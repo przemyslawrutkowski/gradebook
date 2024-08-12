@@ -1,0 +1,328 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model attendances {
+  id          Int      @id @default(autoincrement())
+  date_time   DateTime @default(dbgenerated("(now())")) @db.Timestamp(0)
+  was_present Boolean
+  student_id  Int
+  lesson_id   Int
+  students    students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attendances_ibfk_1")
+  lessons     lessons  @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attendances_ibfk_2")
+
+  @@index([lesson_id], map: "lesson_id")
+  @@index([student_id], map: "student_id")
+}
+
+model badges {
+  id                Int               @id @default(autoincrement())
+  name              String            @db.VarChar(255)
+  description       String            @db.VarChar(255)
+  category_id       Int
+  badges_categories badges_categories @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "badges_ibfk_1")
+  badges_history    badges_history[]
+
+  @@index([category_id], map: "category_id")
+}
+
+model badges_categories {
+  id     Int      @id @default(autoincrement())
+  name   String   @db.VarChar(255)
+  badges badges[]
+}
+
+model badges_history {
+  id           Int      @id @default(autoincrement())
+  date_awarder DateTime @default(dbgenerated("(now())")) @db.Timestamp(0)
+  student_id   Int
+  badge_id     Int
+  students     students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "badges_history_ibfk_1")
+  badges       badges   @relation(fields: [badge_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "badges_history_ibfk_2")
+
+  @@index([badge_id], map: "badge_id")
+  @@index([student_id], map: "student_id")
+}
+
+model classes {
+  id         Int        @id @default(autoincrement())
+  name       String     @db.VarChar(255)
+  yearbook   Int        @db.Year
+  teacher_id Int?
+  teachers   teachers?  @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "classes_ibfk_1")
+  lessons    lessons[]
+  students   students[]
+
+  @@index([teacher_id], map: "teacher_id")
+}
+
+model event_types {
+  id            Int             @id @default(autoincrement())
+  name          String          @db.VarChar(255)
+  school_events school_events[]
+}
+
+model grades_gradebook {
+  id          Int      @id @default(autoincrement())
+  description String   @db.VarChar(255)
+  grade       Int      @db.TinyInt
+  date_given  DateTime @default(dbgenerated("(now())")) @db.Timestamp(0)
+  student_id  Int
+  subject_id  Int
+  teacher_id  Int
+  students    students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "grades_gradebook_ibfk_1")
+  subjects    subjects @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "grades_gradebook_ibfk_2")
+  teachers    teachers @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "grades_gradebook_ibfk_3")
+
+  @@index([student_id], map: "student_id")
+  @@index([subject_id], map: "subject_id")
+  @@index([teacher_id], map: "teacher_id")
+}
+
+model homeworks {
+  id          Int      @id @default(autoincrement())
+  description String   @db.VarChar(255)
+  deadline    DateTime @db.Timestamp(0)
+  lesson_id   Int
+  teacher_id  Int
+  lessons     lessons  @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "homeworks_ibfk_1")
+  teachers    teachers @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "homeworks_ibfk_2")
+
+  @@index([lesson_id], map: "lesson_id")
+  @@index([teacher_id], map: "teacher_id")
+}
+
+model lessons {
+  id          Int           @id @default(autoincrement())
+  description String        @db.VarChar(255)
+  date_time   DateTime      @db.Timestamp(0)
+  teacher_id  Int
+  class_id    Int
+  subject_id  Int
+  attendances attendances[]
+  homeworks   homeworks[]
+  teachers    teachers      @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_1")
+  classes     classes       @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_2")
+  subjects    subjects      @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_3")
+
+  @@index([class_id], map: "class_id")
+  @@index([subject_id], map: "subject_id")
+  @@index([teacher_id], map: "teacher_id")
+}
+
+model messages {
+  id                                                 Int         @id @default(autoincrement())
+  subject                                            String      @db.VarChar(255)
+  content                                            String      @db.VarChar(255)
+  date_time                                          DateTime    @default(dbgenerated("(now())")) @db.Timestamp(0)
+  was_read                                           Boolean     @default(false)
+  sender_id                                          Int
+  sender_type_id                                     Int
+  receiver_id                                        Int
+  receiver_type_id                                   Int
+  users_types_messages_sender_type_idTousers_types   users_types @relation("messages_sender_type_idTousers_types", fields: [sender_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "messages_ibfk_1")
+  users_types_messages_receiver_type_idTousers_types users_types @relation("messages_receiver_type_idTousers_types", fields: [receiver_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "messages_ibfk_2")
+
+  @@index([receiver_type_id], map: "receiver_type_id")
+  @@index([sender_type_id], map: "sender_type_id")
+}
+
+model parents {
+  id               Int                @id @default(autoincrement())
+  pesel            String             @unique(map: "pesel") @db.VarChar(255)
+  email            String             @unique(map: "email") @db.VarChar(255)
+  phone_number     String             @unique(map: "phone_number") @db.VarChar(255)
+  password         String             @db.VarChar(255)
+  first_name       String             @db.VarChar(255)
+  last_name        String             @db.VarChar(255)
+  students_parents students_parents[]
+}
+
+model problem_types {
+  id                 Int                  @id @default(autoincrement())
+  name               String               @db.VarChar(255)
+  problems_gradebook problems_gradebook[]
+}
+
+model problems_gradebook {
+  id                         Int                          @id @default(autoincrement())
+  description                String                       @db.VarChar(255)
+  reported_time              DateTime                     @default(dbgenerated("(now())")) @db.Timestamp(0)
+  problem_type_id            Int
+  reporter_id                Int
+  user_type_id               Int
+  status_id                  Int
+  problem_types              problem_types                @relation(fields: [problem_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_1")
+  users_types                users_types                  @relation(fields: [user_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_2")
+  statuses                   statuses                     @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_3")
+  problems_history_gradebook problems_history_gradebook[]
+
+  @@index([problem_type_id], map: "problem_type_id")
+  @@index([status_id], map: "status_id")
+  @@index([user_type_id], map: "user_type_id")
+}
+
+model problems_history_gradebook {
+  id                 Int                @id @default(autoincrement())
+  change_description String             @db.VarChar(255)
+  change_time        DateTime           @default(dbgenerated("(now())")) @db.Timestamp(0)
+  problem_id         Int
+  status_id          Int
+  problems_gradebook problems_gradebook @relation(fields: [problem_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_history_gradebook_ibfk_1")
+  statuses           statuses           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_history_gradebook_ibfk_2")
+
+  @@index([problem_id], map: "problem_id")
+  @@index([status_id], map: "status_id")
+}
+
+model school_events {
+  id            Int         @id @default(autoincrement())
+  name          String      @db.VarChar(255)
+  location      String      @db.VarChar(255)
+  description   String      @db.VarChar(255)
+  start_time    DateTime    @db.Timestamp(0)
+  end_time      DateTime    @db.Timestamp(0)
+  event_type_id Int
+  event_types   event_types @relation(fields: [event_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "school_events_ibfk_1")
+
+  @@index([event_type_id], map: "event_type_id")
+}
+
+model statuses {
+  id                         Int                          @id @default(autoincrement())
+  name                       String                       @db.VarChar(255)
+  problems_gradebook         problems_gradebook[]
+  problems_history_gradebook problems_history_gradebook[]
+}
+
+model students {
+  id                Int                 @id @default(autoincrement())
+  pesel             String              @unique(map: "pesel") @db.VarChar(255)
+  email             String              @unique(map: "email") @db.VarChar(255)
+  phone_number      String              @unique(map: "phone_number") @db.VarChar(255)
+  password          String              @db.VarChar(255)
+  first_name        String              @db.VarChar(255)
+  last_name         String              @db.VarChar(255)
+  class_id          Int?
+  attendances       attendances[]
+  badges_history    badges_history[]
+  grades_gradebook  grades_gradebook[]
+  classes           classes?            @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "students_ibfk_1")
+  students_parents  students_parents[]
+  surveys_responses surveys_responses[]
+
+  @@index([class_id], map: "class_id")
+}
+
+model students_parents {
+  student_id Int
+  parent_id  Int
+  students   students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "students_parents_ibfk_1")
+  parents    parents  @relation(fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "students_parents_ibfk_2")
+
+  @@id([student_id, parent_id])
+  @@index([parent_id], map: "parent_id")
+}
+
+model subjects {
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(255)
+  grades_gradebook  grades_gradebook[]
+  lessons           lessons[]
+  teachers_subjects teachers_subjects[]
+}
+
+model surveys {
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(255)
+  description       String              @db.VarChar(255)
+  start_time        DateTime            @db.Timestamp(0)
+  end_time          DateTime            @db.Timestamp(0)
+  surveys_questions surveys_questions[]
+}
+
+model surveys_possible_responses {
+  id                Int               @id @default(autoincrement())
+  response          String            @db.VarChar(255)
+  question_id       Int
+  surveys_questions surveys_questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "surveys_possible_responses_ibfk_1")
+
+  @@index([question_id], map: "question_id")
+}
+
+model surveys_questions {
+  id                         Int                          @id @default(autoincrement())
+  question                   String                       @db.VarChar(255)
+  survey_id                  Int
+  question_type_id           Int
+  surveys_possible_responses surveys_possible_responses[]
+  surveys                    surveys                      @relation(fields: [survey_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "surveys_questions_ibfk_1")
+  surveys_questions_types    surveys_questions_types      @relation(fields: [question_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "surveys_questions_ibfk_2")
+  surveys_responses          surveys_responses[]
+
+  @@index([question_type_id], map: "question_type_id")
+  @@index([survey_id], map: "survey_id")
+}
+
+model surveys_questions_types {
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(255)
+  surveys_questions surveys_questions[]
+}
+
+model surveys_responses {
+  id                Int               @id @default(autoincrement())
+  response          String            @db.VarChar(255)
+  student_id        Int
+  question_id       Int
+  students          students          @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "surveys_responses_ibfk_1")
+  surveys_questions surveys_questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "surveys_responses_ibfk_2")
+
+  @@index([question_id], map: "question_id")
+  @@index([student_id], map: "student_id")
+}
+
+model teachers {
+  id                Int                 @id @default(autoincrement())
+  pesel             String              @unique(map: "pesel") @db.VarChar(255)
+  email             String              @unique(map: "email") @db.VarChar(255)
+  phone_number      String              @unique(map: "phone_number") @db.VarChar(255)
+  password          String              @db.VarChar(255)
+  first_name        String              @db.VarChar(255)
+  last_name         String              @db.VarChar(255)
+  classes           classes[]
+  grades_gradebook  grades_gradebook[]
+  homeworks         homeworks[]
+  lessons           lessons[]
+  teachers_subjects teachers_subjects[]
+}
+
+model teachers_subjects {
+  teacher_id Int
+  subject_id Int
+  teachers   teachers @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "teachers_subjects_ibfk_1")
+  subjects   subjects @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "teachers_subjects_ibfk_2")
+
+  @@id([teacher_id, subject_id])
+  @@index([subject_id], map: "subject_id")
+}
+
+model updates {
+  id           Int      @id @default(autoincrement())
+  description  String   @db.VarChar(255)
+  version      String   @db.VarChar(255)
+  release_time DateTime @default(dbgenerated("(now())")) @db.Timestamp(0)
+}
+
+model users_types {
+  id                                              Int                  @id @default(autoincrement())
+  name                                            String               @db.VarChar(255)
+  messages_messages_sender_type_idTousers_types   messages[]           @relation("messages_sender_type_idTousers_types")
+  messages_messages_receiver_type_idTousers_types messages[]           @relation("messages_receiver_type_idTousers_types")
+  problems_gradebook                              problems_gradebook[]
+}
