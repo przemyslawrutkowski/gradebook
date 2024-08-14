@@ -326,3 +326,13 @@ model users_types {
   messages_messages_receiver_type_idTousers_types messages[]           @relation("messages_receiver_type_idTousers_types")
   problems_gradebook                              problems_gradebook[]
 }
+
+model adminstrators {
+  id           Int    @id @default(autoincrement())
+  pesel        String @unique(map: "pesel") @db.VarChar(255)
+  email        String @unique(map: "email") @db.VarChar(255)
+  phone_number String @unique(map: "phone_number") @db.VarChar(255)
+  password     String @db.VarChar(255)
+  first_name   String @db.VarChar(255)
+  last_name    String @db.VarChar(255)
+}

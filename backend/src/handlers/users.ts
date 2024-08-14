@@ -13,10 +13,6 @@ export const signIn = async (req: Request, res: Response) => {
             password: req.body.password
         };
 
-        if (!credentials.email || !credentials.password) {
-            return res.status(400).json({ message: 'Email and password are required.' });
-        }
-
         let user: students | teachers | parents | null = await prisma.students.findUnique({
             where: {
                 email: credentials.email
@@ -69,14 +65,6 @@ export const signUp = async (req: Request, res: Response, targetGroup: 'students
             firstName: req.body.firstName,
             lastName: req.body.lastName
         };
-
-        if (!credentials.email || !credentials.password) {
-            return res.status(400).json({ message: 'Email and password are required.' });
-        }
-
-        if (credentials.password !== credentials.passwordConfirm) {
-            return res.status(400).json({ message: 'Passwords do not match.' });
-        }
 
         let existingUsers: students[] | teachers[] | parents[] | null = null;
 
