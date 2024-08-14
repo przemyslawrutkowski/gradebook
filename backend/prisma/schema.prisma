@@ -327,7 +327,7 @@ model users_types {
   problems_gradebook                              problems_gradebook[]
 }
 
-model adminstrators {
+model administrators {
   id           Int    @id @default(autoincrement())
   pesel        String @unique(map: "pesel") @db.VarChar(255)
   email        String @unique(map: "email") @db.VarChar(255)

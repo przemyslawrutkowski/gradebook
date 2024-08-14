@@ -2,9 +2,9 @@ import { Request, Response } from 'express';
 import LoginCredentialsI from "../interfaces/loginCredentials.js";
 import RegisterCredentialsI from '../interfaces/registerCredentials.js';
 import prisma from '../db.js';
-import { students, teachers, parents } from '@prisma/client';
+import { students, teachers, parents, administrators } from '@prisma/client';
 import { comparePasswords, generateJWT, hashPassword } from '../modules/auth';
-import UserI from '../interfaces/user.js';
+import AuthUser from '../interfaces/authUser.js';
 
 export const signIn = async (req: Request, res: Response) => {
     try {
@@ -13,29 +13,39 @@ export const signIn = async (req: Request, res: Response) => {
             password: req.body.password
         };
 
-        let user: students | teachers | parents | null = await prisma.students.findUnique({
+        const criteria = {
             where: {
                 email: credentials.email
             }
-        });
+        };
 
-        if (!user) {
-            user = await prisma.teachers.findUnique({
-                where: {
-                    email: credentials.email
-                }
-            });
+        let user: students | teachers | parents | administrators | null = await prisma.students.findUnique(criteria);
+        let role: 'student' | 'teacher' | 'parent' | 'administrator' | 'unknown' = 'unknown';
+
+        if (user) {
+            role = 'student';
+        } else if (!user) {
+            user = await prisma.teachers.findUnique(criteria);
+            if (user) {
+                role = "teacher";
+            }
         }
 
         if (!user) {
-            user = await prisma.parents.findUnique({
-                where: {
-                    email: credentials.email
-                }
-            });
+            user = await prisma.parents.findUnique(criteria);
+            if (user) {
+                role = "parent";
+            }
         }
 
         if (!user) {
+            user = await prisma.administrators.findUnique(criteria);
+            if (user) {
+                role = "administrator";
+            }
+        }
+
+        if (!user || role === 'unknown') {
             return res.status(404).json({ message: 'Invalid credentials.' });
         }
 
@@ -44,8 +54,14 @@ export const signIn = async (req: Request, res: Response) => {
             return res.status(401).json({ message: 'Invalid credentials.' });
         }
 
+        const authUser: AuthUser = {
+            email: user.email,
+            firstName: user.first_name,
+            lastName: user.last_name,
+            role: role
+        }
 
-        const jwt = generateJWT(user as UserI);
+        const jwt = generateJWT(authUser);
 
         return res.json(jwt);
     } catch (err) {
@@ -54,7 +70,7 @@ export const signIn = async (req: Request, res: Response) => {
     }
 };
 
-export const signUp = async (req: Request, res: Response, targetGroup: 'students' | 'teachers' | 'parents') => {
+export const signUp = async (req: Request, res: Response, targetGroup: 'students' | 'teachers' | 'parents' | 'administrators') => {
     try {
         const credentials: RegisterCredentialsI = {
             pesel: req.body.pesel,
@@ -66,7 +82,7 @@ export const signUp = async (req: Request, res: Response, targetGroup: 'students
             lastName: req.body.lastName
         };
 
-        let existingUsers: students[] | teachers[] | parents[] | null = null;
+        let existingUsers: students[] | teachers[] | parents[] | administrators[] | null = null;
 
         const criteria = {
             where: {
@@ -93,6 +109,9 @@ export const signUp = async (req: Request, res: Response, targetGroup: 'students
                 break;
             case 'parents':
                 existingUsers = await prisma.parents.findMany(criteria);
+                break;
+            case 'administrators':
+                existingUsers = await prisma.administrators.findMany(criteria);
                 break;
         }
 
@@ -123,6 +142,9 @@ export const signUp = async (req: Request, res: Response, targetGroup: 'students
                 break;
             case 'parents':
                 createdUser = await prisma.parents.create(dataToCreate);
+                break;
+            case 'administrators':
+                createdUser = await prisma.administrators.create(dataToCreate);
                 break;
         }
 

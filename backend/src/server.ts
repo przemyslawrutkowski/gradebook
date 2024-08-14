@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-app.use('/api', router);
+app.use('/', router);
 
 app.use(function (err: Error, req: Request, res: Response, next: NextFunction) {
     console.error(err.stack)

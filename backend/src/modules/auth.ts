@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import UserI from '../interfaces/user.js';
+import AuthUser from '../interfaces/authUser.js';
 import { Request, Response, NextFunction } from 'express';
 
 const secretKey = process.env.SECRET_KEY;
@@ -19,12 +19,8 @@ export const hashPassword = (password: string) => {
     return bcrypt.hash(password, 10);
 };
 
-export const generateJWT = (user: UserI) => {
-    return jwt.sign({
-        email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name
-    }, secretKey);
+export const generateJWT = (authUser: AuthUser) => {
+    return jwt.sign(authUser, secretKey);
 };
 
 export const protect = (req: Request, res: Response, next: NextFunction) => {
@@ -45,5 +41,15 @@ export const protect = (req: Request, res: Response, next: NextFunction) => {
     } catch (err) {
         console.error(err);
         return res.status(401).json({ message: 'Invalid token.' });
+    }
+}
+
+export const authorize = (roles: string[]) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        const userRole = req.body.payload.role;
+        if (!roles.includes(userRole)) {
+            return res.status(403).json({ message: 'You are not authorized.' });
+        }
+        next();
     }
 }
