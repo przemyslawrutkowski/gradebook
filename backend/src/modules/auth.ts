@@ -23,7 +23,7 @@ export const generateJWT = (authUser: AuthUser) => {
     return jwt.sign(authUser, secretKey);
 };
 
-export const protect = (req: Request, res: Response, next: NextFunction) => {
+export const authenticate = (req: Request, res: Response, next: NextFunction) => {
     try {
         const bearer = req.headers.authorization;
         if (!bearer) {

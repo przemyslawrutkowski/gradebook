@@ -29,5 +29,5 @@ export const signUpValidationRules = () => {
             .custom(value => {
                 if (value.charAt(0) !== value.charAt(0).toUpperCase()) return false;
                 return true;
-            }).withMessage('Last name must start with an uppercase letter.')]
+            }).withMessage('Last name must start with an uppercase letter.')];
 }
