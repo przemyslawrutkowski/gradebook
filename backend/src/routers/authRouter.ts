@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { signIn } from '../handlers/users.js';
-import { signUpStudent, signUpTeacher, signUpParent, signUpAdministrator } from '../handlers/administrators.js';
+import { signUpStudent } from '../handlers/students.js';
+import { signUpTeacher } from '../handlers/teachers.js';
+import { signUpParent } from '../handlers/parents.js';
+import { signUpAdministrator } from '../handlers/administrators.js';
 import { signInValidationRules, signUpValidationRules } from '../validations/authValidation.js';
 import { handleInputErrors } from '../modules/middleware.js';
 
@@ -38,8 +41,8 @@ authRouter.post('/signup/parent',
 );
 
 authRouter.post('/signup/administrator',
-    authenticate,
-    authorize(['administrator']),
+    //authenticate,
+    //authorize(['administrator']),
     signUpValidationRules(),
     handleInputErrors,
     signUpAdministrator

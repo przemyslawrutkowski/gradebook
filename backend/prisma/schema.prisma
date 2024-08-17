@@ -52,7 +52,7 @@ model badges_history {
 model classes {
   id         Int        @id @default(autoincrement())
   name       String     @db.VarChar(255)
-  yearbook   Int        @db.Year
+  yearbook   String     @db.VarChar(255)
   teacher_id Int?
   teachers   teachers?  @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "classes_ibfk_1")
   lessons    lessons[]

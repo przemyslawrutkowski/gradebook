@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { studentAndParentIdsValidationRules } from '../validations/studentsParentsValidation.js';
-import { assignParentToStudent, unassignParentFromStudent } from '../handlers/administrators.js';
+import { assignParentToStudent, unassignParentFromStudent } from '../handlers/studentsParents.js';
 import { handleInputErrors } from '../modules/middleware.js';
 
 const studentsParentsRouter = Router();

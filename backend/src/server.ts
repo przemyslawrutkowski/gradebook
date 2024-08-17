@@ -4,6 +4,7 @@ import cors from 'cors';
 import { Request, Response, NextFunction } from 'express';
 import authRouter from './routers/authRouter';
 import studentsParentsRouter from './routers/studentsParentsRouter';
+import classesRouter from './routers/classesRouter';
 
 const app = express();
 
@@ -12,7 +13,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 app.use('/auth', authRouter);
-app.use('/student-parent', studentsParentsRouter)
+app.use('/student-parent', studentsParentsRouter);
+app.use('/class', classesRouter);
 
 app.use(function (err: Error, req: Request, res: Response, next: NextFunction) {
     console.error(err.stack)

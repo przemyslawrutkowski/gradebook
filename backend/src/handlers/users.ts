@@ -132,7 +132,7 @@ export const signUp = async (req: Request, res: Response, targetGroup: 'students
             }
         }
 
-        let createdUser: students | teachers | parents;
+        let createdUser: students | teachers | parents | administrators;
         switch (targetGroup) {
             case 'students':
                 createdUser = await prisma.students.create(dataToCreate);
@@ -148,7 +148,7 @@ export const signUp = async (req: Request, res: Response, targetGroup: 'students
                 break;
         }
 
-        return res.json(createdUser.id);
+        return res.status(200).json(createdUser.id);
     } catch (err) {
         console.error('Error signing up', err);
         res.status(500).json({ message: 'Internal Server Error.' });
