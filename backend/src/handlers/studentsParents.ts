@@ -59,27 +59,22 @@ export const unassignParentFromStudent = async (req: Request, res: Response) => 
         const studentId = Number(req.body.studentId);
         const parentId = Number(req.body.parentId);
 
-        const studentAndParentIds: students_parents | null = await prisma.students_parents.findUnique({
+        const criteria = {
             where: {
                 student_id_parent_id: {
                     student_id: studentId,
                     parent_id: parentId
                 }
             }
-        });
+        };
 
-        if (!studentAndParentIds) {
+        const entry: students_parents | null = await prisma.students_parents.findUnique(criteria);
+
+        if (!entry) {
             return res.status(404).json({ message: 'No relationship was found between specific student and parent identifiers.' });
         }
 
-        const removedBond = await prisma.students_parents.delete({
-            where: {
-                student_id_parent_id: {
-                    student_id: studentId,
-                    parent_id: parentId
-                }
-            }
-        });
+        const removedBond = await prisma.students_parents.delete(criteria);
 
         return res.status(200).json(removedBond);
     } catch (err) {

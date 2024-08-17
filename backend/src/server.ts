@@ -5,6 +5,7 @@ import { Request, Response, NextFunction } from 'express';
 import authRouter from './routers/authRouter';
 import studentsParentsRouter from './routers/studentsParentsRouter';
 import classesRouter from './routers/classesRouter';
+import studentsRouter from './routers/studentsRouter';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(cors());
 app.use('/auth', authRouter);
 app.use('/student-parent', studentsParentsRouter);
 app.use('/class', classesRouter);
+app.use('/student', studentsRouter);
 
 app.use(function (err: Error, req: Request, res: Response, next: NextFunction) {
     console.error(err.stack)
