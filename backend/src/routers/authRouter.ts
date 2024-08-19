@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { signIn } from '../handlers/users.js';
+import { signIn, forgotPassword, resetPassword } from '../handlers/users.js';
 import { signUpStudent } from '../handlers/students.js';
 import { signUpTeacher } from '../handlers/teachers.js';
 import { signUpParent } from '../handlers/parents.js';
 import { signUpAdministrator } from '../handlers/administrators.js';
-import { signInValidationRules, signUpValidationRules } from '../validations/authValidation.js';
+import { signInValidationRules, signUpValidationRules, forgotPasswordValidationRules, resetPasswordValidationRules } from '../validations/authValidation.js';
 import { handleInputErrors } from '../modules/middleware.js';
 
 const authRouter = Router();
@@ -47,5 +47,19 @@ authRouter.post('/signup/administrator',
     handleInputErrors,
     signUpAdministrator
 );
+
+authRouter.post('/forgot-password',
+    forgotPasswordValidationRules(),
+    handleInputErrors,
+    forgotPassword
+)
+
+authRouter.post('/reset-password',
+    authenticate,
+    resetPasswordValidationRules(),
+    handleInputErrors,
+    resetPassword
+)
+
 
 export default authRouter;

@@ -133,14 +133,16 @@ model messages {
 }
 
 model parents {
-  id               Int                @id @default(autoincrement())
-  pesel            String             @unique(map: "pesel") @db.VarChar(255)
-  email            String             @unique(map: "email") @db.VarChar(255)
-  phone_number     String             @unique(map: "phone_number") @db.VarChar(255)
-  password         String             @db.VarChar(255)
-  first_name       String             @db.VarChar(255)
-  last_name        String             @db.VarChar(255)
-  students_parents students_parents[]
+  id                     Int                @id @default(autoincrement())
+  pesel                  String             @unique(map: "pesel") @db.VarChar(255)
+  email                  String             @unique(map: "email") @db.VarChar(255)
+  phone_number           String             @unique(map: "phone_number") @db.VarChar(255)
+  password               String             @db.VarChar(255)
+  first_name             String             @db.VarChar(255)
+  last_name              String             @db.VarChar(255)
+  reset_password_token   String?            @unique(map: "reset_password_token") @db.VarChar(256)
+  reset_password_expires DateTime?          @db.Timestamp(0)
+  students_parents       students_parents[]
 }
 
 model problem_types {
@@ -201,20 +203,22 @@ model statuses {
 }
 
 model students {
-  id                Int                 @id @default(autoincrement())
-  pesel             String              @unique(map: "pesel") @db.VarChar(255)
-  email             String              @unique(map: "email") @db.VarChar(255)
-  phone_number      String              @unique(map: "phone_number") @db.VarChar(255)
-  password          String              @db.VarChar(255)
-  first_name        String              @db.VarChar(255)
-  last_name         String              @db.VarChar(255)
-  class_id          Int?
-  attendances       attendances[]
-  badges_history    badges_history[]
-  grades_gradebook  grades_gradebook[]
-  classes           classes?            @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "students_ibfk_1")
-  students_parents  students_parents[]
-  surveys_responses surveys_responses[]
+  id                     Int                 @id @default(autoincrement())
+  pesel                  String              @unique(map: "pesel") @db.VarChar(255)
+  email                  String              @unique(map: "email") @db.VarChar(255)
+  phone_number           String              @unique(map: "phone_number") @db.VarChar(255)
+  password               String              @db.VarChar(255)
+  first_name             String              @db.VarChar(255)
+  last_name              String              @db.VarChar(255)
+  reset_password_token   String?             @unique(map: "reset_password_token") @db.VarChar(256)
+  reset_password_expires DateTime?           @db.Timestamp(0)
+  class_id               Int?
+  attendances            attendances[]
+  badges_history         badges_history[]
+  grades_gradebook       grades_gradebook[]
+  classes                classes?            @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "students_ibfk_1")
+  students_parents       students_parents[]
+  surveys_responses      surveys_responses[]
 
   @@index([class_id], map: "class_id")
 }
@@ -288,18 +292,20 @@ model surveys_responses {
 }
 
 model teachers {
-  id                Int                 @id @default(autoincrement())
-  pesel             String              @unique(map: "pesel") @db.VarChar(255)
-  email             String              @unique(map: "email") @db.VarChar(255)
-  phone_number      String              @unique(map: "phone_number") @db.VarChar(255)
-  password          String              @db.VarChar(255)
-  first_name        String              @db.VarChar(255)
-  last_name         String              @db.VarChar(255)
-  classes           classes[]
-  grades_gradebook  grades_gradebook[]
-  homeworks         homeworks[]
-  lessons           lessons[]
-  teachers_subjects teachers_subjects[]
+  id                     Int                 @id @default(autoincrement())
+  pesel                  String              @unique(map: "pesel") @db.VarChar(255)
+  email                  String              @unique(map: "email") @db.VarChar(255)
+  phone_number           String              @unique(map: "phone_number") @db.VarChar(255)
+  password               String              @db.VarChar(255)
+  first_name             String              @db.VarChar(255)
+  last_name              String              @db.VarChar(255)
+  reset_password_token   String?             @unique(map: "reset_password_token") @db.VarChar(256)
+  reset_password_expires DateTime?           @db.Timestamp(0)
+  classes                classes[]
+  grades_gradebook       grades_gradebook[]
+  homeworks              homeworks[]
+  lessons                lessons[]
+  teachers_subjects      teachers_subjects[]
 }
 
 model teachers_subjects {
@@ -328,11 +334,13 @@ model users_types {
 }
 
 model administrators {
-  id           Int    @id @default(autoincrement())
-  pesel        String @unique(map: "pesel") @db.VarChar(255)
-  email        String @unique(map: "email") @db.VarChar(255)
-  phone_number String @unique(map: "phone_number") @db.VarChar(255)
-  password     String @db.VarChar(255)
-  first_name   String @db.VarChar(255)
-  last_name    String @db.VarChar(255)
+  id                     Int       @id @default(autoincrement())
+  pesel                  String    @unique(map: "pesel") @db.VarChar(255)
+  email                  String    @unique(map: "email") @db.VarChar(255)
+  phone_number           String    @unique(map: "phone_number") @db.VarChar(255)
+  password               String    @db.VarChar(255)
+  first_name             String    @db.VarChar(255)
+  last_name              String    @db.VarChar(255)
+  reset_password_token   String?   @unique(map: "reset_password_token") @db.VarChar(256)
+  reset_password_expires DateTime? @db.Timestamp(0)
 }

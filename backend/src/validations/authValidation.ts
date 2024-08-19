@@ -31,3 +31,15 @@ export const signUpValidationRules = () => {
                 return true;
             }).withMessage('Last name must start with an uppercase letter.')];
 }
+
+export const forgotPasswordValidationRules = () => {
+    return [
+        body('email').isEmail().withMessage('Invalid email address.'),
+    ];
+}
+
+export const resetPasswordValidationRules = () => {
+    return [
+        body('password').isLength({ min: 8 }).withMessage('New password must be longer than 8 characters.'),
+    ];
+}
