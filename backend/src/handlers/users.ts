@@ -6,6 +6,7 @@ import { students, teachers, parents, administrators } from '@prisma/client';
 import { comparePasswords, generateJWT, hashPassword } from '../modules/auth';
 import AuthUser from '../interfaces/authUser.js';
 import nodemailer from 'nodemailer';
+import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces.js';
 
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
@@ -55,12 +56,12 @@ export const signIn = async (req: Request, res: Response) => {
         }
 
         if (!existingUser || role === 'unknown') {
-            return res.status(404).json({ message: 'Invalid credentials.' });
+            return res.status(404).json(createErrorResponse('Invalid credentials.'));
         }
 
         const isValid = await comparePasswords(credentials.password, existingUser.password);
         if (!isValid) {
-            return res.status(401).json({ message: 'Invalid credentials.' });
+            return res.status(401).json(createErrorResponse('Invalid credentials.'));
         }
 
         const authUser: AuthUser = {
@@ -72,10 +73,10 @@ export const signIn = async (req: Request, res: Response) => {
 
         const jwt = generateJWT(authUser);
 
-        return res.status(200).json(jwt);
+        return res.status(200).json(createSuccessResponse(jwt, 'User signed in successfully.'));
     } catch (err) {
         console.error('Error signing in', err);
-        res.status(500).json({ message: 'Internal Server Error.' });
+        res.status(500).json(createErrorResponse('An unexpected error occurred while signing in. Please try again later.'));
     }
 };
 
@@ -126,7 +127,7 @@ export const signUp = async (req: Request, res: Response, targetGroup: 'students
 
 
         if (existingUsers.length > 0) {
-            return res.status(409).json({ message: 'User with specified details already exists.' });
+            return res.status(409).json(createErrorResponse('User with specified details already exists.'));
         }
 
         const hashedPassword = await hashPassword(credentials.password);
@@ -157,10 +158,10 @@ export const signUp = async (req: Request, res: Response, targetGroup: 'students
                 break;
         }
 
-        return res.status(200).json(createdUser.id);
+        return res.status(200).json(createSuccessResponse(createdUser.id, 'User signed up successfully.'));
     } catch (err) {
         console.error('Error signing up', err);
-        res.status(500).json({ message: 'Internal Server Error.' });
+        res.status(500).json(createErrorResponse('An unexpected error occurred while signing up. Please try again later.'));
     }
 };
 
@@ -201,7 +202,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
         }
 
         if (!existingUser || role === 'unknown') {
-            return res.status(404).json({ message: 'Invalid credential.' });
+            return res.status(404).json(createErrorResponse('Invalid credential.'));
         }
 
         const authUser: AuthUser = {
@@ -219,7 +220,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
             },
             data: {
                 reset_password_token: jwt,
-                reset_password_expires: new Date(Date.now() + 360)
+                reset_password_expires: new Date(Date.now() + 3600000)
             }
         }
 
@@ -258,13 +259,13 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
         transporter.sendMail(message, (err, info) => {
             if (err) {
-                return res.status(500).json({ message: 'Error sending email.' });
+                return res.status(500).json(createErrorResponse('Error sending email.'));
             }
-            return res.status(200).json(info.messageId);
+            return res.status(200).json(createSuccessResponse(info.messageId, 'Password reset email sent successfully.'));
         });
     } catch (err) {
         console.error('Error recovering password', err);
-        res.status(500).json({ message: 'Internal Server Error.' });
+        res.status(500).json('An unexpected error occurred while recovering the password. Please try again later.');
     }
 }
 
@@ -294,7 +295,7 @@ export const resetPassword = async (req: Request, res: Response) => {
         }
 
         if (!existingUser || !existingUser.reset_password_expires || existingUser.reset_password_expires < new Date()) {
-            return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+            return res.status(400).json(createErrorResponse('Password reset token is invalid or has expired.'));
         }
 
         const hashedPassword = await hashPassword(password);
@@ -326,10 +327,10 @@ export const resetPassword = async (req: Request, res: Response) => {
                 break;
         }
 
-        return res.status(200).json({ message: 'Password has been reset.' })
+        return res.status(200).json(createSuccessResponse(updatedUser.id, `Successful password reset for user with ID '${updatedUser.id}'.`))
 
     } catch (err) {
-        console.error('Error reseting password', err);
-        res.status(500).json({ message: 'Internal Server Error.' });
+        console.error('Error resetting password', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while resetting the password. Please try again later.'));
     }
 }
