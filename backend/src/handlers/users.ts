@@ -7,14 +7,7 @@ import { comparePasswords, generateJWT, hashPassword } from '../modules/auth';
 import AuthUser from '../interfaces/authUser.js';
 import nodemailer from 'nodemailer';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces.js';
-
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-
-if (!SMTP_USER || !SMTP_PASS) {
-    console.error('Missing required environment variables');
-    process.exit(1);
-}
+import { SMTP_USER, SMTP_PASS } from '../modules/validateEnv.js';
 
 export const signIn = async (req: Request, res: Response) => {
     try {

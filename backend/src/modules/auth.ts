@@ -1,15 +1,9 @@
-import 'dotenv/config';
+import { SECRET_KEY } from './validateEnv.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import AuthUser from '../interfaces/authUser.js';
 import { Request, Response, NextFunction } from 'express';
-
-const secretKey = process.env.SECRET_KEY;
-
-if (!secretKey) {
-    console.error('Missing required environment variables');
-    process.exit(1);
-}
+import { createErrorResponse } from '../interfaces/responseInterfaces.js';
 
 export const comparePasswords = (password: string, hash: string) => {
     return bcrypt.compare(password, hash);
@@ -20,27 +14,27 @@ export const hashPassword = (password: string) => {
 };
 
 export const generateJWT = (authUser: AuthUser) => {
-    return jwt.sign(authUser, secretKey);
+    return jwt.sign(authUser, SECRET_KEY);
 };
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
     try {
         const bearer = req.headers.authorization;
         if (!bearer) {
-            return res.status(401).json({ message: 'No token provided.' });
+            return res.status(401).json(createErrorResponse('No token provided.'));
         }
 
         const token = bearer.split(' ')[1].replace(/"/g, '');
         if (!token) {
-            return res.status(401).json({ message: 'Invalid token format.' });
+            return res.status(401).json(createErrorResponse('Invalid token format.'));
         }
 
-        const payload = jwt.verify(token, secretKey);
+        const payload = jwt.verify(token, SECRET_KEY);
         req.body.payload = payload;
         next();
     } catch (err) {
         console.error(err);
-        return res.status(401).json({ message: 'Invalid token.' });
+        return res.status(401).json(createErrorResponse('Invalid token.'));
     }
 }
 
@@ -48,7 +42,7 @@ export const authorize = (roles: string[]) => {
     return (req: Request, res: Response, next: NextFunction) => {
         const userRole = req.body.payload.role;
         if (!roles.includes(userRole)) {
-            return res.status(403).json({ message: 'You are not authorized.' });
+            return res.status(403).json(createErrorResponse('You are not authorized.'));
         }
         next();
     }
