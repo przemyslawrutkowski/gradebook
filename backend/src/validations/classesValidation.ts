@@ -1,4 +1,4 @@
-import { body, param } from 'express-validator';
+import { body } from 'express-validator';
 
 export const classCreationValidationRules = () => {
     return [
@@ -9,7 +9,6 @@ export const classCreationValidationRules = () => {
 
 export const classAndStudentIdsValidationRules = () => {
     return [
-        body('classId').notEmpty().withMessage('Class id is required.'),
         body('studentId').notEmpty().withMessage('Student id is required.')
     ]
 }

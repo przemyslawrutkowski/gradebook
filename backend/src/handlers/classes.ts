@@ -102,20 +102,10 @@ export const patchClass = async (req: Request, res: Response) => {
     }
 }
 
-export const assignClassToStudent = async (req: Request, res: Response) => {
+export const assignStudent = async (req: Request, res: Response) => {
     try {
+        const classId = Number(req.params.classId);
         const studentId = Number(req.body.studentId);
-        const classId = Number(req.body.classId);
-
-        const existingStudent: students | null = await prisma.students.findUnique({
-            where: {
-                id: studentId
-            }
-        });
-
-        if (!existingStudent) {
-            return res.status(404).json(createErrorResponse(`Student with ID '${studentId}' does not exist.`));
-        }
 
         const existingClass: classes | null = await prisma.classes.findUnique({
             where: {
@@ -127,7 +117,17 @@ export const assignClassToStudent = async (req: Request, res: Response) => {
             return res.status(404).json(createErrorResponse(`Class with ID '${classId}' does not exist.`));
         }
 
-        const updatedStudent = await prisma.students.update({
+        const existingStudent: students | null = await prisma.students.findUnique({
+            where: {
+                id: studentId
+            }
+        });
+
+        if (!existingStudent) {
+            return res.status(404).json(createErrorResponse(`Student with ID '${studentId}' does not exist.`));
+        }
+
+        const patchedStudent = await prisma.students.update({
             where: {
                 id: studentId
             },
@@ -136,9 +136,9 @@ export const assignClassToStudent = async (req: Request, res: Response) => {
             },
         });
 
-        return res.status(200).json(createSuccessResponse(updatedStudent.id, `Class with ID '${classId}' successfully assigned to student with ID '${studentId}'.`));
+        return res.status(200).json(createSuccessResponse(patchedStudent.id, `Student with ID '${studentId}' successfully assigned to class with ID '${classId}'.`));
     } catch (err) {
-        console.error('Error assigning class to student', err);
-        return res.status(500).json(createErrorResponse('An unexpected error occurred while assigning the class to the student. Please try again later.'));
+        console.error('Error assigning student to class', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while assigning the student to the class. Please try again later.'));
     }
 }

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { classCreationValidationRules, classAndStudentIdsValidationRules, classPatchValidationRules } from '../validations/classesValidation.js';
-import { createClass, assignClassToStudent, patchClass, deleteClass } from '../handlers/classes.js';
+import { createClass, assignStudent, patchClass, deleteClass } from '../handlers/classes.js';
 import { handleInputErrors } from '../modules/middleware.js';
 
 const classesRouter = Router();
@@ -28,12 +28,18 @@ classesRouter.delete('/:id',
     deleteClass
 );
 
-classesRouter.post('/assign-class-to-student',
+classesRouter.patch('/:classId/assign-student',
     authenticate,
     authorize(['administrator']),
     classAndStudentIdsValidationRules(),
     handleInputErrors,
-    assignClassToStudent
+    assignStudent
 );
+
+classesRouter.get('/:id/students',
+    authenticate,
+    authorize(['administrator, teacher, parent, student']),
+
+)
 
 export default classesRouter;
