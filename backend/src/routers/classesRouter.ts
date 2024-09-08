@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { classCreationValidationRules, classAndStudentIdsValidationRules, classPatchValidationRules } from '../validations/classesValidation.js';
-import { createClass, assignClassToStudent, patchClass } from '../handlers/classes.js';
+import { createClass, assignClassToStudent, patchClass, deleteClass } from '../handlers/classes.js';
 import { handleInputErrors } from '../modules/middleware.js';
 
 const classesRouter = Router();
@@ -20,7 +20,13 @@ classesRouter.patch('/:id',
     classPatchValidationRules(),
     handleInputErrors,
     patchClass
-)
+);
+
+classesRouter.delete('/:id',
+    authenticate,
+    authorize(['administrator']),
+    deleteClass
+);
 
 classesRouter.post('/assign-class-to-student',
     authenticate,

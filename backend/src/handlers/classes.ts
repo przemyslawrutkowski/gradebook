@@ -3,11 +3,6 @@ import prisma from '../db';
 import { students, classes } from '@prisma/client';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces';
 
-//TODO:
-// CREATE - DONE
-// READ - NOT DONE
-// UPDATE - NOT DONE
-
 export const createClass = async (req: Request, res: Response) => {
     try {
         const name = req.body.name;
@@ -35,6 +30,33 @@ export const createClass = async (req: Request, res: Response) => {
     } catch (err) {
         console.error('Error creating class', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while creating the class. Please try again later.'));
+    }
+}
+
+export const deleteClass = async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+
+        const existingClass: classes | null = await prisma.classes.findUnique({
+            where: {
+                id: id
+            }
+        });
+
+        if (!existingClass) {
+            return res.status(404).json(createErrorResponse(`A class with ID '${id}' does not exist.`));
+        }
+
+        const deletedClass = await prisma.classes.delete({
+            where: {
+                id: id
+            }
+        });
+
+        return res.status(200).json(createSuccessResponse(deletedClass.id, `Class with ID '${deletedClass.id}' successfully deleted.`));
+    } catch (err) {
+        console.error('Error deleting class', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while deleting the class. Please try again later.'));
     }
 }
 
@@ -73,10 +95,10 @@ export const patchClass = async (req: Request, res: Response) => {
             data: data
         });
 
-        return res.status(200).json(createSuccessResponse(patchedClass.id, `Class with ID '${patchedClass.id}' successfully patched. Patched fields: ${updatedFields.join(', ')}.`));
+        return res.status(200).json(createSuccessResponse(patchedClass.id, `Class with ID '${patchedClass.id}' successfully patched.Patched fields: ${updatedFields.join(', ')}.`));
     } catch (err) {
-        console.error('Error creating class', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while creating the class. Please try again later.'));
+        console.error('Error patching class', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while patching the class. Please try again later.'));
     }
 }
 

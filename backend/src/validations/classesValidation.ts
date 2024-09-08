@@ -1,4 +1,4 @@
-import { body } from 'express-validator';
+import { body, param } from 'express-validator';
 
 export const classCreationValidationRules = () => {
     return [
@@ -20,5 +20,3 @@ export const classPatchValidationRules = () => {
         body('yearbook').if(body('name').isEmpty()).notEmpty().withMessage('Yearbook is required.')
     ]
 }
-
-
