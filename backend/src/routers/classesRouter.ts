@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { classCreationValidationRules, classAndStudentIdsValidationRules, classPatchValidationRules } from '../validations/classesValidation.js';
-import { createClass, assignStudent, patchClass, deleteClass } from '../handlers/classes.js';
+import { createClass, assignStudent, patchClass, deleteClass, getStudents } from '../handlers/classes.js';
 import { handleInputErrors } from '../modules/middleware.js';
 
 const classesRouter = Router();
@@ -36,10 +36,11 @@ classesRouter.patch('/:classId/assign-student',
     assignStudent
 );
 
-classesRouter.get('/:id/students',
+//POST because we have to pass our role in request body
+classesRouter.post('/:id/students',
     authenticate,
-    authorize(['administrator, teacher, parent, student']),
-
+    authorize(['administrator', 'teacher', 'parent', 'student']),
+    getStudents
 )
 
 export default classesRouter;
