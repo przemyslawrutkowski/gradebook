@@ -7,7 +7,7 @@ export const classCreationValidationRules = () => {
     ];
 }
 
-export const classAndStudentIdsValidationRules = () => {
+export const studentIdValidationRule = () => {
     return [
         body('studentId').notEmpty().withMessage('Student id is required.')
     ]

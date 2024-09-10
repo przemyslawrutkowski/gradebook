@@ -1,6 +1,6 @@
-import { Router } from 'express';
+    import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { classCreationValidationRules, classAndStudentIdsValidationRules, classPatchValidationRules } from '../validations/classesValidation.js';
+import { classCreationValidationRules, studentIdValidationRule, classPatchValidationRules } from '../validations/classesValidation.js';
 import { createClass, assignStudent, patchClass, deleteClass, getStudents } from '../handlers/classes.js';
 import { handleInputErrors } from '../modules/middleware.js';
 
@@ -31,7 +31,7 @@ classesRouter.delete('/:id',
 classesRouter.patch('/:classId/assign-student',
     authenticate,
     authorize(['administrator']),
-    classAndStudentIdsValidationRules(),
+    studentIdValidationRule(),
     handleInputErrors,
     assignStudent
 );
