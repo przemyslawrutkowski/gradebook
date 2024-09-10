@@ -241,7 +241,7 @@ model students_parents {
 
 model subjects {
   id                Int                 @id @default(autoincrement())
-  name              String              @db.VarChar(255)
+  name              String              @unique(map: "name") @db.VarChar(255)
   grades_gradebook  grades_gradebook[]
   lessons           lessons[]
   teachers_subjects teachers_subjects[]

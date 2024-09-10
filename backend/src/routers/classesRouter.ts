@@ -1,7 +1,7 @@
-    import { Router } from 'express';
+import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { classCreationValidationRules, studentIdValidationRule, classPatchValidationRules } from '../validations/classesValidation.js';
-import { createClass, assignStudent, patchClass, deleteClass, getStudents } from '../handlers/classes.js';
+import { getClasses, createClass, assignStudent, patchClass, deleteClass, getStudents } from '../handlers/classes.js';
 import { handleInputErrors } from '../modules/middleware.js';
 
 const classesRouter = Router();
@@ -14,18 +14,25 @@ classesRouter.post('',
     createClass
 );
 
+classesRouter.get('',
+    authenticate,
+    authorize(['administrator', 'teacher']),
+    getClasses
+);
+
+//POST because we have to pass our role in request body
+classesRouter.post('/:id/students',
+    authenticate,
+    authorize(['administrator', 'teacher', 'parent', 'student']),
+    getStudents
+);
+
 classesRouter.patch('/:id',
     authenticate,
     authorize(['administrator']),
     classPatchValidationRules(),
     handleInputErrors,
     patchClass
-);
-
-classesRouter.delete('/:id',
-    authenticate,
-    authorize(['administrator']),
-    deleteClass
 );
 
 classesRouter.patch('/:classId/assign-student',
@@ -36,11 +43,10 @@ classesRouter.patch('/:classId/assign-student',
     assignStudent
 );
 
-//POST because we have to pass our role in request body
-classesRouter.post('/:id/students',
+classesRouter.delete('/:id',
     authenticate,
-    authorize(['administrator', 'teacher', 'parent', 'student']),
-    getStudents
-)
+    authorize(['administrator']),
+    deleteClass
+);
 
 export default classesRouter;

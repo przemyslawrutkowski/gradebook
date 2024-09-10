@@ -1,5 +1,7 @@
 import { body } from 'express-validator';
 
+// Discuss the validation rules
+
 export const classCreationValidationRules = () => {
     return [
         body('name').notEmpty().withMessage('Name is required.'),

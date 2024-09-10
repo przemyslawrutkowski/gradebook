@@ -114,7 +114,39 @@ export const generateLessons = async (req: Request, res: Response) => {
         console.error('Error generating lessons', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while generating lessons. Please try again later.'));
     }
-}
+};
+
+export const patchLesson = async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        const description = req.body.description;
+
+        const existingLesson: lessons | null = await prisma.lessons.findUnique({
+            where: {
+                id: id
+            }
+        });
+
+        if (!existingLesson) {
+            return res.status(404).json(createErrorResponse(`Lesson with ID '${id}' does not exist.`));
+        }
+
+        const patchedLesson = await prisma.lessons.update({
+            where: {
+                id: id
+            }, data: {
+                description: description,
+                is_completed: true
+            }
+        });
+
+        return res.status(200).json(createSuccessResponse(patchedLesson.id, `Lesson with ID '${patchedLesson.id}' successfully patched.`));
+    } catch (err) {
+        console.error('Error patching lesson', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while patching the lesson. Please try again later.'));
+
+    }
+};
 
 export const deleteLessonsSeries = async (req: Request, res: Response) => {
     try {
@@ -144,35 +176,4 @@ export const deleteLessonsSeries = async (req: Request, res: Response) => {
         console.error('Error deleting lessons series', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while deleting the lessons series. Please try again later.'));
     }
-}
-
-export const patchLesson = async (req: Request, res: Response) => {
-    try {
-        const id = Number(req.params.id);
-        const description = req.body.description;
-
-        const existingLesson: lessons | null = await prisma.lessons.findUnique({
-            where: {
-                id: id
-            }
-        });
-
-        if (!existingLesson) {
-            return res.status(404).json(createErrorResponse(`Lesson with ID '${id}' does not exist.`));
-        }
-
-        const patchedLesson = await prisma.lessons.update({
-            where: {
-                id: id
-            }, data: {
-                description: description
-            }
-        });
-
-        return res.status(200).json(createSuccessResponse(patchedLesson.id, `Lesson with ID '${patchedLesson.id}' successfully patched.`));
-    } catch (err) {
-        console.error('Error patching lesson', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while patching the lesson. Please try again later.'));
-
-    }
-}
+};
