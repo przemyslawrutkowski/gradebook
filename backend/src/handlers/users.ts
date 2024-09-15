@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import LoginCredentialsI from "../interfaces/loginCredentials.js";
-import RegisterCredentialsI from '../interfaces/registerCredentials.js';
+import LoginCredentials from "../interfaces/loginCredentials.js";
+import RegisterCredentials from '../interfaces/registerCredentials.js';
 import prisma from '../db.js';
 import { students, teachers, parents, administrators } from '@prisma/client';
 import { comparePasswords, generateJWT, hashPassword } from '../modules/auth';
@@ -11,7 +11,7 @@ import { SMTP_USER, SMTP_PASS } from '../modules/validateEnv.js';
 
 export const signIn = async (req: Request, res: Response) => {
     try {
-        const credentials: LoginCredentialsI = {
+        const credentials: LoginCredentials = {
             email: req.body.email,
             password: req.body.password
         };
@@ -66,7 +66,7 @@ export const signIn = async (req: Request, res: Response) => {
 
         const jwt = generateJWT(authUser);
 
-        return res.status(200).json(createSuccessResponse(jwt, 'User signed in successfully.'));
+        return res.status(200).json(createSuccessResponse(jwt, 'Signed in successfully.'));
     } catch (err) {
         console.error('Error signing in', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while signing in. Please try again later.'));
@@ -75,7 +75,7 @@ export const signIn = async (req: Request, res: Response) => {
 
 export const signUp = async (req: Request, res: Response, targetGroup: 'students' | 'teachers' | 'parents' | 'administrators') => {
     try {
-        const credentials: RegisterCredentialsI = {
+        const credentials: RegisterCredentials = {
             pesel: req.body.pesel,
             email: req.body.email,
             phoneNumber: req.body.phoneNumber,
@@ -120,7 +120,7 @@ export const signUp = async (req: Request, res: Response, targetGroup: 'students
 
 
         if (existingUsers.length > 0) {
-            return res.status(409).json(createErrorResponse('User with specified details already exists.'));
+            return res.status(409).json(createErrorResponse('User already exists.'));
         }
 
         const hashedPassword = await hashPassword(credentials.password);
@@ -151,7 +151,7 @@ export const signUp = async (req: Request, res: Response, targetGroup: 'students
                 break;
         }
 
-        return res.status(200).json(createSuccessResponse(createdUser.id, 'User signed up successfully.'));
+        return res.status(200).json(createSuccessResponse(createdUser.id, 'Signed up successfully.'));
     } catch (err) {
         console.error('Error signing up', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while signing up. Please try again later.'));
@@ -160,7 +160,7 @@ export const signUp = async (req: Request, res: Response, targetGroup: 'students
 
 export const forgotPassword = async (req: Request, res: Response) => {
     try {
-        const email = req.body.email;
+        const email: string = req.body.email;
 
         const criteria = {
             where: {
@@ -258,18 +258,18 @@ export const forgotPassword = async (req: Request, res: Response) => {
         });
     } catch (err) {
         console.error('Error recovering password', err);
-        res.status(500).json('An unexpected error occurred while recovering the password. Please try again later.');
+        res.status(500).json('An unexpected error occurred while recovering password. Please try again later.');
     }
 }
 
 export const resetPassword = async (req: Request, res: Response) => {
     try {
-        const payload: AuthUser = req.body.payload;
-        const password = req.body.password;
+        const user: AuthUser = req.user as AuthUser;
+        const password: string = req.body.password;
 
         const criteria = {
             where: {
-                email: payload.email
+                email: user.email
             }
         }
 
@@ -288,14 +288,14 @@ export const resetPassword = async (req: Request, res: Response) => {
         }
 
         if (!existingUser || !existingUser.reset_password_expires || existingUser.reset_password_expires < new Date()) {
-            return res.status(400).json(createErrorResponse('Password reset token is invalid or has expired.'));
+            return res.status(400).json(createErrorResponse('Invalid or expired token.'));
         }
 
         const hashedPassword = await hashPassword(password);
 
         const dataToUpdate = {
             where: {
-                email: payload.email
+                email: user.email
             },
             data: {
                 password: hashedPassword,
@@ -305,7 +305,7 @@ export const resetPassword = async (req: Request, res: Response) => {
         };
 
         let updatedUser: students | teachers | parents | administrators;
-        switch (payload.role) {
+        switch (user.role) {
             case 'student':
                 updatedUser = await prisma.students.update(dataToUpdate);
                 break;
@@ -320,10 +320,10 @@ export const resetPassword = async (req: Request, res: Response) => {
                 break;
         }
 
-        return res.status(200).json(createSuccessResponse(updatedUser.id, `Successful password reset for user with ID '${updatedUser.id}'.`))
+        return res.status(200).json(createSuccessResponse(updatedUser.id, `Password reset successfully.`))
 
     } catch (err) {
         console.error('Error resetting password', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while resetting the password. Please try again later.'));
+        res.status(500).json(createErrorResponse('An unexpected error occurred while resetting password. Please try again later.'));
     }
 }

@@ -1,23 +1,27 @@
 import { body } from 'express-validator';
+import { createIntValidation, createNotEmptyValidation } from './validationUtils';
 
-// Discuss the validation rules
+const classIdValidation = createIntValidation('classId', 'param');
+const studentIdValidation = createIntValidation('studentId');
+const nameValidation = createNotEmptyValidation('name');
+const yearbookValidation = createNotEmptyValidation('yearbook');
 
-export const classCreationValidationRules = () => {
-    return [
-        body('name').notEmpty().withMessage('Name is required.'),
-        body('yearbook').notEmpty().withMessage('Yearbook is required.')
-    ];
-}
+export const validateCreateClass = () => [
+    nameValidation,
+    yearbookValidation
+];
 
-export const studentIdValidationRule = () => {
-    return [
-        body('studentId').notEmpty().withMessage('Student id is required.')
-    ]
-}
+export const validateAssignStudent = () => [
+    classIdValidation,
+    studentIdValidation
+];
 
-export const classPatchValidationRules = () => {
-    return [
-        body('name').if(body('yearbook').isEmpty()).notEmpty().withMessage('Class name is required.'),
-        body('yearbook').if(body('name').isEmpty()).notEmpty().withMessage('Yearbook is required.')
-    ]
-}
+export const validateClassUpdate = () => [
+    classIdValidation,
+    nameValidation.if(body('yearbook').isEmpty()),
+    yearbookValidation.if(body('name').isEmpty())
+];
+
+export const validateClassId = () => [
+    classIdValidation
+];

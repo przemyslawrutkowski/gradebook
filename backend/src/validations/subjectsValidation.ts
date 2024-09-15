@@ -1,7 +1,9 @@
-import { body } from "express-validator";
+import { createNotEmptyValidation, createIntValidation } from './validationUtils';
 
-export const subjectNameValidationRule = () => {
-    return [
-        body('name').notEmpty().withMessage('Name is required.')
-    ];
-}
+export const validateSubjectName = () => [
+    createNotEmptyValidation('name')
+];
+
+export const validateSubjectId = () => [
+    createIntValidation('subjectId', 'param')
+];

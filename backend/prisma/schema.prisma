@@ -16,8 +16,9 @@ model attendances {
   students    students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attendances_ibfk_1")
   lessons     lessons  @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attendances_ibfk_2")
 
-  @@index([lesson_id], map: "lesson_id")
+  @@unique([student_id, lesson_id], map: "student_lesson_ids")
   @@index([student_id], map: "student_id")
+  @@index([lesson_id], map: "lesson_id")
 }
 
 model badges {
@@ -98,27 +99,24 @@ model homeworks {
 }
 
 model lessons {
-  id             Int            @id @default(autoincrement())
-  description    String?        @db.VarChar(255)
-  date           DateTime       @db.Date
-  start_time     DateTime       @db.Time(0)
-  end_time       DateTime       @db.Time(0)
-  is_completed   Boolean        @default(dbgenerated("b'0'")) @db.Bit(1)
-  series_id      Int
-  teacher_id     Int
-  class_id       Int
-  subject_id     Int
-  attendances    attendances[]
-  homeworks      homeworks[]
-  lessons_series lessons_series @relation(fields: [series_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_1")
-  teachers       teachers       @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_2")
-  classes        classes        @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_3")
-  subjects       subjects       @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_4")
+  id           Int           @id @default(autoincrement())
+  description  String?       @db.VarChar(255)
+  teacher_id   Int
+  class_id     Int
+  subject_id   Int
+  date         DateTime      @db.Date
+  end_time     DateTime      @db.Time(0)
+  start_time   DateTime      @db.Time(0)
+  is_completed Boolean       @default(dbgenerated("b'0'")) @db.Bit(1)
+  attendances  attendances[]
+  homeworks    homeworks[]
+  teachers     teachers      @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_2")
+  classes      classes       @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_3")
+  subjects     subjects      @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_4")
 
   @@index([class_id], map: "class_id")
   @@index([subject_id], map: "subject_id")
   @@index([teacher_id], map: "teacher_id")
-  @@index([series_id], map: "series_id")
 }
 
 model messages {
@@ -146,8 +144,8 @@ model parents {
   password               String             @db.VarChar(255)
   first_name             String             @db.VarChar(255)
   last_name              String             @db.VarChar(255)
-  reset_password_token   String?            @unique(map: "reset_password_token") @db.VarChar(256)
   reset_password_expires DateTime?          @db.Timestamp(0)
+  reset_password_token   String?            @unique(map: "reset_password_token") @db.VarChar(256)
   students_parents       students_parents[]
 }
 
@@ -216,9 +214,9 @@ model students {
   password               String              @db.VarChar(255)
   first_name             String              @db.VarChar(255)
   last_name              String              @db.VarChar(255)
-  reset_password_token   String?             @unique(map: "reset_password_token") @db.VarChar(256)
-  reset_password_expires DateTime?           @db.Timestamp(0)
   class_id               Int?
+  reset_password_expires DateTime?           @db.Timestamp(0)
+  reset_password_token   String?             @unique(map: "reset_password_token") @db.VarChar(256)
   attendances            attendances[]
   badges_history         badges_history[]
   grades_gradebook       grades_gradebook[]
@@ -305,8 +303,8 @@ model teachers {
   password               String              @db.VarChar(255)
   first_name             String              @db.VarChar(255)
   last_name              String              @db.VarChar(255)
-  reset_password_token   String?             @unique(map: "reset_password_token") @db.VarChar(256)
   reset_password_expires DateTime?           @db.Timestamp(0)
+  reset_password_token   String?             @unique(map: "reset_password_token") @db.VarChar(256)
   classes                classes[]
   grades_gradebook       grades_gradebook[]
   homeworks              homeworks[]
@@ -347,13 +345,6 @@ model administrators {
   password               String    @db.VarChar(255)
   first_name             String    @db.VarChar(255)
   last_name              String    @db.VarChar(255)
-  reset_password_token   String?   @unique(map: "reset_password_token") @db.VarChar(256)
   reset_password_expires DateTime? @db.Timestamp(0)
-}
-
-model lessons_series {
-  id        Int       @id @default(autoincrement())
-  key       String    @db.VarChar(255)
-  date_time DateTime  @default(dbgenerated("(now())")) @db.Timestamp(0)
-  lessons   lessons[]
+  reset_password_token   String?   @unique(map: "reset_password_token") @db.VarChar(256)
 }

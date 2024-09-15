@@ -1,8 +1,15 @@
-import { body } from "express-validator";
+import { createIntValidation } from "./validationUtils";
 
-export const studentAndParentIdsValidationRules = () => {
+export const validateAssignParentToStudent = () => {
     return [
-        body('studentId').notEmpty().withMessage('Student id is required.'),
-        body('parentId').notEmpty().withMessage('Parent id is required.')
+        createIntValidation('studentId'),
+        createIntValidation('parentId')
+    ];
+}
+
+export const validateUnassignParentFromStudent = () => {
+    return [
+        createIntValidation('studentId', 'param'),
+        createIntValidation('studentId', 'param'),
     ];
 }

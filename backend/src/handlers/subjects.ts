@@ -5,7 +5,7 @@ import { createSuccessResponse, createErrorResponse } from '../interfaces/respon
 
 export const createSubject = async (req: Request, res: Response) => {
     try {
-        const name = req.body.name;
+        const name: string = req.body.name;
 
         const existingSubject: subjects | null = await prisma.subjects.findUnique({
             where: {
@@ -14,7 +14,7 @@ export const createSubject = async (req: Request, res: Response) => {
         });
 
         if (existingSubject) {
-            return res.status(409).json(createErrorResponse(`Subject with the name '${name}' already exists.`));
+            return res.status(409).json(createErrorResponse(`Subject already exists.`));
         }
 
         const createdSubject = await prisma.subjects.create({
@@ -23,10 +23,10 @@ export const createSubject = async (req: Request, res: Response) => {
             }
         });
 
-        return res.status(200).json(createSuccessResponse(createdSubject.id, `Subject '${name}' created successfully with ID ${createdSubject.id}.`));
+        return res.status(200).json(createSuccessResponse(createdSubject.id, `Subject created successfully.`));
     } catch (err) {
         console.error('Error creating subject', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while creating the subject. Please try again later.'));
+        res.status(500).json(createErrorResponse('An unexpected error occurred while creating subject. Please try again later.'));
     }
 }
 
@@ -40,9 +40,10 @@ export const getSubjects = async (req: Request, res: Response) => {
     }
 }
 
-export const deleteSubject = async (req: Request, res: Response) => {
+export const updateSubject = async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params.id);
+        const id = Number(req.params.subjectId);
+        const name: string = req.body.name;
 
         const existingSubject: subjects | null = await prisma.subjects.findUnique({
             where: {
@@ -51,38 +52,10 @@ export const deleteSubject = async (req: Request, res: Response) => {
         });
 
         if (!existingSubject) {
-            return res.status(404).json(createErrorResponse(`Subject with ID '${id}' does not exist.`));
+            return res.status(404).json(createErrorResponse(`Subject does not exist.`));
         }
 
-        const deletedSubject = await prisma.subjects.delete({
-            where: {
-                id: id
-            }
-        });
-
-        return res.status(200).json(createSuccessResponse(deletedSubject.id, `Subject with ID '${deletedSubject.id}' successfully deleted.`));
-    } catch (err) {
-        console.error('Error deleting subject', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while deleting the subject. Please try again later.'));
-    }
-}
-
-export const patchSubject = async (req: Request, res: Response) => {
-    try {
-        const id = Number(req.params.id);
-        const name = req.body.name;
-
-        const existingSubject: subjects | null = await prisma.subjects.findUnique({
-            where: {
-                id: id
-            }
-        });
-
-        if (!existingSubject) {
-            return res.status(404).json(createErrorResponse(`Subject with ID '${id}' does not exist.`));
-        }
-
-        const patchedSubject = await prisma.subjects.update({
+        const updatedSubject = await prisma.subjects.update({
             where: {
                 id: id
             },
@@ -91,9 +64,36 @@ export const patchSubject = async (req: Request, res: Response) => {
             }
         });
 
-        return res.status(200).json(createSuccessResponse(patchedSubject.id, `Subject with ID '${patchedSubject.id}' successfully patched.`));
+        return res.status(200).json(createSuccessResponse(updatedSubject.id, `Subject successfully updated.`));
     } catch (err) {
-        console.error('Error patching subject', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while patching the subject. Please try again later.'));
+        console.error('Error updating subject', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while updating subject. Please try again later.'));
+    }
+}
+
+export const deleteSubject = async (req: Request, res: Response) => {
+    try {
+        const id = Number(req.params.subjectId);
+
+        const existingSubject: subjects | null = await prisma.subjects.findUnique({
+            where: {
+                id: id
+            }
+        });
+
+        if (!existingSubject) {
+            return res.status(404).json(createErrorResponse(`Subject does not exist.`));
+        }
+
+        const deletedSubject = await prisma.subjects.delete({
+            where: {
+                id: id
+            }
+        });
+
+        return res.status(200).json(createSuccessResponse(deletedSubject.id, `Subject deleted successfully.`));
+    } catch (err) {
+        console.error('Error deleting subject', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while deleting subject. Please try again later.'));
     }
 }

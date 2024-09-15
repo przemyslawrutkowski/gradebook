@@ -1,4 +1,4 @@
-export default interface AuthUserI {
+export default interface AuthUser {
     email: string;
     firstName: string;
     lastName: string;

@@ -1,17 +1,15 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { handleInputErrors } from '../modules/middleware.js';
-import { subjectNameValidationRule } from '../validations/subjectsValidation.js';
-import { createSubject, getSubjects, patchSubject, deleteSubject } from '../handlers/subjects.js';
+import { validateSubjectName, validateSubjectId } from '../validations/subjectsValidation.js';
+import { createSubject, getSubjects, updateSubject, deleteSubject } from '../handlers/subjects.js';
 
 const subjectsRouter = Router();
-
-//create, read, update, delete
 
 subjectsRouter.post('',
     authenticate,
     authorize(['administrator']),
-    subjectNameValidationRule(),
+    validateSubjectName(),
     handleInputErrors,
     createSubject
 )
@@ -22,20 +20,21 @@ subjectsRouter.get('',
     getSubjects
 )
 
-subjectsRouter.patch('/:id',
+subjectsRouter.patch('/:subjectId',
     authenticate,
     authorize(['administrator']),
-    subjectNameValidationRule(),
+    validateSubjectId(),
+    validateSubjectName(),
     handleInputErrors,
-    patchSubject
+    updateSubject
 )
 
-subjectsRouter.delete('/:id',
+subjectsRouter.delete('/:subjectId',
     authenticate,
     authorize(['administrator']),
+    validateSubjectId(),
+    handleInputErrors,
     deleteSubject
 )
-
-
 
 export default subjectsRouter;

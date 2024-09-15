@@ -15,7 +15,7 @@ export const assignParentToStudent = async (req: Request, res: Response) => {
         });
 
         if (!existingStudent) {
-            return res.status(404).json(createErrorResponse(`Student with ID '${studentId}' does not exist.`));
+            return res.status(404).json(createErrorResponse(`Student does not exist.`));
         }
 
         const existingParent: parents | null = await prisma.parents.findUnique({
@@ -25,7 +25,7 @@ export const assignParentToStudent = async (req: Request, res: Response) => {
         });
 
         if (!existingParent) {
-            return res.status(404).json(createErrorResponse(`Parent with ID '${parentId}' does not exist.`));
+            return res.status(404).json(createErrorResponse(`Parent does not exist.`));
         }
 
         const existingEntry: students_parents | null = await prisma.students_parents.findUnique({
@@ -38,7 +38,7 @@ export const assignParentToStudent = async (req: Request, res: Response) => {
         });
 
         if (existingEntry) {
-            return res.status(409).json(createErrorResponse(`Parent with ID '${parentId}' is already assigned to student with ID '${studentId}'.`));
+            return res.status(409).json(createErrorResponse(`Parent already assigned to student.`));
         }
 
         const createdBond = await prisma.students_parents.create({
@@ -48,17 +48,17 @@ export const assignParentToStudent = async (req: Request, res: Response) => {
             }
         });
 
-        return res.status(200).json(createSuccessResponse(createdBond, `Parent with ID '${parentId}' successfully assigned to student with ID '${studentId}'.`));
+        return res.status(200).json(createSuccessResponse(createdBond, `Parent assigned to student successfully.`));
     } catch (err) {
         console.error('Error assigning parent to student', err);
-        return res.status(500).json(createErrorResponse('An unexpected error occurred while assigning the parent to the student. Please try again later.'));
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while assigning parent to student. Please try again later.'));
     }
 };
 
 export const unassignParentFromStudent = async (req: Request, res: Response) => {
     try {
-        const studentId = Number(req.body.studentId);
-        const parentId = Number(req.body.parentId);
+        const studentId = Number(req.params.studentId);
+        const parentId = Number(req.params.parentId);
 
         const criteria = {
             where: {
@@ -72,14 +72,14 @@ export const unassignParentFromStudent = async (req: Request, res: Response) => 
         const existingEntry: students_parents | null = await prisma.students_parents.findUnique(criteria);
 
         if (!existingEntry) {
-            return res.status(404).json(createErrorResponse(`No relationship found between student with ID '${studentId}' and parent with ID '${parentId}'.`));
+            return res.status(404).json(createErrorResponse(`Relationship not found.`));
         }
 
         const removedBond = await prisma.students_parents.delete(criteria);
 
-        return res.status(200).json(createSuccessResponse(removedBond, `Parent with ID '${parentId}' successfully unassigned from student with ID '${studentId}'.`));
+        return res.status(200).json(createSuccessResponse(removedBond, `Parent unassigned from student successfully.`));
     } catch (err) {
         console.error('Error unassigning parent from student', err);
-        return res.status(500).json(createErrorResponse('An unexpected error occurred while unassigning the parent from the student. Please try again later.'));
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while unassigning parent from student. Please try again later.'));
     }
 };

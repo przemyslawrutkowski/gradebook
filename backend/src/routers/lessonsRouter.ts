@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { lessonsGenerationValidationRules, lessonPatchValidationRule } from '../validations/lessonsValidation.js';
-import { generateLessons, deleteLessonsSeries, patchLesson } from '../handlers/lessons.js';
+import { validateGenerateLessons, validateUpdateLesson } from '../validations/lessonsValidation.js';
+import { generateLessons, deleteLessons, updateLesson } from '../handlers/lessons.js';
 import { handleInputErrors } from '../modules/middleware.js';
 
 const lessonsRouter = Router();
@@ -9,28 +9,31 @@ const lessonsRouter = Router();
 lessonsRouter.post('',
     authenticate,
     authorize(['administrator']),
-    lessonsGenerationValidationRules(),
+    validateGenerateLessons(),
     handleInputErrors,
     generateLessons
 )
 
-/*
-The idea: the teacher starts a lesson, in order to finish it he has to enter a description of the lesson.
-After confirming the termination operation - in the database the lesson record is updated 
-*/
-
-lessonsRouter.patch('/:id',
+lessonsRouter.get('/:classId/:subjectId',
     authenticate,
-    authorize(['administrator', 'teacher']),
-    lessonPatchValidationRule(),
+    authorize(['administrator', 'teacher', 'parent', 'student']),
+    validateUpdateLesson(),
     handleInputErrors,
-    patchLesson
+    updateLesson
 )
 
-lessonsRouter.delete('/:id',
+lessonsRouter.patch('/:lessonId',
+    authenticate,
+    authorize(['administrator', 'teacher']),
+    validateUpdateLesson(),
+    handleInputErrors,
+    updateLesson
+)
+
+lessonsRouter.delete('/:classId/:subjectId',
     authenticate,
     authorize(['administrator']),
-    deleteLessonsSeries
+    deleteLessons
 )
 
 export default lessonsRouter;

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { studentAndParentIdsValidationRules } from '../validations/studentsParentsValidation.js';
+import { validateAssignParentToStudent, validateUnassignParentFromStudent } from '../validations/studentsParentsValidation.js';
 import { assignParentToStudent, unassignParentFromStudent } from '../handlers/studentsParents.js';
 import { handleInputErrors } from '../modules/middleware.js';
 
@@ -9,15 +9,15 @@ const studentsParentsRouter = Router();
 studentsParentsRouter.post('/assign-parent',
     authenticate,
     authorize(['administrator']),
-    studentAndParentIdsValidationRules(),
+    validateAssignParentToStudent(),
     handleInputErrors,
     assignParentToStudent
 );
 
-studentsParentsRouter.delete('/unassign-parent',
+studentsParentsRouter.delete('/unassign-parent/:studentId/:parentId',
     authenticate,
     authorize(['administrator']),
-    studentAndParentIdsValidationRules(),
+    validateUnassignParentFromStudent(),
     handleInputErrors,
     unassignParentFromStudent
 );

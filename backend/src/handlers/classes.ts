@@ -5,8 +5,8 @@ import { createSuccessResponse, createErrorResponse } from '../interfaces/respon
 
 export const createClass = async (req: Request, res: Response) => {
     try {
-        const name = req.body.name;
-        const yearbook = req.body.yearbook;
+        const name: string = req.body.name;
+        const yearbook: string = req.body.yearbook;
 
         const existingClass: classes | null = await prisma.classes.findFirst({
             where: {
@@ -16,7 +16,7 @@ export const createClass = async (req: Request, res: Response) => {
         });
 
         if (existingClass) {
-            return res.status(409).json(createErrorResponse(`Class with the name '${name}' and yearbook '${yearbook}' already exists.`));
+            return res.status(409).json(createErrorResponse(`Class already exists.`));
         }
 
         const createdClass = await prisma.classes.create({
@@ -26,10 +26,10 @@ export const createClass = async (req: Request, res: Response) => {
             }
         });
 
-        return res.status(200).json(createSuccessResponse(createdClass.id, `Class '${name}' for yearbook '${yearbook}' created successfully with ID ${createdClass.id}.`));
+        return res.status(200).json(createSuccessResponse(createdClass.id, `Class created successfully.`));
     } catch (err) {
         console.error('Error creating class', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while creating the class. Please try again later.'));
+        res.status(500).json(createErrorResponse('An unexpected error occurred while creating class. Please try again later.'));
     }
 };
 
@@ -45,7 +45,7 @@ export const getClasses = async (req: Request, res: Response) => {
 
 export const getStudents = async (req: Request, res: Response) => {
     try {
-        const classId = Number(req.params.id);
+        const classId = Number(req.params.classId);
 
         const existingClass: classes | null = await prisma.classes.findUnique({
             where: {
@@ -54,7 +54,7 @@ export const getStudents = async (req: Request, res: Response) => {
         });
 
         if (!existingClass) {
-            return res.status(404).json(createErrorResponse(`Class with ID '${classId}' does not exist.`));
+            return res.status(404).json(createErrorResponse(`Class does not exist.`));
         }
 
         const students = await prisma.students.findMany({
@@ -63,18 +63,18 @@ export const getStudents = async (req: Request, res: Response) => {
             }
         });
 
-        return res.status(200).json(createSuccessResponse(students, `Successfully fetched students from class with ID '${classId}'.`));
+        return res.status(200).json(createSuccessResponse(students, `Students retrieved successfully.`));
     } catch (err) {
-        console.error('Error getting students', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while getting the students. Please try again later.'));
+        console.error('Error retrieving students', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving students. Please try again later.'));
     }
 };
 
-export const patchClass = async (req: Request, res: Response) => {
+export const updateClass = async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params.id);
-        const name = req.body.name;
-        const yearbook = req.body.yearbook;
+        const id = Number(req.params.classId);
+        const name: string = req.body.name;
+        const yearbook: string = req.body.yearbook;
 
         const existingClass: classes | null = await prisma.classes.findUnique({
             where: {
@@ -83,32 +83,25 @@ export const patchClass = async (req: Request, res: Response) => {
         });
 
         if (!existingClass) {
-            return res.status(404).json(createErrorResponse(`Class with ID '${id}' does not exist.`));
+            return res.status(404).json(createErrorResponse(`Class does not exist.`));
         }
 
         const data: { name?: string, yearbook?: string } = {};
-        const updatedFields: string[] = [];
 
-        if (name) {
-            data.name = name;
-            updatedFields.push(`name: '${name}'`);
-        }
-        if (yearbook) {
-            data.yearbook = yearbook;
-            updatedFields.push(`yearbook: '${yearbook}'`);
-        }
+        if (name) data.name = name;
+        if (yearbook) data.yearbook = yearbook;
 
-        const patchedClass = await prisma.classes.update({
+        const updatedClass = await prisma.classes.update({
             where: {
                 id: id
             },
             data: data
         });
 
-        return res.status(200).json(createSuccessResponse(patchedClass.id, `Class with ID '${patchedClass.id}' successfully patched. Patched fields: ${updatedFields.join(', ')}.`));
+        return res.status(200).json(createSuccessResponse(updatedClass.id, `Class updated successfully.`));
     } catch (err) {
-        console.error('Error patching class', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while patching the class. Please try again later.'));
+        console.error('Error updating class', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while updating class. Please try again later.'));
     }
 };
 
@@ -124,7 +117,7 @@ export const assignStudent = async (req: Request, res: Response) => {
         });
 
         if (!existingClass) {
-            return res.status(404).json(createErrorResponse(`Class with ID '${classId}' does not exist.`));
+            return res.status(404).json(createErrorResponse(`Class does not exist.`));
         }
 
         const existingStudent: students | null = await prisma.students.findUnique({
@@ -134,28 +127,28 @@ export const assignStudent = async (req: Request, res: Response) => {
         });
 
         if (!existingStudent) {
-            return res.status(404).json(createErrorResponse(`Student with ID '${studentId}' does not exist.`));
+            return res.status(404).json(createErrorResponse(`Student does not exist.`));
         }
 
-        const patchedStudent = await prisma.students.update({
+        const updatedStudent = await prisma.students.update({
             where: {
                 id: studentId
             },
             data: {
                 class_id: classId
-            },
+            }
         });
 
-        return res.status(200).json(createSuccessResponse(patchedStudent.id, `Student with ID '${studentId}' successfully assigned to class with ID '${classId}'.`));
+        return res.status(200).json(createSuccessResponse(updatedStudent.id, `Student assigned to class successfully.`));
     } catch (err) {
         console.error('Error assigning student to class', err);
-        return res.status(500).json(createErrorResponse('An unexpected error occurred while assigning the student to the class. Please try again later.'));
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while assigning student to class. Please try again later.'));
     }
 };
 
 export const deleteClass = async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params.id);
+        const id = Number(req.params.classId);
 
         const existingClass: classes | null = await prisma.classes.findUnique({
             where: {
@@ -164,7 +157,7 @@ export const deleteClass = async (req: Request, res: Response) => {
         });
 
         if (!existingClass) {
-            return res.status(404).json(createErrorResponse(`Class with ID '${id}' does not exist.`));
+            return res.status(404).json(createErrorResponse(`Class does not exist.`));
         }
 
         const deletedClass = await prisma.classes.delete({
@@ -173,9 +166,9 @@ export const deleteClass = async (req: Request, res: Response) => {
             }
         });
 
-        return res.status(200).json(createSuccessResponse(deletedClass.id, `Class with ID '${deletedClass.id}' successfully deleted.`));
+        return res.status(200).json(createSuccessResponse(deletedClass.id, `Class deleted successfully.`));
     } catch (err) {
         console.error('Error deleting class', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while deleting the class. Please try again later.'));
+        res.status(500).json(createErrorResponse('An unexpected error occurred while deleting class. Please try again later.'));
     }
 };

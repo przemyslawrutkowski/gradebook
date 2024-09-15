@@ -30,7 +30,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
         }
 
         const payload = jwt.verify(token, SECRET_KEY);
-        req.body.payload = payload;
+        req.user = payload as AuthUser;
         next();
     } catch (err) {
         console.error(err);
@@ -40,9 +40,9 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
 
 export const authorize = (roles: string[]) => {
     return (req: Request, res: Response, next: NextFunction) => {
-        const userRole = req.body.payload.role;
-        if (!roles.includes(userRole)) {
-            return res.status(403).json(createErrorResponse('You are not authorized.'));
+        const userRole = req.user?.role;
+        if (!userRole || !roles.includes(userRole)) {
+            return res.status(403).json(createErrorResponse('Not authorized.'));
         }
         next();
     }

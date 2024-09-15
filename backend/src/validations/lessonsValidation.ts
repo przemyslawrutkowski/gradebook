@@ -1,22 +1,24 @@
-import { body } from "express-validator";
+import { createDateValidation, createNotEmptyValidation, createArrayValidation, createIntValidation, createTimeValidation } from './validationUtils';
 
-export const lessonsGenerationValidationRules = () => {
-    return [
-        body('startDate').isDate().withMessage('Start date must be a valid date in UTC format.'),
-        body('endDate').isDate().withMessage('End date must be a valid date in UTC format.'),
-        body('teacherId').notEmpty().withMessage('Teacher id is required.'),
-        body('classId').notEmpty().withMessage('Class id is required.'),
-        body('subjectId').notEmpty().withMessage('Subject id is required.'),
-        body('lessonSchedules').isArray({ min: 1 }).withMessage('Lesson schedules must be a non-empty array.'),
-        body('lessonSchedules.*.dayOfWeek').isInt({ min: 0, max: 6 }).withMessage('Day of week must be an integer between 0 (Sunday) and 6 (Saturday).'),
-        body('lessonSchedules.*.startTime').matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage('Start time must be in HH:MM format.'),
-        body('lessonSchedules.*.endTime').matches(/^([01]\d|2[0-3]):([0-5]\d)$/).withMessage('End time must be in HH:MM format.'),
-        body('lessonSchedules.*.frequency').isInt({ min: 1 }).withMessage('Frequency must be an integer greater than 0.')
-    ];
-}
+export const validateGenerateLessons = () => [
+    createDateValidation('startDate'),
+    createDateValidation('endDate'),
+    createIntValidation('teacherId', 'body'),
+    createIntValidation('classId', 'body'),
+    createIntValidation('subjectId', 'body'),
+    createArrayValidation('lessonSchedules'),
+    createIntValidation('lessonSchedules.*.dayOfWeek', 'body', 0, 6),
+    createTimeValidation('lessonSchedules.*.startTime'),
+    createTimeValidation('lessonSchedules.*.endTime'),
+    createIntValidation('lessonSchedules.*.frequency', 'body', 1)
+];
 
-export const lessonPatchValidationRule = () => {
-    return [
-        body('description').notEmpty().withMessage('Description is required.')
-    ];
-}
+export const validateUpdateLesson = () => [
+    createIntValidation('id', 'param'),
+    createNotEmptyValidation('description')
+];
+
+export const validateDeleteLessons = () => [
+    createIntValidation('classId', 'param'),
+    createIntValidation('subjectId', 'param')
+];

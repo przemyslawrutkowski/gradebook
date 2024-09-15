@@ -5,13 +5,13 @@ import { signUpStudent } from '../handlers/students.js';
 import { signUpTeacher } from '../handlers/teachers.js';
 import { signUpParent } from '../handlers/parents.js';
 import { signUpAdministrator } from '../handlers/administrators.js';
-import { signInValidationRules, signUpValidationRules, forgotPasswordValidationRules, resetPasswordValidationRules } from '../validations/authValidation.js';
+import { validateSignIn, validateSignUp, validateForgotPassword, validateResetPassword } from '../validations/authValidation.js';
 import { handleInputErrors } from '../modules/middleware.js';
 
 const authRouter = Router();
 
 authRouter.post('/signin',
-    signInValidationRules(),
+    validateSignIn(),
     handleInputErrors,
     signIn
 );
@@ -19,7 +19,7 @@ authRouter.post('/signin',
 authRouter.post('/signup/student',
     authenticate,
     authorize(['administrator']),
-    signUpValidationRules(),
+    validateSignUp(),
     handleInputErrors,
     signUpStudent
 );
@@ -27,7 +27,7 @@ authRouter.post('/signup/student',
 authRouter.post('/signup/teacher',
     authenticate,
     authorize(['administrator']),
-    signUpValidationRules(),
+    validateSignUp(),
     handleInputErrors,
     signUpTeacher
 );
@@ -35,7 +35,7 @@ authRouter.post('/signup/teacher',
 authRouter.post('/signup/parent',
     authenticate,
     authorize(['administrator']),
-    signUpValidationRules(),
+    validateSignUp(),
     handleInputErrors,
     signUpParent
 );
@@ -43,23 +43,22 @@ authRouter.post('/signup/parent',
 authRouter.post('/signup/administrator',
     //authenticate,
     //authorize(['administrator']),
-    signUpValidationRules(),
+    validateSignUp(),
     handleInputErrors,
     signUpAdministrator
 );
 
 authRouter.post('/forgot-password',
-    forgotPasswordValidationRules(),
+    validateForgotPassword(),
     handleInputErrors,
     forgotPassword
 )
 
 authRouter.post('/reset-password',
     authenticate,
-    resetPasswordValidationRules(),
+    validateResetPassword(),
     handleInputErrors,
     resetPassword
 )
-
 
 export default authRouter;

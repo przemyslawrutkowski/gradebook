@@ -6,8 +6,8 @@ import LessonSchedule from '../interfaces/lessonSchedule';
 
 export const generateLessons = async (req: Request, res: Response) => {
     try {
-        const startDate = new Date(req.body.startDate);
-        const endDate = new Date(req.body.endDate);
+        const startDate = new Date(req.body.startDate as string);
+        const endDate = new Date(req.body.endDate as string);
 
         const lessonSchedules: LessonSchedule[] = req.body.lessonSchedules;
 
@@ -22,7 +22,7 @@ export const generateLessons = async (req: Request, res: Response) => {
         });
 
         if (!existingTeacher) {
-            return res.status(409).json(createErrorResponse(`Teacher with ID '${teacherId}' does not exist.`));
+            return res.status(409).json(createErrorResponse(`Teacher does not exist.`));
         }
 
         const existingClass: classes | null = await prisma.classes.findUnique({
@@ -32,7 +32,7 @@ export const generateLessons = async (req: Request, res: Response) => {
         });
 
         if (!existingClass) {
-            return res.status(409).json(createErrorResponse(`Class with ID '${classId}' does not exist.`));
+            return res.status(409).json(createErrorResponse(`Class does not exist.`));
         }
 
         const existingSubject: subjects | null = await prisma.classes.findUnique({
@@ -42,15 +42,8 @@ export const generateLessons = async (req: Request, res: Response) => {
         });
 
         if (!existingSubject) {
-            return res.status(409).json(createErrorResponse(`Subject with ID '${subjectId}' does not exist.`));
+            return res.status(409).json(createErrorResponse(`Subject does not exist.`));
         }
-
-        const createdLessonsSeries = await prisma.lessons_series.create({
-            data: {
-                key: `${teacherId}/${classId}/${subjectId}`,
-                date_time: new Date()
-            }
-        });
 
         const dayMilliseconds = 24 * 60 * 60 * 1000;
         const weekMilliseconds = 7 * dayMilliseconds;
@@ -60,7 +53,6 @@ export const generateLessons = async (req: Request, res: Response) => {
             start_time: Date;
             end_time: Date;
             is_completed: boolean;
-            series_id: number;
             teacher_id: number;
             class_id: number;
             subject_id: number;
@@ -91,7 +83,6 @@ export const generateLessons = async (req: Request, res: Response) => {
                         start_time: lessonStartTime,
                         end_time: lessonEndTime,
                         is_completed: false,
-                        series_id: createdLessonsSeries.id,
                         teacher_id: teacherId,
                         class_id: classId,
                         subject_id: subjectId
@@ -106,20 +97,17 @@ export const generateLessons = async (req: Request, res: Response) => {
             data: lessonsToCreate
         });
 
-        res.status(200).json(createSuccessResponse({
-            series: createdLessonsSeries,
-            lessonsCreated: payload.count
-        }, `Series with ID '${createdLessonsSeries.id}' and associated lessons successfully generated.`));
+        res.status(200).json(createSuccessResponse(payload.count, `Lessons generated successfully.`));
     } catch (err) {
         console.error('Error generating lessons', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while generating lessons. Please try again later.'));
     }
 };
 
-export const patchLesson = async (req: Request, res: Response) => {
+export const updateLesson = async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params.id);
-        const description = req.body.description;
+        const id = Number(req.params.lessonId);
+        const description: string = req.body.description;
 
         const existingLesson: lessons | null = await prisma.lessons.findUnique({
             where: {
@@ -128,10 +116,10 @@ export const patchLesson = async (req: Request, res: Response) => {
         });
 
         if (!existingLesson) {
-            return res.status(404).json(createErrorResponse(`Lesson with ID '${id}' does not exist.`));
+            return res.status(404).json(createErrorResponse(`Lesson does not exist.`));
         }
 
-        const patchedLesson = await prisma.lessons.update({
+        const updatedLesson = await prisma.lessons.update({
             where: {
                 id: id
             }, data: {
@@ -140,40 +128,29 @@ export const patchLesson = async (req: Request, res: Response) => {
             }
         });
 
-        return res.status(200).json(createSuccessResponse(patchedLesson.id, `Lesson with ID '${patchedLesson.id}' successfully patched.`));
+        return res.status(200).json(createSuccessResponse(updatedLesson.id, `Lesson updated successfully.`));
     } catch (err) {
-        console.error('Error patching lesson', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while patching the lesson. Please try again later.'));
+        console.error('Error updating lesson', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while updating lesson. Please try again later.'));
 
     }
 };
 
-export const deleteLessonsSeries = async (req: Request, res: Response) => {
+export const deleteLessons = async (req: Request, res: Response) => {
     try {
-        const seriesId = Number(req.params.seriesId);
-
-        const existingSeries = await prisma.lessons_series.findUnique({
-            where: { id: seriesId }
-        });
-
-        if (!existingSeries) {
-            return res.status(404).json(createErrorResponse(`Series with ID '${seriesId}' does not exist.`));
-        }
+        const classId = Number(req.params.classId);
+        const subjectId = Number(req.params.subjectId);
 
         const payload = await prisma.lessons.deleteMany({
-            where: { series_id: seriesId }
+            where: {
+                class_id: classId,
+                subject_id: subjectId,
+            }
         });
 
-        const deletedSeries = await prisma.lessons_series.delete({
-            where: { id: seriesId }
-        });
-
-        res.status(200).json(createSuccessResponse({
-            series: deletedSeries,
-            lessonsDeleted: payload.count
-        }, `Series with ID '${deletedSeries.id}' and associated lessons successfully deleted.`));
+        res.status(200).json(createSuccessResponse(payload.count, `Lessons deleted successfully.`));
     } catch (err) {
-        console.error('Error deleting lessons series', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while deleting the lessons series. Please try again later.'));
+        console.error('Error deleting lessons', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while deleting lessons. Please try again later.'));
     }
 };
