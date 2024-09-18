@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../db';
-import { students, classes } from '@prisma/client';
+import { students, classes, teachers } from '@prisma/client';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces';
 
 export const createClass = async (req: Request, res: Response) => {
@@ -72,13 +72,14 @@ export const getStudents = async (req: Request, res: Response) => {
 
 export const updateClass = async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params.classId);
+        const classId = Number(req.params.classId);
         const name: string = req.body.name;
         const yearbook: string = req.body.yearbook;
+        const teacherId = Number(req.body.teacherId);
 
         const existingClass: classes | null = await prisma.classes.findUnique({
             where: {
-                id: id
+                id: classId
             }
         });
 
@@ -86,14 +87,25 @@ export const updateClass = async (req: Request, res: Response) => {
             return res.status(404).json(createErrorResponse(`Class does not exist.`));
         }
 
-        const data: { name?: string, yearbook?: string } = {};
+        const existingTeacher: teachers | null = await prisma.teachers.findUnique({
+            where: {
+                id: teacherId
+            }
+        });
+
+        if (!existingTeacher) {
+            return res.status(404).json(createErrorResponse(`Teacher does not exist.`));
+        }
+
+        const data: { name?: string, yearbook?: string, teacher_id?: number } = {};
 
         if (name) data.name = name;
         if (yearbook) data.yearbook = yearbook;
+        if (teacherId) data.teacher_id = teacherId;
 
         const updatedClass = await prisma.classes.update({
             where: {
-                id: id
+                id: classId
             },
             data: data
         });

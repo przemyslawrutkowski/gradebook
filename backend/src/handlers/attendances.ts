@@ -22,7 +22,7 @@ export const createAttendances = async (req: Request, res: Response) => {
         console.error('Error creating attendances list', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while creating attendances list. Please try again later.'));
     }
-}
+};
 
 export const getAttendances = async (req: Request, res: Response) => {
     try {
@@ -39,7 +39,7 @@ export const getAttendances = async (req: Request, res: Response) => {
         console.error('Error retrieving attendances', err);
         return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving attendances. Please try again later.'));
     }
-}
+};
 
 export const updateAttendance = async (req: Request, res: Response) => {
     try {
@@ -77,4 +77,4 @@ export const updateAttendance = async (req: Request, res: Response) => {
         console.error('Error updating attendance', err);
         return res.status(500).json(createErrorResponse('An unexpected error occurred while updating attendance. Please try again later.'));
     }
-}
+};
