@@ -3,6 +3,8 @@ import prisma from '../db';
 import { teachers, classes, subjects, lessons } from '@prisma/client';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces';
 import LessonSchedule from '../interfaces/lessonSchedule';
+import { parse as uuidParse } from 'uuid';
+import { Buffer } from 'node:buffer';
 
 export const generateLessons = async (req: Request, res: Response) => {
     try {
@@ -11,13 +13,13 @@ export const generateLessons = async (req: Request, res: Response) => {
 
         const lessonSchedules: LessonSchedule[] = req.body.lessonSchedules;
 
-        const teacherId = Number(req.body.teacherId);
-        const classId = Number(req.body.classId);
-        const subjectId = Number(req.body.subjectId);
+        const teacherId: string = req.body.teacherId;
+        const classId: string = req.body.classId;
+        const subjectId: string = req.body.subjectId;
 
         const existingTeacher: teachers | null = await prisma.teachers.findUnique({
             where: {
-                id: teacherId
+                id: Buffer.from(uuidParse(teacherId))
             }
         });
 
@@ -27,7 +29,7 @@ export const generateLessons = async (req: Request, res: Response) => {
 
         const existingClass: classes | null = await prisma.classes.findUnique({
             where: {
-                id: classId
+                id: Buffer.from(uuidParse(classId))
             }
         });
 
@@ -37,7 +39,7 @@ export const generateLessons = async (req: Request, res: Response) => {
 
         const existingSubject: subjects | null = await prisma.classes.findUnique({
             where: {
-                id: classId
+                id: Buffer.from(uuidParse(classId))
             }
         });
 
@@ -53,9 +55,9 @@ export const generateLessons = async (req: Request, res: Response) => {
             start_time: Date;
             end_time: Date;
             is_completed: boolean;
-            teacher_id: number;
-            class_id: number;
-            subject_id: number;
+            teacher_id: Buffer;
+            class_id: Buffer;
+            subject_id: Buffer;
         }[] = [];
 
         lessonSchedules.forEach((schedule: LessonSchedule) => {
@@ -83,9 +85,9 @@ export const generateLessons = async (req: Request, res: Response) => {
                         start_time: lessonStartTime,
                         end_time: lessonEndTime,
                         is_completed: false,
-                        teacher_id: teacherId,
-                        class_id: classId,
-                        subject_id: subjectId
+                        teacher_id: Buffer.from(uuidParse(teacherId)),
+                        class_id: Buffer.from(uuidParse(classId)),
+                        subject_id: Buffer.from(uuidParse(subjectId))
                     });
                 }
 
@@ -106,12 +108,12 @@ export const generateLessons = async (req: Request, res: Response) => {
 
 export const updateLesson = async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params.lessonId);
+        const id: string = req.params.lessonId;
         const description: string = req.body.description;
 
         const existingLesson: lessons | null = await prisma.lessons.findUnique({
             where: {
-                id: id
+                id: Buffer.from(uuidParse(id))
             }
         });
 
@@ -121,7 +123,7 @@ export const updateLesson = async (req: Request, res: Response) => {
 
         const updatedLesson = await prisma.lessons.update({
             where: {
-                id: id
+                id: Buffer.from(uuidParse(id))
             }, data: {
                 description: description,
                 is_completed: true
@@ -138,13 +140,13 @@ export const updateLesson = async (req: Request, res: Response) => {
 
 export const deleteLessons = async (req: Request, res: Response) => {
     try {
-        const classId = Number(req.params.classId);
-        const subjectId = Number(req.params.subjectId);
+        const classId: string = req.params.classId;
+        const subjectId: string = req.params.subjectId;
 
         const payload = await prisma.lessons.deleteMany({
             where: {
-                class_id: classId,
-                subject_id: subjectId,
+                class_id: Buffer.from(uuidParse(classId)),
+                subject_id: Buffer.from(uuidParse(subjectId)),
             }
         });
 

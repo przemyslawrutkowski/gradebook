@@ -1,5 +1,5 @@
 export default interface Attendance {
     wasPresent: boolean,
-    studentId: number;
-    lessonId: number;
+    studentId: string;
+    lessonId: string;
 }

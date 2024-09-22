@@ -1,4 +1,4 @@
-import { createDateValidation, createNotEmptyValidation, createArrayValidation, createIntValidation, createTimeValidation } from './validationUtils';
+import { createDateValidation, createNotEmptyValidation, createArrayValidation, createIntValidation, createTimeValidation } from '../utils/validationHelpers';
 
 export const validateGenerateLessons = () => [
     createDateValidation('startDate'),

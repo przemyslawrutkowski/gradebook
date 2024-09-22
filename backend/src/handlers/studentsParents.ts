@@ -2,15 +2,17 @@ import { Request, Response } from 'express';
 import prisma from '../db';
 import { students, parents, students_parents } from '@prisma/client';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces';
+import { parse as uuidParse } from 'uuid';
+import { Buffer } from 'node:buffer';
 
 export const assignParentToStudent = async (req: Request, res: Response) => {
     try {
-        const studentId = Number(req.body.studentId);
-        const parentId = Number(req.body.parentId);
+        const studentId: string = req.body.studentId;
+        const parentId: string = req.body.parentId;
 
         const existingStudent: students | null = await prisma.students.findUnique({
             where: {
-                id: studentId
+                id: Buffer.from(uuidParse(studentId))
             }
         });
 
@@ -20,7 +22,7 @@ export const assignParentToStudent = async (req: Request, res: Response) => {
 
         const existingParent: parents | null = await prisma.parents.findUnique({
             where: {
-                id: parentId
+                id: Buffer.from(uuidParse(parentId))
             }
         });
 
@@ -31,8 +33,8 @@ export const assignParentToStudent = async (req: Request, res: Response) => {
         const existingEntry: students_parents | null = await prisma.students_parents.findUnique({
             where: {
                 student_id_parent_id: {
-                    student_id: studentId,
-                    parent_id: parentId
+                    student_id: Buffer.from(uuidParse(studentId)),
+                    parent_id: Buffer.from(uuidParse(parentId))
                 }
             }
         });
@@ -43,8 +45,8 @@ export const assignParentToStudent = async (req: Request, res: Response) => {
 
         const createdBond = await prisma.students_parents.create({
             data: {
-                student_id: studentId,
-                parent_id: parentId
+                student_id: Buffer.from(uuidParse(studentId)),
+                parent_id: Buffer.from(uuidParse(parentId))
             }
         });
 
@@ -57,14 +59,14 @@ export const assignParentToStudent = async (req: Request, res: Response) => {
 
 export const unassignParentFromStudent = async (req: Request, res: Response) => {
     try {
-        const studentId = Number(req.params.studentId);
-        const parentId = Number(req.params.parentId);
+        const studentId: string = req.params.studentId;
+        const parentId: string = req.params.parentId;
 
         const criteria = {
             where: {
                 student_id_parent_id: {
-                    student_id: studentId,
-                    parent_id: parentId
+                    student_id: Buffer.from(uuidParse(studentId)),
+                    parent_id: Buffer.from(uuidParse(parentId))
                 }
             }
         };

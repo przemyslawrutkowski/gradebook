@@ -4,28 +4,27 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_TEST_URL")
 }
 
 model attendances {
-  id          Int      @id @default(autoincrement())
+  id          Bytes    @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   date_time   DateTime @default(dbgenerated("(now())")) @db.Timestamp(0)
   was_present Boolean  @default(dbgenerated("b'0'")) @db.Bit(1)
-  student_id  Int
-  lesson_id   Int
+  student_id  Bytes    @db.Binary(16)
+  lesson_id   Bytes    @db.Binary(16)
   students    students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attendances_ibfk_1")
   lessons     lessons  @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attendances_ibfk_2")
 
-  @@unique([student_id, lesson_id], map: "student_lesson_ids")
-  @@index([student_id], map: "student_id")
+  @@unique([student_id, lesson_id], map: "student_id")
   @@index([lesson_id], map: "lesson_id")
 }
 
 model badges {
-  id                Int               @id @default(autoincrement())
+  id                Bytes             @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   name              String            @db.VarChar(255)
   description       String            @db.VarChar(255)
-  category_id       Int
+  category_id       Bytes             @db.Binary(16)
   badges_categories badges_categories @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "badges_ibfk_1")
   badges_history    badges_history[]
 
@@ -33,16 +32,16 @@ model badges {
 }
 
 model badges_categories {
-  id     Int      @id @default(autoincrement())
+  id     Bytes    @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   name   String   @db.VarChar(255)
   badges badges[]
 }
 
 model badges_history {
-  id           Int      @id @default(autoincrement())
+  id           Bytes    @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   date_awarder DateTime @default(dbgenerated("(now())")) @db.Timestamp(0)
-  student_id   Int
-  badge_id     Int
+  student_id   Bytes    @db.Binary(16)
+  badge_id     Bytes    @db.Binary(16)
   students     students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "badges_history_ibfk_1")
   badges       badges   @relation(fields: [badge_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "badges_history_ibfk_2")
 
@@ -51,10 +50,10 @@ model badges_history {
 }
 
 model classes {
-  id         Int        @id @default(autoincrement())
+  id         Bytes      @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   name       String     @db.VarChar(255)
   yearbook   String     @db.VarChar(255)
-  teacher_id Int?
+  teacher_id Bytes?     @db.Binary(16)
   teachers   teachers?  @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "classes_ibfk_1")
   lessons    lessons[]
   students   students[]
@@ -63,19 +62,19 @@ model classes {
 }
 
 model event_types {
-  id            Int             @id @default(autoincrement())
+  id            Bytes           @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   name          String          @db.VarChar(255)
   school_events school_events[]
 }
 
 model grades_gradebook {
-  id          Int      @id @default(autoincrement())
+  id          Bytes    @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   description String   @db.VarChar(255)
   grade       Int      @db.TinyInt
   date_given  DateTime @default(dbgenerated("(now())")) @db.Timestamp(0)
-  student_id  Int
-  subject_id  Int
-  teacher_id  Int
+  student_id  Bytes    @db.Binary(16)
+  subject_id  Bytes    @db.Binary(16)
+  teacher_id  Bytes    @db.Binary(16)
   students    students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "grades_gradebook_ibfk_1")
   subjects    subjects @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "grades_gradebook_ibfk_2")
   teachers    teachers @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "grades_gradebook_ibfk_3")
@@ -86,11 +85,11 @@ model grades_gradebook {
 }
 
 model homeworks {
-  id          Int      @id @default(autoincrement())
+  id          Bytes    @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   description String   @db.VarChar(255)
   deadline    DateTime @db.Timestamp(0)
-  lesson_id   Int
-  teacher_id  Int
+  lesson_id   Bytes    @db.Binary(16)
+  teacher_id  Bytes    @db.Binary(16)
   lessons     lessons  @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "homeworks_ibfk_1")
   teachers    teachers @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "homeworks_ibfk_2")
 
@@ -99,15 +98,15 @@ model homeworks {
 }
 
 model lessons {
-  id           Int           @id @default(autoincrement())
+  id           Bytes         @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   description  String?       @db.VarChar(255)
-  teacher_id   Int
-  class_id     Int
-  subject_id   Int
   date         DateTime      @db.Date
-  end_time     DateTime      @db.Time(0)
   start_time   DateTime      @db.Time(0)
+  end_time     DateTime      @db.Time(0)
   is_completed Boolean       @default(dbgenerated("b'0'")) @db.Bit(1)
+  teacher_id   Bytes         @db.Binary(16)
+  class_id     Bytes         @db.Binary(16)
+  subject_id   Bytes         @db.Binary(16)
   attendances  attendances[]
   homeworks    homeworks[]
   teachers     teachers      @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_2")
@@ -120,15 +119,15 @@ model lessons {
 }
 
 model messages {
-  id                                                 Int         @id @default(autoincrement())
+  id                                                 Bytes       @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   subject                                            String      @db.VarChar(255)
   content                                            String      @db.VarChar(255)
   date_time                                          DateTime    @default(dbgenerated("(now())")) @db.Timestamp(0)
   was_read                                           Boolean     @default(dbgenerated("b'0'")) @db.Bit(1)
-  sender_id                                          Int
-  sender_type_id                                     Int
-  receiver_id                                        Int
-  receiver_type_id                                   Int
+  sender_id                                          Bytes       @db.Binary(16)
+  sender_type_id                                     Bytes       @db.Binary(16)
+  receiver_id                                        Bytes       @db.Binary(16)
+  receiver_type_id                                   Bytes       @db.Binary(16)
   users_types_messages_sender_type_idTousers_types   users_types @relation("messages_sender_type_idTousers_types", fields: [sender_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "messages_ibfk_1")
   users_types_messages_receiver_type_idTousers_types users_types @relation("messages_receiver_type_idTousers_types", fields: [receiver_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "messages_ibfk_2")
 
@@ -137,32 +136,32 @@ model messages {
 }
 
 model parents {
-  id                     Int                @id @default(autoincrement())
+  id                     Bytes              @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   pesel                  String             @unique(map: "pesel") @db.VarChar(255)
   email                  String             @unique(map: "email") @db.VarChar(255)
   phone_number           String             @unique(map: "phone_number") @db.VarChar(255)
   password               String             @db.VarChar(255)
   first_name             String             @db.VarChar(255)
   last_name              String             @db.VarChar(255)
-  reset_password_expires DateTime?          @db.Timestamp(0)
   reset_password_token   String?            @unique(map: "reset_password_token") @db.VarChar(256)
+  reset_password_expires DateTime?          @db.Timestamp(0)
   students_parents       students_parents[]
 }
 
 model problem_types {
-  id                 Int                  @id @default(autoincrement())
+  id                 Bytes                @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   name               String               @db.VarChar(255)
   problems_gradebook problems_gradebook[]
 }
 
 model problems_gradebook {
-  id                         Int                          @id @default(autoincrement())
+  id                         Bytes                        @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   description                String                       @db.VarChar(255)
   reported_time              DateTime                     @default(dbgenerated("(now())")) @db.Timestamp(0)
-  problem_type_id            Int
-  reporter_id                Int
-  user_type_id               Int
-  status_id                  Int
+  problem_type_id            Bytes                        @db.Binary(16)
+  reporter_id                Bytes                        @db.Binary(16)
+  user_type_id               Bytes                        @db.Binary(16)
+  status_id                  Bytes                        @db.Binary(16)
   problem_types              problem_types                @relation(fields: [problem_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_1")
   users_types                users_types                  @relation(fields: [user_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_2")
   statuses                   statuses                     @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_3")
@@ -174,11 +173,11 @@ model problems_gradebook {
 }
 
 model problems_history_gradebook {
-  id                 Int                @id @default(autoincrement())
+  id                 Bytes              @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   change_description String             @db.VarChar(255)
   change_time        DateTime           @default(dbgenerated("(now())")) @db.Timestamp(0)
-  problem_id         Int
-  status_id          Int
+  problem_id         Bytes              @db.Binary(16)
+  status_id          Bytes              @db.Binary(16)
   problems_gradebook problems_gradebook @relation(fields: [problem_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_history_gradebook_ibfk_1")
   statuses           statuses           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_history_gradebook_ibfk_2")
 
@@ -187,36 +186,36 @@ model problems_history_gradebook {
 }
 
 model school_events {
-  id            Int         @id @default(autoincrement())
+  id            Bytes       @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   name          String      @db.VarChar(255)
   location      String      @db.VarChar(255)
   description   String      @db.VarChar(255)
   start_time    DateTime    @db.Timestamp(0)
   end_time      DateTime    @db.Timestamp(0)
-  event_type_id Int
+  event_type_id Bytes       @db.Binary(16)
   event_types   event_types @relation(fields: [event_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "school_events_ibfk_1")
 
   @@index([event_type_id], map: "event_type_id")
 }
 
 model statuses {
-  id                         Int                          @id @default(autoincrement())
+  id                         Bytes                        @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   name                       String                       @db.VarChar(255)
   problems_gradebook         problems_gradebook[]
   problems_history_gradebook problems_history_gradebook[]
 }
 
 model students {
-  id                     Int                 @id @default(autoincrement())
+  id                     Bytes               @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   pesel                  String              @unique(map: "pesel") @db.VarChar(255)
   email                  String              @unique(map: "email") @db.VarChar(255)
   phone_number           String              @unique(map: "phone_number") @db.VarChar(255)
   password               String              @db.VarChar(255)
   first_name             String              @db.VarChar(255)
   last_name              String              @db.VarChar(255)
-  class_id               Int?
-  reset_password_expires DateTime?           @db.Timestamp(0)
   reset_password_token   String?             @unique(map: "reset_password_token") @db.VarChar(256)
+  reset_password_expires DateTime?           @db.Timestamp(0)
+  class_id               Bytes?              @db.Binary(16)
   attendances            attendances[]
   badges_history         badges_history[]
   grades_gradebook       grades_gradebook[]
@@ -228,8 +227,8 @@ model students {
 }
 
 model students_parents {
-  student_id Int
-  parent_id  Int
+  student_id Bytes    @db.Binary(16)
+  parent_id  Bytes    @db.Binary(16)
   students   students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "students_parents_ibfk_1")
   parents    parents  @relation(fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "students_parents_ibfk_2")
 
@@ -238,7 +237,7 @@ model students_parents {
 }
 
 model subjects {
-  id                Int                 @id @default(autoincrement())
+  id                Bytes               @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   name              String              @unique(map: "name") @db.VarChar(255)
   grades_gradebook  grades_gradebook[]
   lessons           lessons[]
@@ -246,7 +245,7 @@ model subjects {
 }
 
 model surveys {
-  id                Int                 @id @default(autoincrement())
+  id                Bytes               @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   name              String              @db.VarChar(255)
   description       String              @db.VarChar(255)
   start_time        DateTime            @db.Timestamp(0)
@@ -255,19 +254,19 @@ model surveys {
 }
 
 model surveys_possible_responses {
-  id                Int               @id @default(autoincrement())
+  id                Bytes             @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   response          String            @db.VarChar(255)
-  question_id       Int
+  question_id       Bytes             @db.Binary(16)
   surveys_questions surveys_questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "surveys_possible_responses_ibfk_1")
 
   @@index([question_id], map: "question_id")
 }
 
 model surveys_questions {
-  id                         Int                          @id @default(autoincrement())
+  id                         Bytes                        @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   question                   String                       @db.VarChar(255)
-  survey_id                  Int
-  question_type_id           Int
+  survey_id                  Bytes                        @db.Binary(16)
+  question_type_id           Bytes                        @db.Binary(16)
   surveys_possible_responses surveys_possible_responses[]
   surveys                    surveys                      @relation(fields: [survey_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "surveys_questions_ibfk_1")
   surveys_questions_types    surveys_questions_types      @relation(fields: [question_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "surveys_questions_ibfk_2")
@@ -278,16 +277,16 @@ model surveys_questions {
 }
 
 model surveys_questions_types {
-  id                Int                 @id @default(autoincrement())
+  id                Bytes               @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   name              String              @db.VarChar(255)
   surveys_questions surveys_questions[]
 }
 
 model surveys_responses {
-  id                Int               @id @default(autoincrement())
+  id                Bytes             @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   response          String            @db.VarChar(255)
-  student_id        Int
-  question_id       Int
+  student_id        Bytes             @db.Binary(16)
+  question_id       Bytes             @db.Binary(16)
   students          students          @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "surveys_responses_ibfk_1")
   surveys_questions surveys_questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "surveys_responses_ibfk_2")
 
@@ -296,15 +295,15 @@ model surveys_responses {
 }
 
 model teachers {
-  id                     Int                 @id @default(autoincrement())
+  id                     Bytes               @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   pesel                  String              @unique(map: "pesel") @db.VarChar(255)
   email                  String              @unique(map: "email") @db.VarChar(255)
   phone_number           String              @unique(map: "phone_number") @db.VarChar(255)
   password               String              @db.VarChar(255)
   first_name             String              @db.VarChar(255)
   last_name              String              @db.VarChar(255)
-  reset_password_expires DateTime?           @db.Timestamp(0)
   reset_password_token   String?             @unique(map: "reset_password_token") @db.VarChar(256)
+  reset_password_expires DateTime?           @db.Timestamp(0)
   classes                classes[]
   grades_gradebook       grades_gradebook[]
   homeworks              homeworks[]
@@ -313,8 +312,8 @@ model teachers {
 }
 
 model teachers_subjects {
-  teacher_id Int
-  subject_id Int
+  teacher_id Bytes    @db.Binary(16)
+  subject_id Bytes    @db.Binary(16)
   teachers   teachers @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "teachers_subjects_ibfk_1")
   subjects   subjects @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "teachers_subjects_ibfk_2")
 
@@ -323,14 +322,14 @@ model teachers_subjects {
 }
 
 model updates {
-  id           Int      @id @default(autoincrement())
+  id           Bytes    @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   description  String   @db.VarChar(255)
   version      String   @db.VarChar(255)
   release_time DateTime @default(dbgenerated("(now())")) @db.Timestamp(0)
 }
 
 model users_types {
-  id                                              Int                  @id @default(autoincrement())
+  id                                              Bytes                @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   name                                            String               @db.VarChar(255)
   messages_messages_sender_type_idTousers_types   messages[]           @relation("messages_sender_type_idTousers_types")
   messages_messages_receiver_type_idTousers_types messages[]           @relation("messages_receiver_type_idTousers_types")
@@ -338,13 +337,13 @@ model users_types {
 }
 
 model administrators {
-  id                     Int       @id @default(autoincrement())
+  id                     Bytes     @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   pesel                  String    @unique(map: "pesel") @db.VarChar(255)
   email                  String    @unique(map: "email") @db.VarChar(255)
   phone_number           String    @unique(map: "phone_number") @db.VarChar(255)
   password               String    @db.VarChar(255)
   first_name             String    @db.VarChar(255)
   last_name              String    @db.VarChar(255)
-  reset_password_expires DateTime? @db.Timestamp(0)
   reset_password_token   String?   @unique(map: "reset_password_token") @db.VarChar(256)
+  reset_password_expires DateTime? @db.Timestamp(0)
 }

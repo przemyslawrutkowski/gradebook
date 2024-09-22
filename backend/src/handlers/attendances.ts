@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import prisma from '../db';
 import Attendance from '../interfaces/attendance';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces';
+import { parse as uuidParse } from 'uuid';
+import { Buffer } from 'node:buffer';
 
 export const createAttendances = async (req: Request, res: Response) => {
     try {
@@ -11,8 +13,8 @@ export const createAttendances = async (req: Request, res: Response) => {
             data: attendances.map((attendance) => {
                 return {
                     was_present: attendance.wasPresent,
-                    student_id: attendance.studentId,
-                    lesson_id: attendance.lessonId
+                    student_id: Buffer.from(uuidParse(attendance.studentId)),
+                    lesson_id: Buffer.from(uuidParse(attendance.lessonId))
                 };
             })
         });
@@ -26,11 +28,11 @@ export const createAttendances = async (req: Request, res: Response) => {
 
 export const getAttendances = async (req: Request, res: Response) => {
     try {
-        const lessonId = Number(req.params.lessonId);
+        const lessonId: string = req.params.lessonId;
 
         const attendances = await prisma.attendances.findMany({
             where: {
-                lesson_id: lessonId
+                lesson_id: Buffer.from(uuidParse(lessonId))
             }
         });
 
@@ -43,15 +45,15 @@ export const getAttendances = async (req: Request, res: Response) => {
 
 export const updateAttendance = async (req: Request, res: Response) => {
     try {
-        const studentId = Number(req.params.studentId);
-        const lessonId = Number(req.params.lessonId);
+        const studentId: string = req.params.studentId;
+        const lessonId: string = req.params.lessonId;
         const wasPresent: boolean = req.body.wasPresent;
 
         const attendance = await prisma.attendances.findUnique({
             where: {
                 student_id_lesson_id: {
-                    student_id: studentId,
-                    lesson_id: lessonId
+                    student_id: Buffer.from(uuidParse(studentId)),
+                    lesson_id: Buffer.from(uuidParse(lessonId))
                 }
             }
         });
@@ -63,8 +65,8 @@ export const updateAttendance = async (req: Request, res: Response) => {
         const updatedAttendance = await prisma.attendances.update({
             where: {
                 student_id_lesson_id: {
-                    student_id: studentId,
-                    lesson_id: lessonId
+                    student_id: Buffer.from(uuidParse(studentId)),
+                    lesson_id: Buffer.from(uuidParse(lessonId))
                 }
             },
             data: {

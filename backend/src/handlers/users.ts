@@ -8,6 +8,7 @@ import AuthUser from '../interfaces/authUser.js';
 import nodemailer from 'nodemailer';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces.js';
 import { SMTP_USER, SMTP_PASS } from '../modules/validateEnv.js';
+import { stringify as uuidStringify } from 'uuid';
 
 export const signIn = async (req: Request, res: Response) => {
     try {
@@ -151,7 +152,7 @@ export const signUp = async (req: Request, res: Response, targetGroup: 'students
                 break;
         }
 
-        return res.status(200).json(createSuccessResponse(createdUser.id, 'Signed up successfully.'));
+        return res.status(200).json(createSuccessResponse(uuidStringify(createdUser.id), 'Signed up successfully.'));
     } catch (err) {
         console.error('Error signing up', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while signing up. Please try again later.'));

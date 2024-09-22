@@ -1,4 +1,4 @@
-import { createArrayValidation, createBooleanValidation, createIntValidation } from './validationUtils';
+import { createArrayValidation, createBooleanValidation, createIntValidation } from '../utils/validationHelpers';
 
 export const validateCreateAttendances = () => [
     createArrayValidation('attendances'),

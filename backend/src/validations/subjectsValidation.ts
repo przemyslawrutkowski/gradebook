@@ -1,4 +1,4 @@
-import { createNotEmptyValidation, createIntValidation } from './validationUtils';
+import { createNotEmptyValidation, createIntValidation } from '../utils/validationHelpers';
 
 export const validateSubjectName = () => [
     createNotEmptyValidation('name')

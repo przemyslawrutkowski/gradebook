@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import prisma from '../db';
 import { subjects } from '@prisma/client';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces';
+import { parse as uuidParse } from 'uuid';
+import { Buffer } from 'node:buffer';
 
 export const createSubject = async (req: Request, res: Response) => {
     try {
@@ -42,12 +44,12 @@ export const getSubjects = async (req: Request, res: Response) => {
 
 export const updateSubject = async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params.subjectId);
+        const id: string = req.params.subjectId;
         const name: string = req.body.name;
 
         const existingSubject: subjects | null = await prisma.subjects.findUnique({
             where: {
-                id: id
+                id: Buffer.from(uuidParse(id))
             }
         });
 
@@ -57,7 +59,7 @@ export const updateSubject = async (req: Request, res: Response) => {
 
         const updatedSubject = await prisma.subjects.update({
             where: {
-                id: id
+                id: Buffer.from(uuidParse(id))
             },
             data: {
                 name: name
@@ -73,11 +75,11 @@ export const updateSubject = async (req: Request, res: Response) => {
 
 export const deleteSubject = async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params.subjectId);
+        const id: string = req.params.subjectId;
 
         const existingSubject: subjects | null = await prisma.subjects.findUnique({
             where: {
-                id: id
+                id: Buffer.from(uuidParse(id))
             }
         });
 
@@ -87,7 +89,7 @@ export const deleteSubject = async (req: Request, res: Response) => {
 
         const deletedSubject = await prisma.subjects.delete({
             where: {
-                id: id
+                id: Buffer.from(uuidParse(id))
             }
         });
 

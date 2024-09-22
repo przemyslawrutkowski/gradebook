@@ -1,9 +1,9 @@
-import { body, Result, validationResult } from 'express-validator';
-import { createIntValidation, createNotEmptyValidation } from './validationUtils';
+import { body, validationResult } from 'express-validator';
+import { createNotEmptyValidation } from '../utils/validationHelpers';
 
-const classIdValidation = createIntValidation('classId', 'param');
-const studentIdValidation = createIntValidation('studentId');
-const teacherIdValidation = createIntValidation('teacherId');
+const classIdValidation = createNotEmptyValidation('classId', 'param');
+const studentIdValidation = createNotEmptyValidation('studentId');
+const teacherIdValidation = createNotEmptyValidation('teacherId');
 const nameValidation = createNotEmptyValidation('name');
 const yearbookValidation = createNotEmptyValidation('yearbook');
 

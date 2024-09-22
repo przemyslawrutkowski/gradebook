@@ -1,4 +1,4 @@
-import { createIntValidation } from "./validationUtils";
+import { createIntValidation } from "../utils/validationHelpers";
 
 export const validateAssignParentToStudent = () => {
     return [
