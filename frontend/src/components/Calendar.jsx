@@ -31,10 +31,10 @@ const Calendar = () => {
   const todayOffset = 0;
 
   return (
-    <div className='flex flex-col w-fit'>
+    <div className='flex flex-col w-full'>
       <p className="text-textBg-700 font-bold text-2xl mb-6">Calendar</p>
       
-      <div className="flex flex-nowrap gap-4">
+      <div className="flex flex-nowrap sm:gap-4">
         {[-3, -2, -1, 0, 1, 2, 3].map((offset) => {
           const currentDate = getDateWithOffset(offset);
           const currentDayOfWeek = currentDate.getDay();
@@ -44,12 +44,12 @@ const Calendar = () => {
           const isToday = offset === todayOffset;
 
           return (
-            <div key={offset} className="flex flex-col w-9 justify-center items-center gap-2">
+            <div key={offset} className="w-full flex flex-col justify-center items-center gap-2">
               <p className="text-textBg-900 text-sm">{dayName.slice(0, 3)}</p>
               <p
-                className={`h-8 w-8 text-base flex items-center justify-center cursor-pointer
+                className={`w-8 h-8 text-base flex items-center justify-center cursor-pointer
                 ${isSelected ? 'rounded-full bg-primary-500 text-textBg-100 focus:outline-none' : 'text-textBg-700 bg-textBg-100 border-none'}
-                ${isToday && !isSelected ? 'border border-primary-500 focus:outline-none' : 'focus:outline-none'}`}
+                ${isToday && !isSelected ? 'w-8 border border-primary-500 focus:outline-none' : 'focus:outline-none'}`}
                 onClick={() => setSelectedOffset(offset)}
               >
                 {dayNumber}
@@ -59,37 +59,42 @@ const Calendar = () => {
         })}
       </div>
       
-      <div className="mt-8 max-w-sm">
-        <div className="grid grid-rows-[repeat(11,66px)] text-left">
+      <div className="w-full sm:w-full mt-8 max-w-full overflow-x-auto">
+        <div className="grid grid-cols-[auto,1fr] grid-rows-[repeat(11,66px)] w-full">
           {['07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'].map(
             (time, idx) => (
-              <div key={idx} className={`${idx > 0 ? 'border-x border-b' : 'border'} border-textBg-300 relative p-[1px]`}>
-                <span className="text-gray-500 text-xs absolute -left-16">{time}</span>
-                {eventsData
-                  .filter(event => event.dateOffset === selectedOffset)
-                  .filter(event => 
-                    convertTimeToHours(event.startTime) <= convertTimeToHours(time) &&
-                    convertTimeToHours(event.endTime) > convertTimeToHours(time)
-                  )
-                  .map((event, eventIdx) => {
-                    const eventStart = convertTimeToHours(event.startTime);
-                    const eventEnd = convertTimeToHours(event.endTime);
-                    const eventDuration = (eventEnd - eventStart) * 2;
+              <>
+                <div key={`time-${idx}`} className="flex justify-end pr-2 sm:pr-4 text-gray-500 text-xs">
+                  {time}
+                </div>
+                
+                <div key={`event-${idx}`} className={`relative p-[1px] ${idx > 0 ? 'border-x border-b' : 'border'} border-textBg-300`}>
+                  {eventsData
+                    .filter(event => event.dateOffset === selectedOffset)
+                    .filter(event => 
+                      convertTimeToHours(event.startTime) <= convertTimeToHours(time) &&
+                      convertTimeToHours(event.endTime) > convertTimeToHours(time)
+                    )
+                    .map((event, eventIdx) => {
+                      const eventStart = convertTimeToHours(event.startTime);
+                      const eventEnd = convertTimeToHours(event.endTime);
+                      const eventDuration = (eventEnd - eventStart) * 2;
 
-                    return (
-                      <div 
-                        key={eventIdx} 
-                        className={`px-6 py-3 rounded-sm ${event.color} text-white`}
-                        style={{ gridRow: `span ${eventDuration}` }}
-                      >
-                        <div className='text-sm font-bold mb-1'>{event.title}</div>
-                        <div className="text-sm">
-                          {event.startTime} - {event.endTime}
+                      return (
+                        <div 
+                          key={eventIdx} 
+                          className={`px-6 py-3 rounded-sm ${event.color} text-white`}
+                          style={{ gridRow: `span ${eventDuration}` }}
+                        >
+                          <div className='text-sm font-bold mb-1'>{event.title}</div>
+                          <div className="text-sm">
+                            {event.startTime} - {event.endTime}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-              </div>
+                      );
+                    })}
+                </div>
+              </>
             )
           )}
         </div>

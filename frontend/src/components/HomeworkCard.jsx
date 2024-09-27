@@ -13,9 +13,9 @@ const HomeworkCard = () => {
         </div>
       </div>   
       <div className="flex items-center gap-4">
-          <CircleAlert size={20} color="#EB4C60"/>
+          <CircleAlert size={20} color="#EB4C60" className='hidden sm:block'/>
           <div className="bg-primary-200 rounded px-3 py-1">
-            <p className="text-primary-600 font-bold text-base">12 JAN 2024</p>
+            <p className="text-primary-600 font-bold text-sm text-center">12 JAN 2024</p>
           </div>
       </div>
     </div>
