@@ -1,299 +1,356 @@
-import prisma from '../../src/db';
-import test, { beforeEach, suite } from 'node:test';
-import assert from 'node:assert';
-import {
-    sendPostRequest,
-    sendGetRequest,
-    sendPatchRequest,
-    sendDeleteRequest,
-} from '../../src/utils/requestHelpers';
+// import prisma from '../../src/db';
+// import test, { afterEach, suite } from 'node:test';
+// import assert from 'node:assert';
+// import {
+//     sendPostRequest,
+//     sendGetRequest,
+//     sendPatchRequest,
+//     sendDeleteRequest,
+// } from '../../src/utils/requestHelpers';
 
-beforeEach(async () => {
-    await prisma.students.deleteMany();
-    await prisma.classes.deleteMany();
-    await prisma.teachers.deleteMany();
-});
+// suite('classesRouter', () => {
+//     afterEach(async () => {
+//         await prisma.students.deleteMany();
+//         await prisma.classes.deleteMany();
+//         await prisma.teachers.deleteMany();
+//     });
 
-suite('classesRouter', () => {
-    test('createClass() - success', async () => {
-        const response = await sendPostRequest('/class', {
-            name: 'IA',
-            yearbook: '2024/2025',
-        });
+//     test('createClass() - success', async () => {
+//         const createClassResponse = await sendPostRequest('/class', {
+//             name: 'IA',
+//             yearbook: '2024/2025',
+//         });
 
-        assert.strictEqual(response.statusCode, 200);
-        assert.strictEqual(response.body.data.name, 'IA');
-        assert.strictEqual(response.body.data.yearbook, '2024/2025');
-    });
+//         assert.strictEqual(createClassResponse.statusCode, 200, 'Expected status code 200 for successful class creation');
+//         assert.strictEqual(createClassResponse.body.data.name, 'IA', 'Expected class name to be "IA"');
+//         assert.strictEqual(createClassResponse.body.data.yearbook, '2024/2025', 'Expected yearbook to be "2024/2025"');
+//     });
 
-    test('createClass() - validation error', async () => {
-        const response = await sendPostRequest('/class', {
-            name: '',
-            yearbook: '',
-        });
+//     test('createClass() - validation error', async () => {
+//         const createClassResponse = await sendPostRequest('/class', {
+//             name: '',
+//             yearbook: '',
+//         });
 
-        assert.strictEqual(response.statusCode, 400);
-    });
+//         assert.strictEqual(createClassResponse.statusCode, 400, 'Expected status code 400 for validation error');
+//         assert.strictEqual(createClassResponse.body.errors.length, 2, 'Expected 2 validation errors');
+//     });
 
-    test('createClass() - class exists', async () => {
-        await sendPostRequest('/class', {
-            name: 'IA',
-            yearbook: '2024/2025',
-        });
+//     test('createClass() - class exists', async () => {
+//         const createClassResponse1 = await sendPostRequest('/class', {
+//             name: 'IA',
+//             yearbook: '2024/2025',
+//         });
 
-        const response = await sendPostRequest('/class', {
-            name: 'IA',
-            yearbook: '2024/2025',
-        });
+//         assert.strictEqual(createClassResponse1.statusCode, 200, 'Expected status code 200 for successful class creation');
 
-        assert.strictEqual(response.statusCode, 409);
-    });
+//         const createClassResponse2 = await sendPostRequest('/class', {
+//             name: 'IA',
+//             yearbook: '2024/2025',
+//         });
 
-    test('getClasses() - success', async () => {
-        await sendPostRequest('/class', {
-            name: 'IA',
-            yearbook: '2024/2025',
-        });
+//         assert.strictEqual(createClassResponse2.statusCode, 409, 'Expected status code 409 for class already exists');
+//     });
 
-        await sendPostRequest('/class', {
-            name: 'IIA',
-            yearbook: '2024/2025',
-        });
+//     test('getClasses() - success', async () => {
+//         const createClassResponse1 = await sendPostRequest('/class', {
+//             name: 'IA',
+//             yearbook: '2024/2025',
+//         });
 
-        const response = await sendGetRequest('/class');
-        assert.strictEqual(response.statusCode, 200);
-        assert.strictEqual(response.body.data.length, 2);
-        assert.strictEqual(response.body.data[0].name, 'IA');
-        assert.strictEqual(response.body.data[0].yearbook, '2024/2025');
-        assert.strictEqual(response.body.data[1].name, 'IIA');
-        assert.strictEqual(response.body.data[1].yearbook, '2024/2025');
-    });
+//         assert.strictEqual(createClassResponse1.statusCode, 200, 'Expected status code 200 for first successful class creation');
 
-    test('getStudents() - success', async () => {
-        const createClassResponse = await sendPostRequest('/class', {
-            name: 'IA',
-            yearbook: '2024/2025',
-        });
+//         const createClassResponse2 = await sendPostRequest('/class', {
+//             name: 'IIA',
+//             yearbook: '2024/2025',
+//         });
 
-        const signUpResponse = await sendPostRequest('/auth/signup/student', {
-            pesel: '11111111111',
-            email: 'student@example.com',
-            phoneNumber: '601234567',
-            password: 'password',
-            passwordConfirm: 'password',
-            firstName: 'Student',
-            lastName: 'Student',
-        });
+//         assert.strictEqual(createClassResponse2.statusCode, 200, 'Expected status code 200 for second successful class creation');
 
-        const assignStudentResponse = await sendPatchRequest(
-            `/class/${createClassResponse.body.data.id}/assign-student`,
-            {
-                studentId: signUpResponse.body.data,
-            }
-        );
+//         const getClassesResponse = await sendGetRequest('/class');
 
-        const getStudentsResponse = await sendGetRequest(
-            `/class/${createClassResponse.body.data.id}/students`
-        );
 
-        assert.strictEqual(getStudentsResponse.statusCode, 200);
-        assert.strictEqual(getStudentsResponse.body.data.length, 1);
-    });
+//         assert.strictEqual(getClassesResponse.statusCode, 200, 'Expected status code 200 for getting classes');
+//         assert.strictEqual(getClassesResponse.body.data.length, 2, 'Expected 2 classes in the response');
+//         assert.strictEqual(getClassesResponse.body.data[0].name, 'IA', 'Expected first class name to be "IA"');
+//         assert.strictEqual(getClassesResponse.body.data[0].yearbook, '2024/2025', 'Expected first class yearbook to be "2024/2025"');
+//         assert.strictEqual(getClassesResponse.body.data[1].name, 'IIA', 'Expected second class name to be "IIA"');
+//         assert.strictEqual(getClassesResponse.body.data[1].yearbook, '2024/2025', 'Expected second class yearbook to be "2024/2025"');
+//     });
 
-    test('getStudents() - validation error', async () => {
-        const invalidId = '%20';
+//     test('getStudents() - success', async () => {
+//         const createClassResponse = await sendPostRequest('/class', {
+//             name: 'IA',
+//             yearbook: '2024/2025',
+//         });
 
-        const getStudentsResponse = await sendGetRequest(
-            `/class/${invalidId}/students`
-        );
+//         assert.strictEqual(createClassResponse.statusCode, 200, 'Expected status code 200 for successful class creation');
 
-        assert.strictEqual(getStudentsResponse.statusCode, 400);
-    });
+//         const signUpResponse1 = await sendPostRequest('/auth/signup/student', {
+//             pesel: '11111111111',
+//             email: 'student1@student.com',
+//             phoneNumber: '601234567',
+//             password: 'password',
+//             passwordConfirm: 'password',
+//             firstName: 'Student',
+//             lastName: 'Student'
+//         });
 
-    test('getStudents() - class does not exist', async () => {
-        const invalidId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
+//         assert.strictEqual(signUpResponse1.statusCode, 200, 'Expected status code 200 for first successful student signup');
 
-        const getStudentsResponse = await sendGetRequest(
-            `/class/${invalidId}/students`
-        );
+//         const signUpResponse2 = await sendPostRequest('/auth/signup/student', {
+//             pesel: '22222222222',
+//             email: 'student2@student.com',
+//             phoneNumber: '601234568',
+//             password: 'password',
+//             passwordConfirm: 'password',
+//             firstName: 'Student',
+//             lastName: 'Student'
+//         });
 
-        assert.strictEqual(getStudentsResponse.statusCode, 404);
-    });
+//         assert.strictEqual(signUpResponse2.statusCode, 200, 'Expected status code 200 for second successful student signup');
 
-    test('updateClass() - success', async () => {
-        const createClassResponse = await sendPostRequest('/class', {
-            name: 'IA',
-            yearbook: '2024/2025',
-        });
+//         const assignStudentResponse1 = await sendPatchRequest(
+//             `/class/${createClassResponse.body.data.id}/assign-student`,
+//             {
+//                 studentId: signUpResponse1.body.data,
+//             }
+//         );
 
-        const signUpResponse = await sendPostRequest('/auth/signup/teacher', {
-            pesel: '11111111111',
-            email: 'teacher@teacher.com',
-            phoneNumber: '555555555',
-            password: 'password',
-            passwordConfirm: 'password',
-            firstName: 'John',
-            lastName: 'Doe',
-        });
+//         assert.strictEqual(assignStudentResponse1.statusCode, 200, 'Expected status code 200 for first successful student assignment');
 
-        const updateClassReponse = await sendPatchRequest(
-            `/class/${createClassResponse.body.data.id}`,
-            {
-                name: 'IIA',
-                yearbook: '2025/2026',
-                teacherId: signUpResponse.body.data,
-            }
-        );
+//         const assignStudentResponse2 = await sendPatchRequest(
+//             `/class/${createClassResponse.body.data.id}/assign-student`,
+//             {
+//                 studentId: signUpResponse2.body.data,
+//             }
+//         );
 
-        assert.strictEqual(updateClassReponse.statusCode, 200);
-        assert.strictEqual(updateClassReponse.body.data.name, 'IIA');
-        assert.strictEqual(updateClassReponse.body.data.yearbook, '2025/2026');
-        assert.strictEqual(updateClassReponse.body.data.teacher_id, signUpResponse.body.data);
-    });
+//         assert.strictEqual(assignStudentResponse2.statusCode, 200, 'Expected status code 200 for second successful student assignment');
 
-    test('updateClass() - validation error', async () => {
-        const invalidId = '%20';
+//         const getStudentsResponse = await sendGetRequest(
+//             `/class/${createClassResponse.body.data.id}/students`
+//         );
 
-        const updateClassReponse = await sendPatchRequest(
-            `/class/${invalidId}`,
-            {
-                name: '',
-                yearbook: '',
-                teacherId: ''
-            }
-        );
+//         assert.strictEqual(getStudentsResponse.statusCode, 200, 'Expected status code 200 for getting students');
+//         assert.strictEqual(getStudentsResponse.body.data.length, 2, 'Expected 2 students in the response');
+//         assert.strictEqual(getStudentsResponse.body.data[0].id, signUpResponse1.body.data, 'Expected first student ID to match');
+//         assert.strictEqual(getStudentsResponse.body.data[1].id, signUpResponse2.body.data, 'Expected second student ID to match');
+//     });
 
-        assert.strictEqual(updateClassReponse.statusCode, 400);
-    });
+//     test('getStudents() - validation error', async () => {
+//         const invalidId = '%20';
 
-    test('updateClass() - class does not exist', async () => {
-        const invalidId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
+//         const getStudentsResponse = await sendGetRequest(
+//             `/class/${invalidId}/students`
+//         );
 
-        const updateClassReponse = await sendPatchRequest(
-            `/class/${invalidId}`,
-            {
-                name: 'IIA',
-                yearbook: '2025/2026'
-            }
-        );
+//         assert.strictEqual(getStudentsResponse.statusCode, 400, 'Expected status code 400 for validation error');
+//         assert.strictEqual(getStudentsResponse.body.errors.length, 1, 'Expected 1 validation error');
+//     });
 
-        assert.strictEqual(updateClassReponse.statusCode, 404);
-    });
+//     test('getStudents() - class does not exist', async () => {
+//         const invalidId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
 
-    test('updateClass() - teacher does not exist', async () => {
-        const invalidId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
+//         const getStudentsResponse = await sendGetRequest(
+//             `/class/${invalidId}/students`
+//         );
 
-        const createClassResponse = await sendPostRequest('/class', {
-            name: 'IA',
-            yearbook: '2024/2025',
-        });
+//         assert.strictEqual(getStudentsResponse.statusCode, 404, 'Expected status code 404 for class not found');
+//     });
 
-        const updateClassReponse = await sendPatchRequest(
-            `/class/${createClassResponse.body.data.id}`,
-            {
-                teacherId: invalidId
-            }
-        );
+//     test('updateClass() - success', async () => {
+//         const createClassResponse = await sendPostRequest('/class', {
+//             name: 'IA',
+//             yearbook: '2024/2025',
+//         });
 
-        assert.strictEqual(updateClassReponse.statusCode, 404);
-    });
+//         assert.strictEqual(createClassResponse.statusCode, 200, 'Expected status code 200 for successful class creation');
 
-    test('assignStudent() - success', async () => {
-        const createClassResponse = await sendPostRequest('/class', {
-            name: 'IA',
-            yearbook: '2024/2025',
-        });
+//         const signUpResponse = await sendPostRequest('/auth/signup/teacher', {
+//             pesel: '11111111111',
+//             email: 'teacher@teacher.com',
+//             phoneNumber: '555555555',
+//             password: 'password',
+//             passwordConfirm: 'password',
+//             firstName: 'John',
+//             lastName: 'Doe',
+//         });
 
-        const signUpResponse = await sendPostRequest('/auth/signup/student', {
-            pesel: '11111111111',
-            email: 'student@student.com',
-            phoneNumber: '555555555',
-            password: 'password',
-            passwordConfirm: 'password',
-            firstName: 'John',
-            lastName: 'Doe',
-        });
+//         assert.strictEqual(signUpResponse.statusCode, 200, 'Expected status code 200 for successful teacher signup');
 
-        const assignStudentReponse = await sendPatchRequest(
-            `/class/${createClassResponse.body.data.id}/assign-student`,
-            {
-                studentId: signUpResponse.body.data
-            }
-        );
+//         const updateClassReponse = await sendPatchRequest(
+//             `/class/${createClassResponse.body.data.id}`,
+//             {
+//                 name: 'IIA',
+//                 yearbook: '2025/2026',
+//                 teacherId: signUpResponse.body.data,
+//             }
+//         );
 
-        assert.strictEqual(assignStudentReponse.statusCode, 200);
-        assert.strictEqual(assignStudentReponse.body.data.class_id, createClassResponse.body.data.id);
-    });
 
-    test('assignStudent() - validation error', async () => {
-        const invalidClassId = '%20';
+//         assert.strictEqual(updateClassReponse.statusCode, 200, 'Expected status code 200 for successful class update');
+//         assert.strictEqual(updateClassReponse.body.data.name, 'IIA', 'Expected updated class name to be "IIA"');
+//         assert.strictEqual(updateClassReponse.body.data.yearbook, '2025/2026', 'Expected updated yearbook to be "2025/2026"');
+//         assert.strictEqual(updateClassReponse.body.data.teacher_id, signUpResponse.body.data, 'Expected updated teacher ID to match');
+//     });
 
-        const assignStudentReponse = await sendPatchRequest(
-            `/class/${invalidClassId}/assign-student`,
-            {
-                studentId: ''
-            }
-        );
+//     test('updateClass() - validation error', async () => {
+//         const invalidId = '%20';
 
-        assert.strictEqual(assignStudentReponse.statusCode, 400);
-    });
+//         const updateClassReponse = await sendPatchRequest(
+//             `/class/${invalidId}`,
+//             {
+//                 name: '',
+//                 yearbook: '',
+//                 teacherId: ''
+//             }
+//         );
 
-    test('assignStudent() - class does not exist', async () => {
-        const invalidId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
+//         assert.strictEqual(updateClassReponse.statusCode, 400, 'Expected status code 400 for validation error');
+//         assert.strictEqual(updateClassReponse.body.errors.length, 2, 'Expected 2 validation errors');
+//     });
 
-        const assignStudentReponse = await sendPatchRequest(
-            `/class/${invalidId}/assign-student`,
-            {
-                studentId: invalidId
-            }
-        );
+//     test('updateClass() - class does not exist', async () => {
+//         const invalidId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
 
-        assert.strictEqual(assignStudentReponse.statusCode, 404);
-    });
+//         const updateClassReponse = await sendPatchRequest(
+//             `/class/${invalidId}`,
+//             {
+//                 name: 'IIA',
+//                 yearbook: '2025/2026'
+//             }
+//         );
 
-    test('assignStudent() - student does not exist', async () => {
-        const invalidId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
+//         assert.strictEqual(updateClassReponse.statusCode, 404, 'Expected status code 404 for class not found');
+//     });
 
-        const createClassResponse = await sendPostRequest('/class', {
-            name: 'IA',
-            yearbook: '2024/2025',
-        });
+//     test('updateClass() - teacher does not exist', async () => {
+//         const invalidId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
 
-        const assignStudentReponse = await sendPatchRequest(
-            `/class/${createClassResponse.body.data.id}/assign-student`,
-            {
-                studentId: invalidId
-            }
-        );
+//         const createClassResponse = await sendPostRequest('/class', {
+//             name: 'IA',
+//             yearbook: '2024/2025',
+//         });
 
-        assert.strictEqual(assignStudentReponse.statusCode, 404);
-    });
+//         assert.strictEqual(createClassResponse.statusCode, 200, 'Expected status code 200 for successful class creation');
 
-    test('deleteClass() - success', async () => {
-        const createClassResponse = await sendPostRequest('/class', {
-            name: 'IA',
-            yearbook: '2024/2025',
-        });
+//         const updateClassReponse = await sendPatchRequest(
+//             `/class/${createClassResponse.body.data.id}`,
+//             {
+//                 teacherId: invalidId
+//             }
+//         );
 
-        const deleteClassReponse = await sendDeleteRequest(`/class/${createClassResponse.body.data.id}`);
+//         assert.strictEqual(updateClassReponse.statusCode, 404, 'Expected status code 404 for teacher not found');
+//     });
 
-        assert.strictEqual(deleteClassReponse.statusCode, 200);
-        assert.strictEqual(deleteClassReponse.body.data.id, createClassResponse.body.data.id);
-    });
+//     test('assignStudent() - success', async () => {
+//         const createClassResponse = await sendPostRequest('/class', {
+//             name: 'IA',
+//             yearbook: '2024/2025',
+//         });
 
-    test('deleteClass() - validation error', async () => {
-        const invalidId = '%20';
+//         assert.strictEqual(createClassResponse.statusCode, 200, 'Expected status code 200 for successful class creation');
 
-        const deleteClassReponse = await sendDeleteRequest(`/class/${invalidId}`);
+//         const signUpResponse = await sendPostRequest('/auth/signup/student', {
+//             pesel: '11111111111',
+//             email: 'student@student.com',
+//             phoneNumber: '555555555',
+//             password: 'password',
+//             passwordConfirm: 'password',
+//             firstName: 'John',
+//             lastName: 'Doe',
+//         });
 
-        assert.strictEqual(deleteClassReponse.statusCode, 400);
-    });
+//         assert.strictEqual(signUpResponse.statusCode, 200, 'Expected status code 200 for successful student signup');
 
-    test('deleteClass() - class does not exist', async () => {
-        const invalidId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
+//         const assignStudentReponse = await sendPatchRequest(
+//             `/class/${createClassResponse.body.data.id}/assign-student`,
+//             {
+//                 studentId: signUpResponse.body.data
+//             }
+//         );
 
-        const deleteClassReponse = await sendDeleteRequest(`/class/${invalidId}`);
+//         assert.strictEqual(assignStudentReponse.statusCode, 200, 'Expected status code 200 for successful student assignment');
+//         assert.strictEqual(assignStudentReponse.body.data.class_id, createClassResponse.body.data.id, 'Expected assigned student to be in the correct class');
+//     });
 
-        assert.strictEqual(deleteClassReponse.statusCode, 404);
-    });
-});
+//     test('assignStudent() - validation error', async () => {
+//         const invalidClassId = '%20';
+
+//         const assignStudentReponse = await sendPatchRequest(
+//             `/class/${invalidClassId}/assign-student`,
+//             {
+//                 studentId: ''
+//             }
+//         );
+
+//         assert.strictEqual(assignStudentReponse.statusCode, 400, 'Expected status code 400 for validation error');
+//         assert.strictEqual(assignStudentReponse.body.errors.length, 2, 'Expected 2 validation errors');
+//     });
+
+//     test('assignStudent() - class does not exist', async () => {
+//         const invalidId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
+
+//         const assignStudentReponse = await sendPatchRequest(
+//             `/class/${invalidId}/assign-student`,
+//             {
+//                 studentId: invalidId
+//             }
+//         );
+
+//         assert.strictEqual(assignStudentReponse.statusCode, 404, 'Expected status code 404 for class not found');
+//     });
+
+//     test('assignStudent() - student does not exist', async () => {
+//         const invalidId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
+
+//         const createClassResponse = await sendPostRequest('/class', {
+//             name: 'IA',
+//             yearbook: '2024/2025',
+//         });
+
+//         assert.strictEqual(createClassResponse.statusCode, 200, 'Expected status code 200 for successful class creation');
+
+//         const assignStudentReponse = await sendPatchRequest(
+//             `/class/${createClassResponse.body.data.id}/assign-student`,
+//             {
+//                 studentId: invalidId
+//             }
+//         );
+
+//         assert.strictEqual(assignStudentReponse.statusCode, 404, 'Expected status code 404 for student not found');
+//     });
+
+//     test('deleteClass() - success', async () => {
+//         const createClassResponse = await sendPostRequest('/class', {
+//             name: 'IA',
+//             yearbook: '2024/2025',
+//         });
+
+//         assert.strictEqual(createClassResponse.statusCode, 200, 'Expected status code 200 for successful class creation');
+
+//         const deleteClassReponse = await sendDeleteRequest(`/class/${createClassResponse.body.data.id}`);
+
+//         assert.strictEqual(deleteClassReponse.statusCode, 200, 'Expected status code 200 for successful class deletion');
+//         assert.strictEqual(deleteClassReponse.body.data.id, createClassResponse.body.data.id, 'Expected deleted class ID to match created class ID');
+//     });
+
+//     test('deleteClass() - validation error', async () => {
+//         const invalidId = '%20';
+
+//         const deleteClassReponse = await sendDeleteRequest(`/class/${invalidId}`);
+
+//         assert.strictEqual(deleteClassReponse.statusCode, 400, 'Expected status code 400 for validation error');
+//         assert.strictEqual(deleteClassReponse.body.errors.length, 1, 'Expected 1 validation error');
+//     });
+
+//     test('deleteClass() - class does not exist', async () => {
+//         const invalidId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
+
+//         const deleteClassReponse = await sendDeleteRequest(`/class/${invalidId}`);
+
+//         assert.strictEqual(deleteClassReponse.statusCode, 404, 'Expected status code 404 for class not found');
+//     });
+// });

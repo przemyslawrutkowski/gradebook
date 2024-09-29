@@ -24,7 +24,7 @@ export const passwordValidation = body('password').isLength({ min: 8 }).withMess
 export const peselValidation = body('pesel').isLength({ min: 11, max: 11 }).withMessage('PESEL must be 11 digits.');
 export const phoneNumberValidation = body('phoneNumber').isMobilePhone('pl-PL').withMessage('Invalid phone number.');
 export const passwordConfirmValidation = body('passwordConfirm').custom((value, { req }) => value === req.body.password).withMessage('Passwords do not match.');
-export const nameValidation = (field: string) => [
+export const createNameValidation = (field: string) => [
     body(field)
         .isLength({ min: 2, max: 50 }).withMessage(`${field} must be 2-50 characters.`)
         .isAlpha().withMessage(`${field} must contain only letters.`)
