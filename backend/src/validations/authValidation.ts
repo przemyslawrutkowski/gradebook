@@ -1,4 +1,4 @@
-import { emailValidation, passwordValidation, peselValidation, phoneNumberValidation, passwordConfirmValidation, nameValidation } from '../utils/validationHelpers';
+import { emailValidation, passwordValidation, peselValidation, phoneNumberValidation, passwordConfirmValidation, createNameValidation } from '../utils/validationHelpers';
 
 export const validateSignIn = () => [
     emailValidation,
@@ -11,8 +11,8 @@ export const validateSignUp = () => [
     phoneNumberValidation,
     passwordValidation,
     passwordConfirmValidation,
-    ...nameValidation('firstName'),
-    ...nameValidation('lastName')
+    ...createNameValidation('firstName'),
+    ...createNameValidation('lastName')
 ];
 
 export const validateForgotPassword = () => [

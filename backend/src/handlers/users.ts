@@ -10,6 +10,10 @@ import { createSuccessResponse, createErrorResponse } from '../interfaces/respon
 import { SMTP_USER, SMTP_PASS } from '../modules/validateEnv.js';
 import { stringify as uuidStringify } from 'uuid';
 
+function isStudent(user: students | teachers | parents | administrators): user is students {
+    return (user as students).class_id !== undefined;
+}
+
 export const signIn = async (req: Request, res: Response) => {
     try {
         const credentials: LoginCredentials = {
@@ -321,7 +325,13 @@ export const resetPassword = async (req: Request, res: Response) => {
                 break;
         }
 
-        return res.status(200).json(createSuccessResponse(updatedUser.id, `Password reset successfully.`))
+        const responseData = {
+            ...updatedUser,
+            id: uuidStringify(updatedUser.id),
+            class_id: isStudent(updatedUser) && updatedUser.class_id ? uuidStringify(updatedUser.class_id) : undefined
+        }
+
+        return res.status(200).json(createSuccessResponse(responseData, `Password reset successfully.`))
 
     } catch (err) {
         console.error('Error resetting password', err);

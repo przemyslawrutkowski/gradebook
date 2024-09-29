@@ -1,7 +1,7 @@
 import http from 'node:http';
 import { PORT, BEARER_TOKEN } from '../../src/modules/validateEnv';
 
-export const sendPostRequest = async (path: string, postData: object) => {
+export const sendPostRequest = async (path: string, postData: object, bearerToken?: string) => {
     const dataString = JSON.stringify(postData);
 
     const options = {
@@ -12,7 +12,7 @@ export const sendPostRequest = async (path: string, postData: object) => {
         headers: {
             'Content-Type': 'application/json',
             'Content-Length': Buffer.byteLength(dataString),
-            'Authorization': `Bearer ${BEARER_TOKEN}`
+            'Authorization': bearerToken ? `Bearer ${bearerToken}` : `Bearer ${BEARER_TOKEN}`
         },
     };
 

@@ -1,24 +1,18 @@
 import { body, validationResult } from 'express-validator';
 import { createNotEmptyValidation } from '../utils/validationHelpers';
 
-const classIdValidation = createNotEmptyValidation('classId', 'param');
-const studentIdValidation = createNotEmptyValidation('studentId');
-const teacherIdValidation = createNotEmptyValidation('teacherId');
-const nameValidation = createNotEmptyValidation('name');
-const yearbookValidation = createNotEmptyValidation('yearbook');
-
 const atLeastOneFieldValidation = () => {
     return body().custom((value, { req }) => {
         const name: string = req.body.name;
         const yearbook: string = req.body.yearbook;
-        const teacherId = Number(req.body.teacherId);
+        const teacherId: string = req.body.teacherId;
 
         if (!name && !yearbook && !teacherId)
             throw new Error('At least one field must be provided.')
 
-        if (name) nameValidation.run(req);
-        if (yearbook) yearbookValidation.run(req);
-        if (teacherId) teacherIdValidation.run(req);
+        if (name) createNotEmptyValidation('name').run(req);
+        if (yearbook) createNotEmptyValidation('yearbook').run(req);
+        if (teacherId) createNotEmptyValidation('teacherId').run(req);
 
         const result = validationResult(req);
         if (!result.isEmpty()) return false;
@@ -28,20 +22,20 @@ const atLeastOneFieldValidation = () => {
 
 
 export const validateCreateClass = () => [
-    nameValidation,
-    yearbookValidation
+    createNotEmptyValidation('name'),
+    createNotEmptyValidation('yearbook')
 ];
 
 export const validateAssignStudent = () => [
-    classIdValidation,
-    studentIdValidation
+    createNotEmptyValidation('classId', 'param'),
+    createNotEmptyValidation('studentId')
 ];
 
 export const validateClassUpdate = () => [
-    classIdValidation,
+    createNotEmptyValidation('classId', 'param'),
     atLeastOneFieldValidation(),
 ];
 
 export const validateClassId = () => [
-    classIdValidation
+    createNotEmptyValidation('classId', 'param')
 ];
