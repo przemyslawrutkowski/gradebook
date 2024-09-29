@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node --test",
-    "start": "node --env-file=.env ./dist/src/index.js"
+    "test": "clear && node --test",
+    "start": "clear && npx tsc && node --env-file=.env ./dist/src/index.js"
   },
   "keywords": [],
   "author": "",

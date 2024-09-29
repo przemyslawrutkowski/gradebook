@@ -3,7 +3,7 @@ import { body, param } from 'express-validator';
 export const createDateValidation = (field: string) => body(field).isDate().withMessage(`${field} must be a valid date in YYYY-MM-DD format.`);
 export const createNotEmptyValidation = (field: string, location: 'body' | 'param' = 'body') => {
     const validator = location === 'body' ? body(field) : param(field);
-    return validator.notEmpty().withMessage(`${field} is required.`);
+    return validator.not().isEmpty({ ignore_whitespace: true }).withMessage(`${field} is required.`);
 };
 export const createArrayValidation = (field: string) => body(field).isArray({ min: 1 }).withMessage(`${field} must be a non-empty array.`);
 export const createIntValidation = (field: string, location: 'body' | 'param' = 'body', min?: number, max?: number) => {

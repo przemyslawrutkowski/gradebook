@@ -11,7 +11,7 @@ const atLeastOneFieldValidation = () => {
     return body().custom((value, { req }) => {
         const name: string = req.body.name;
         const yearbook: string = req.body.yearbook;
-        const teacherId = Number(req.body.teacherId);
+        const teacherId: string = req.body.teacherId;
 
         if (!name && !yearbook && !teacherId)
             throw new Error('At least one field must be provided.')

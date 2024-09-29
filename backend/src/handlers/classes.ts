@@ -133,6 +133,7 @@ export const updateClass = async (req: Request, res: Response) => {
 
         const responseData = {
             ...updatedClass,
+            id: uuidStringify(updatedClass.id),
             teacher_id: updatedClass.teacher_id ? uuidStringify(updatedClass.teacher_id) : null
         };
 
