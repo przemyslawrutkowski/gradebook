@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React from "react";
 import PageTitle from '../components/PageTitle';
-import Calendar from "../components/Calendar";
+import Calendar from "../components/DashboardCalendar";
 import ExamCard from "../components/ExamCard";
 import {Atom, Calculator, ChevronRight, CircleAlert, Dna, SquareSigma} from 'lucide-react';
 import GradeCard from "../components/GradeCard";

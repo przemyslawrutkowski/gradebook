@@ -67,15 +67,15 @@ const AttendanceChart = () => {
           <Bar 
             dataKey="Presence" 
             stackId="a" 
-            fill="#ff6384"
-            barSize={48}
-            radius={[0,0,4,4]} 
+            fill="#EB4C60"
+            barSize={64}
+            radius={[0,0,0,0]} 
           />
           <Bar 
             dataKey="All" 
             stackId="a" 
-            fill="#36a2eb"
-            barSize={48}
+            fill="#1A99EE"
+            barSize={64}
             radius={[4,4,0,0]} 
           />
         </BarChart>
