@@ -72,10 +72,6 @@
 
 //         assert.strictEqual(getClassesResponse.statusCode, 200, 'Expected status code 200 for getting classes');
 //         assert.strictEqual(getClassesResponse.body.data.length, 2, 'Expected 2 classes in the response');
-//         assert.strictEqual(getClassesResponse.body.data[0].name, 'IA', 'Expected first class name to be "IA"');
-//         assert.strictEqual(getClassesResponse.body.data[0].yearbook, '2024/2025', 'Expected first class yearbook to be "2024/2025"');
-//         assert.strictEqual(getClassesResponse.body.data[1].name, 'IIA', 'Expected second class name to be "IIA"');
-//         assert.strictEqual(getClassesResponse.body.data[1].yearbook, '2024/2025', 'Expected second class yearbook to be "2024/2025"');
 //     });
 
 //     test('getStudents() - success', async () => {
@@ -134,8 +130,6 @@
 
 //         assert.strictEqual(getStudentsResponse.statusCode, 200, 'Expected status code 200 for getting students');
 //         assert.strictEqual(getStudentsResponse.body.data.length, 2, 'Expected 2 students in the response');
-//         assert.strictEqual(getStudentsResponse.body.data[0].id, signUpResponse1.body.data, 'Expected first student ID to match');
-//         assert.strictEqual(getStudentsResponse.body.data[1].id, signUpResponse2.body.data, 'Expected second student ID to match');
 //     });
 
 //     test('getStudents() - validation error', async () => {

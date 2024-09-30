@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { handleInputErrors } from '../modules/middleware.js';
-import { validateSubjectName, validateSubjectId } from '../validations/subjectsValidation.js';
+import { validateSubjectName, validateSubjectId, validateSubjectUpdate } from '../validations/subjectsValidation.js';
 import { createSubject, getSubjects, updateSubject, deleteSubject } from '../handlers/subjects.js';
 
 const subjectsRouter = Router();
@@ -23,8 +23,7 @@ subjectsRouter.get('',
 subjectsRouter.patch('/:subjectId',
     authenticate,
     authorize(['administrator']),
-    validateSubjectId(),
-    validateSubjectName(),
+    validateSubjectUpdate(),
     handleInputErrors,
     updateSubject
 )
