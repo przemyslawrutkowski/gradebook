@@ -1,15 +1,15 @@
-import { createIntValidation } from "../utils/validationHelpers";
+import { createNotEmptyValidation } from "../utils/validationHelpers";
 
-export const validateAssignParentToStudent = () => {
+export const validateCreateStudentParentRelationship = () => {
     return [
-        createIntValidation('studentId'),
-        createIntValidation('parentId')
+        createNotEmptyValidation('studentId'),
+        createNotEmptyValidation('parentId')
     ];
 }
 
-export const validateUnassignParentFromStudent = () => {
+export const validateDeleteStudentParentRelationship = () => {
     return [
-        createIntValidation('studentId', 'param'),
-        createIntValidation('studentId', 'param'),
+        createNotEmptyValidation('studentId', 'param'),
+        createNotEmptyValidation('parentId', 'param'),
     ];
 }
