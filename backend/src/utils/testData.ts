@@ -78,6 +78,16 @@ export const student2 = {
     lastName: 'Student'
 };
 
+export const invalidUser = {
+    pesel: '',
+    email: '',
+    phoneNumber: '',
+    password: 'a',
+    passwordConfirm: 'b',
+    firstName: '1',
+    lastName: '1'
+};
+
 export const class1 = {
     name: 'IA',
     yearbook: '2024/2025'
@@ -88,6 +98,17 @@ export const class2 = {
     yearbook: '2024/2025'
 };
 
+export const invalidClass = {
+    name: '',
+    yearbook: ''
+};
+
+export const invalidClassUpdate = {
+    name: '',
+    yearbook: '',
+    teacherId: ''
+};
+
 export const subject1 = {
     name: 'Math'
 };
@@ -95,3 +116,53 @@ export const subject1 = {
 export const subject2 = {
     name: 'Geography'
 };
+
+export const invalidSubject = {
+    name: ''
+};
+
+export const lessonsData = {
+    startDate: '2024-10-01',
+    endDate: '2024-11-01',
+    lessonSchedules: [
+        {
+            dayOfWeek: 2,
+            startTime: '12:00',
+            endTime: '13:00',
+            frequency: 1
+        }, {
+            dayOfWeek: 5,
+            startTime: '15:00',
+            endTime: '16:00',
+            frequency: 2
+        }
+    ],
+};
+
+export const invalidLessonsData = {
+    startDate: '',
+    endDate: '',
+    teacherId: '',
+    classId: '',
+    subjectId: '',
+    lessonSchedules: [
+        {
+            dayOfWeek: 7,
+            startTime: '',
+            endTime: '',
+            frequency: ''
+        }
+    ],
+};
+
+export const invalidLessonUpdate = {
+    description: ''
+};
+
+export const nonExistentId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
+export const invalidIdUrl = '%20';
+export const invalidIdBody = '';
+export const nonExistentPassword = 'nonexistentpassword';
+export const nonExistentEmail = 'user@user.com';
+export const newPassword = 'newpassword';
+export const newDescription = 'newdescription';
