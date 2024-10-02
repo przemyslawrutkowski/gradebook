@@ -85,6 +85,50 @@ suite('lessonsRouter', () => {
         assert.strictEqual(generateLessonsResponse.statusCode, 404, 'Expected the status code to be 404 for a subject that does not exist.');
     });
 
+    test('getLessons() - success', async () => {
+        const signUpResponse = await sendPostRequest('/auth/signup/teacher', teacher1);
+        assert.strictEqual(signUpResponse.statusCode, 200, 'Expected the status code to be 200 for a successful signup.');
+
+        const createClassResponse = await sendPostRequest('/class', class1);
+        assert.strictEqual(createClassResponse.statusCode, 200, 'Expected the status code to be 200 for a successful class creation.');
+
+        const createSubjectResponse = await sendPostRequest('/subject', subject1);
+        assert.strictEqual(createSubjectResponse.statusCode, 200, 'Expected the status code to be 200 for a successful subject creation.');
+
+        const lessonData = {
+            ...lessonsData,
+            teacherId: signUpResponse.body.data,
+            classId: createClassResponse.body.data.id,
+            subjectId: createSubjectResponse.body.data.id
+        };
+
+        const generateLessonsResponse = await sendPostRequest('/lesson', lessonData);
+        assert.strictEqual(generateLessonsResponse.statusCode, 200, 'Expected the status code to be 200 for a successful lessons generation.');
+
+        const getLessonsResponse = await sendGetRequest(`/lesson/${createClassResponse.body.data.id}/${createSubjectResponse.body.data.id}`);
+        assert.strictEqual(getLessonsResponse.statusCode, 200, 'Expected the status code to be 200 for a successful lessons retrieval.');
+        assert.strictEqual(getLessonsResponse.body.data.length, 6, 'Expected the number of retrieved lessons to be 6.');
+    });
+
+    test('getLessons() - validation error', async () => {
+        const getLessonsResponse = await sendGetRequest(`/lesson/${invalidIdUrl}/${invalidIdUrl}`);
+        assert.strictEqual(getLessonsResponse.statusCode, 400, 'Expected the status code to be 400 for a validation error.');
+        assert.strictEqual(getLessonsResponse.body.errors.length, 2, 'Expected the number of validation errors to be 2.');
+    });
+
+    test('getLessons() - class does not exist', async () => {
+        const getLessonsResponse = await sendGetRequest(`/lesson/${nonExistentId}/${nonExistentId}`);
+        assert.strictEqual(getLessonsResponse.statusCode, 404, 'Expected the status code to be 404 for a class that does not exist.');
+    });
+
+    test('getLessons() - subject does not exist', async () => {
+        const createClassResponse = await sendPostRequest('/class', class1);
+        assert.strictEqual(createClassResponse.statusCode, 200, 'Expected the status code to be 200 for a successful class creation.');
+
+        const getLessonsResponse = await sendGetRequest(`/lesson/${createClassResponse.body.data.id}/${nonExistentId}`);
+        assert.strictEqual(getLessonsResponse.statusCode, 404, 'Expected the status code to be 404 for a subject that does not exist.');
+    });
+
     test('updateLesson() - success', async () => {
         const signUpResponse = await sendPostRequest('/auth/signup/teacher', teacher1);
         assert.strictEqual(signUpResponse.statusCode, 200, 'Expected the status code to be 200 for a successful signup.');
