@@ -21,12 +21,13 @@ export const createTimeValidation = (field: string) => body(field).matches(/^([0
 export const createBooleanValidation = (field: string) => body(field).isBoolean().withMessage(`${field} must be a boolean.`)
 export const emailValidation = body('email').isEmail().withMessage('Invalid email.');
 export const passwordValidation = body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters.');
-export const peselValidation = body('pesel').isLength({ min: 11, max: 11 }).withMessage('PESEL must be 11 digits.');
+export const peselValidation = body('pesel')
+    .isLength({ min: 11, max: 11 }).withMessage('PESEL must be 11 digits.')
+    .isNumeric({ no_symbols: true }).withMessage('PESEL must contain only numeric characters.');
 export const phoneNumberValidation = body('phoneNumber').isMobilePhone('pl-PL').withMessage('Invalid phone number.');
 export const passwordConfirmValidation = body('passwordConfirm').custom((value, { req }) => value === req.body.password).withMessage('Passwords do not match.');
 export const createNameValidation = (field: string) => [
     body(field)
         .isLength({ min: 2, max: 50 }).withMessage(`${field} must be 2-50 characters.`)
         .isAlpha().withMessage(`${field} must contain only letters.`)
-        .custom(value => value.charAt(0) === value.charAt(0).toUpperCase()).withMessage(`${field} must start with an uppercase letter.`)
 ];

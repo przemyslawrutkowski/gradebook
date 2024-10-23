@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { validateGenerateLessons, validateUpdateLesson } from '../validations/lessonsValidation.js';
-import { generateLessons, deleteLessons, updateLesson } from '../handlers/lessons.js';
+import { validateGenerateLessons, validateUpdateLesson, validateGetAndDeleteLessons } from '../validations/lessonsValidation.js';
+import { generateLessons, getLessons, updateLesson, deleteLessons } from '../handlers/lessons.js';
 import { handleInputErrors } from '../modules/middleware.js';
 
 const lessonsRouter = Router();
@@ -17,9 +17,9 @@ lessonsRouter.post('',
 lessonsRouter.get('/:classId/:subjectId',
     authenticate,
     authorize(['administrator', 'teacher', 'parent', 'student']),
-    validateUpdateLesson(),
+    validateGetAndDeleteLessons(),
     handleInputErrors,
-    updateLesson
+    getLessons
 )
 
 lessonsRouter.patch('/:lessonId',
@@ -33,6 +33,8 @@ lessonsRouter.patch('/:lessonId',
 lessonsRouter.delete('/:classId/:subjectId',
     authenticate,
     authorize(['administrator']),
+    validateGetAndDeleteLessons(),
+    handleInputErrors,
     deleteLessons
 )
 

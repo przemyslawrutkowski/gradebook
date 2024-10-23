@@ -3,7 +3,7 @@ import prisma from '../db';
 import { teachers, classes, subjects, lessons } from '@prisma/client';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces';
 import LessonSchedule from '../interfaces/lessonSchedule';
-import { parse as uuidParse } from 'uuid';
+import { parse as uuidParse, stringify as uuidStringify } from 'uuid';
 import { Buffer } from 'node:buffer';
 
 export const generateLessons = async (req: Request, res: Response) => {
@@ -24,7 +24,7 @@ export const generateLessons = async (req: Request, res: Response) => {
         });
 
         if (!existingTeacher) {
-            return res.status(409).json(createErrorResponse(`Teacher does not exist.`));
+            return res.status(404).json(createErrorResponse(`Teacher does not exist.`));
         }
 
         const existingClass: classes | null = await prisma.classes.findUnique({
@@ -34,17 +34,17 @@ export const generateLessons = async (req: Request, res: Response) => {
         });
 
         if (!existingClass) {
-            return res.status(409).json(createErrorResponse(`Class does not exist.`));
+            return res.status(404).json(createErrorResponse(`Class does not exist.`));
         }
 
-        const existingSubject: subjects | null = await prisma.classes.findUnique({
+        const existingSubject: subjects | null = await prisma.subjects.findUnique({
             where: {
-                id: Buffer.from(uuidParse(classId))
+                id: Buffer.from(uuidParse(subjectId))
             }
         });
 
         if (!existingSubject) {
-            return res.status(409).json(createErrorResponse(`Subject does not exist.`));
+            return res.status(404).json(createErrorResponse(`Subject does not exist.`));
         }
 
         const dayMilliseconds = 24 * 60 * 60 * 1000;
@@ -106,14 +106,62 @@ export const generateLessons = async (req: Request, res: Response) => {
     }
 };
 
+export const getLessons = async (req: Request, res: Response) => {
+    try {
+        const classId: string = req.params.classId;
+        const subjectId: string = req.params.subjectId;
+
+        const existingClass: classes | null = await prisma.classes.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(classId))
+            }
+        });
+
+        if (!existingClass) {
+            return res.status(404).json(createErrorResponse(`Class does not exist.`));
+        }
+
+        const existingSubject: subjects | null = await prisma.subjects.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(subjectId))
+            }
+        });
+
+        if (!existingSubject) {
+            return res.status(404).json(createErrorResponse(`Subject does not exist.`));
+        }
+
+        const lessons = await prisma.lessons.findMany({
+            where: {
+                class_id: Buffer.from(uuidParse(classId)),
+                subject_id: Buffer.from(uuidParse(subjectId)),
+            }
+        });
+
+        const responseData = lessons.map(lesson => ({
+            ...lesson,
+            id: uuidStringify(lesson.id),
+            teacher_id: uuidStringify(lesson.teacher_id),
+            class_id: uuidStringify(lesson.class_id),
+            subject_id: uuidStringify(lesson.subject_id)
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, `Lessons retrieved successfully.`));
+    } catch (err) {
+        console.error('Error retrieving lessons', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving lessons. Please try again later.'));
+
+    }
+};
+
 export const updateLesson = async (req: Request, res: Response) => {
     try {
-        const id: string = req.params.lessonId;
+        const lessonId: string = req.params.lessonId;
         const description: string = req.body.description;
 
         const existingLesson: lessons | null = await prisma.lessons.findUnique({
             where: {
-                id: Buffer.from(uuidParse(id))
+                id: Buffer.from(uuidParse(lessonId))
             }
         });
 
@@ -123,14 +171,22 @@ export const updateLesson = async (req: Request, res: Response) => {
 
         const updatedLesson = await prisma.lessons.update({
             where: {
-                id: Buffer.from(uuidParse(id))
+                id: Buffer.from(uuidParse(lessonId))
             }, data: {
                 description: description,
                 is_completed: true
             }
         });
 
-        return res.status(200).json(createSuccessResponse(updatedLesson.id, `Lesson updated successfully.`));
+        const responseData = {
+            ...updatedLesson,
+            id: uuidStringify(updatedLesson.id),
+            teacher_id: uuidStringify(updatedLesson.teacher_id),
+            class_id: uuidStringify(updatedLesson.class_id),
+            subject_id: uuidStringify(updatedLesson.subject_id)
+        };
+
+        return res.status(200).json(createSuccessResponse(responseData, `Lesson updated successfully.`));
     } catch (err) {
         console.error('Error updating lesson', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while updating lesson. Please try again later.'));

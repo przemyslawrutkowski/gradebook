@@ -5,5 +5,10 @@ export const validateSubjectName = () => [
 ];
 
 export const validateSubjectId = () => [
-    createIntValidation('subjectId', 'param')
+    createNotEmptyValidation('subjectId', 'param')
+];
+
+export const validateSubjectUpdate = () => [
+    createNotEmptyValidation('subjectId', 'param'),
+    createNotEmptyValidation('name')
 ];

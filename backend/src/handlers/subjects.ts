@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../db';
 import { subjects } from '@prisma/client';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces';
-import { parse as uuidParse } from 'uuid';
+import { parse as uuidParse, stringify as uuidStringify } from 'uuid';
 import { Buffer } from 'node:buffer';
 
 export const createSubject = async (req: Request, res: Response) => {
@@ -25,7 +25,12 @@ export const createSubject = async (req: Request, res: Response) => {
             }
         });
 
-        return res.status(200).json(createSuccessResponse(createdSubject.id, `Subject created successfully.`));
+        const responseData = {
+            ...createdSubject,
+            id: uuidStringify(createdSubject.id)
+        };
+
+        return res.status(200).json(createSuccessResponse(responseData, `Subject created successfully.`));
     } catch (err) {
         console.error('Error creating subject', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while creating subject. Please try again later.'));
@@ -66,7 +71,12 @@ export const updateSubject = async (req: Request, res: Response) => {
             }
         });
 
-        return res.status(200).json(createSuccessResponse(updatedSubject.id, `Subject successfully updated.`));
+        const responseData = {
+            ...updatedSubject,
+            id: uuidStringify(updatedSubject.id)
+        };
+
+        return res.status(200).json(createSuccessResponse(responseData, `Subject successfully updated.`));
     } catch (err) {
         console.error('Error updating subject', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while updating subject. Please try again later.'));
@@ -93,7 +103,12 @@ export const deleteSubject = async (req: Request, res: Response) => {
             }
         });
 
-        return res.status(200).json(createSuccessResponse(deletedSubject.id, `Subject deleted successfully.`));
+        const responseData = {
+            ...deletedSubject,
+            id: uuidStringify(deletedSubject.id)
+        };
+
+        return res.status(200).json(createSuccessResponse(responseData, `Subject deleted successfully.`));
     } catch (err) {
         console.error('Error deleting subject', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while deleting subject. Please try again later.'));

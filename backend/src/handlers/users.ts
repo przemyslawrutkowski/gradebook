@@ -69,9 +69,12 @@ export const signIn = async (req: Request, res: Response) => {
             role: role
         };
 
-        const jwt = generateJWT(authUser);
+        const responseData = {
+            jwt: generateJWT(authUser),
+            id: uuidStringify(existingUser.id)
+        };
 
-        return res.status(200).json(createSuccessResponse(jwt, 'Signed in successfully.'));
+        return res.status(200).json(createSuccessResponse(responseData, 'Signed in successfully.'));
     } catch (err) {
         console.error('Error signing in', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while signing in. Please try again later.'));

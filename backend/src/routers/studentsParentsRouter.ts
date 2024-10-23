@@ -1,25 +1,25 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { validateAssignParentToStudent, validateUnassignParentFromStudent } from '../validations/studentsParentsValidation.js';
-import { assignParentToStudent, unassignParentFromStudent } from '../handlers/studentsParents.js';
+import { validateCreateStudentParentRelationship, validateDeleteStudentParentRelationship } from '../validations/studentsParentsValidation.js';
+import { createStudentParentRelationship, deleteStudentParentRelationship } from '../handlers/studentsParents.js';
 import { handleInputErrors } from '../modules/middleware.js';
 
 const studentsParentsRouter = Router();
 
-studentsParentsRouter.post('/assign-parent',
+studentsParentsRouter.post('/student-parent-relationship',
     authenticate,
     authorize(['administrator']),
-    validateAssignParentToStudent(),
+    validateCreateStudentParentRelationship(),
     handleInputErrors,
-    assignParentToStudent
+    createStudentParentRelationship
 );
 
-studentsParentsRouter.delete('/unassign-parent/:studentId/:parentId',
+studentsParentsRouter.delete('/student-parent-relationship/:studentId/:parentId',
     authenticate,
     authorize(['administrator']),
-    validateUnassignParentFromStudent(),
+    validateDeleteStudentParentRelationship(),
     handleInputErrors,
-    unassignParentFromStudent
+    deleteStudentParentRelationship
 );
 
 export default studentsParentsRouter;

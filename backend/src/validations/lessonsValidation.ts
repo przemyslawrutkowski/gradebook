@@ -3,9 +3,9 @@ import { createDateValidation, createNotEmptyValidation, createArrayValidation, 
 export const validateGenerateLessons = () => [
     createDateValidation('startDate'),
     createDateValidation('endDate'),
-    createIntValidation('teacherId', 'body'),
-    createIntValidation('classId', 'body'),
-    createIntValidation('subjectId', 'body'),
+    createNotEmptyValidation('teacherId', 'body'),
+    createNotEmptyValidation('classId', 'body'),
+    createNotEmptyValidation('subjectId', 'body'),
     createArrayValidation('lessonSchedules'),
     createIntValidation('lessonSchedules.*.dayOfWeek', 'body', 0, 6),
     createTimeValidation('lessonSchedules.*.startTime'),
@@ -14,11 +14,11 @@ export const validateGenerateLessons = () => [
 ];
 
 export const validateUpdateLesson = () => [
-    createIntValidation('id', 'param'),
+    createNotEmptyValidation('lessonId', 'param'),
     createNotEmptyValidation('description')
 ];
 
-export const validateDeleteLessons = () => [
-    createIntValidation('classId', 'param'),
-    createIntValidation('subjectId', 'param')
+export const validateGetAndDeleteLessons = () => [
+    createNotEmptyValidation('classId', 'param'),
+    createNotEmptyValidation('subjectId', 'param')
 ];
