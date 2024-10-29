@@ -28,14 +28,12 @@ suite('lessonsRouter', () => {
         const createSubjectResponse = await sendPostRequest('/subject', subject1);
         assert.strictEqual(createSubjectResponse.statusCode, 200, 'Expected the status code to be 200 for a successful subject creation.');
 
-        const lessonData = {
+        const generateLessonsResponse = await sendPostRequest('/lesson', {
             ...lessonsData,
             teacherId: signUpResponse.body.data,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id
-        };
-
-        const generateLessonsResponse = await sendPostRequest('/lesson', lessonData);
+        });
         assert.strictEqual(generateLessonsResponse.statusCode, 200, 'Expected the status code to be 200 for a successful lessons generation.');
         assert.strictEqual(generateLessonsResponse.body.data, 6, 'Expected the number of generated lessons to be 6.');
     });
@@ -95,14 +93,12 @@ suite('lessonsRouter', () => {
         const createSubjectResponse = await sendPostRequest('/subject', subject1);
         assert.strictEqual(createSubjectResponse.statusCode, 200, 'Expected the status code to be 200 for a successful subject creation.');
 
-        const lessonData = {
+        const generateLessonsResponse = await sendPostRequest('/lesson', {
             ...lessonsData,
             teacherId: signUpResponse.body.data,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id
-        };
-
-        const generateLessonsResponse = await sendPostRequest('/lesson', lessonData);
+        });
         assert.strictEqual(generateLessonsResponse.statusCode, 200, 'Expected the status code to be 200 for a successful lessons generation.');
 
         const getLessonsResponse = await sendGetRequest(`/lesson/${createClassResponse.body.data.id}/${createSubjectResponse.body.data.id}`);
@@ -139,14 +135,12 @@ suite('lessonsRouter', () => {
         const createSubjectResponse = await sendPostRequest('/subject', subject1);
         assert.strictEqual(createSubjectResponse.statusCode, 200, 'Expected the status code to be 200 for a successful subject creation.');
 
-        const lessonData = {
+        const generateLessonsResponse = await sendPostRequest('/lesson', {
             ...lessonsData,
             teacherId: signUpResponse.body.data,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id
-        };
-
-        const generateLessonsResponse = await sendPostRequest('/lesson', lessonData);
+        });
         assert.strictEqual(generateLessonsResponse.statusCode, 200, 'Expected the status code to be 200 for a successful lessons generation.');
 
         const getLessonsResponse = await sendGetRequest(`/lesson/${createClassResponse.body.data.id}/${createSubjectResponse.body.data.id}`);
@@ -184,14 +178,12 @@ suite('lessonsRouter', () => {
         const createSubjectResponse = await sendPostRequest('/subject', subject1);
         assert.strictEqual(createSubjectResponse.statusCode, 200, 'Expected the status code to be 200 for a successful subject creation.');
 
-        const lessonData = {
+        const generateLessonsResponse = await sendPostRequest('/lesson', {
             ...lessonsData,
             teacherId: signUpResponse.body.data,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id
-        };
-
-        const generateLessonsResponse = await sendPostRequest('/lesson', lessonData);
+        });
         assert.strictEqual(generateLessonsResponse.statusCode, 200, 'Expected the status code to be 200 for a successful lessons generation.');
 
         const deleteLessonsResponse = await sendDeleteRequest(`/lesson/${createClassResponse.body.data.id}/${createSubjectResponse.body.data.id}`);

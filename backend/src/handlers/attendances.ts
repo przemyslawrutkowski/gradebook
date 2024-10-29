@@ -59,7 +59,7 @@ export const updateAttendance = async (req: Request, res: Response) => {
         });
 
         if (!attendance) {
-            return res.status(404).json(createErrorResponse(`Attendance not found.`));
+            return res.status(404).json(createErrorResponse(`Attendance does not exist.`));
         }
 
         const updatedAttendance = await prisma.attendances.update({
