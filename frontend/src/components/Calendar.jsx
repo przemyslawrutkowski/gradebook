@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from './Button';
-import { ChevronLeft, ChevronRight } from 'lucide-react'; // Importing Lucide icons
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const monthNames = [
@@ -8,33 +8,33 @@ const monthNames = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-// Definition of months to display and their corresponding JavaScript indices
 const displayMonthNames = [
   "September", "October", "November", "December",
   "January", "February", "March", "April", "May", "June"
 ];
 const monthNumbers = [8, 9, 10, 11, 0, 1, 2, 3, 4, 5];
+
 let datesToRender = [];
 
-// Calculate the base year for the academic calendar
 const today = new Date();
 let baseYear = today.getFullYear();
-if (today.getMonth() < 8) { // If before September, subtract one year
+if (today.getMonth() < 8) { 
   baseYear -= 1;
 }
-const baseDate = new Date(baseYear, 8, 1); // September 1st of the academic year
 
-// Helper function to get the correct year based on the month index
 const getYearForMonthIndex = (monthIndex) => {
   return monthIndex <= 3 ? baseYear : baseYear + 1;
 };
 
 const eventsData = [
-  { title: 'Meeting with team', startTime: '07:00 AM', endTime: '09:00 AM', bgColor: 'bg-[#f3f4f6]', date: new Date(baseYear, 8, 1), textColor: 'text-[#6f7787]' },
-  { title: 'Lunch with client', startTime: '10:00 AM', endTime: '01:00 PM', bgColor: 'bg-[#1A99EE]', date: new Date(baseYear, 8, 1), textColor: 'text-[#ffffff]' },
-  { title: 'Project discussion', startTime: '03:30 PM', endTime: '05:00 PM', bgColor: 'bg-[#f1f9fe]', date: new Date(baseYear, 8, 2), textColor: 'text-[#0f7bc4]' },
-  { title: 'Wrap-up session', startTime: '05:00 PM', endTime: '06:00 PM', bgColor: 'bg-[#F5C747]', date: new Date(baseYear, 8, 3), textColor: 'text-[#ffffff]' },
-  { title: 'Wrap-up session', startTime: '05:00 PM', endTime: '06:00 PM', bgColor: 'bg-[#F5C747]', date: new Date(baseYear + 1, 3, 1), textColor: 'text-[#ffffff]' },
+  { title: 'PE', startTime: '07:00 AM', endTime: '09:00 AM', bgColor: 'bg-[#f3f4f6]', date: new Date(baseYear, 8, 1), textColor: 'text-[#6f7787]' },
+  { title: 'Biology', startTime: '10:00 AM', endTime: '01:00 PM', bgColor: 'bg-[#1A99EE]', date: new Date(baseYear, 8, 1), textColor: 'text-[#ffffff]' },
+  { title: 'Math', startTime: '03:30 PM', endTime: '05:00 PM', bgColor: 'bg-[#f1f9fe]', date: new Date(baseYear, 8, 2), textColor: 'text-[#0f7bc4]' },
+  { title: 'Physics', startTime: '05:00 PM', endTime: '06:00 PM', bgColor: 'bg-[#F5C747]', date: new Date(baseYear, 8, 3), textColor: 'text-[#ffffff]' },
+  { title: 'Physics', startTime: '05:00 PM', endTime: '06:00 PM', bgColor: 'bg-[#F5C747]', date: new Date(baseYear, 8, 4), textColor: 'text-[#ffffff]' },
+  { title: 'Physics', startTime: '05:00 PM', endTime: '06:00 PM', bgColor: 'bg-[#F5C747]', date: new Date(baseYear, 8, 5), textColor: 'text-[#ffffff]' },
+  { title: 'Physics', startTime: '05:00 PM', endTime: '06:00 PM', bgColor: 'bg-[#F5C747]', date: new Date(baseYear, 8, 6), textColor: 'text-[#ffffff]' },
+  { title: 'Physics', startTime: '05:00 PM', endTime: '06:00 PM', bgColor: 'bg-[#F5C747]', date: new Date(baseYear + 1, 3, 1), textColor: 'text-[#ffffff]' },
 ];
 
 const convertTimeToHours = (time) => {
@@ -63,23 +63,20 @@ const areDatesEqual = (date1, date2) => {
     date1.getDate() === date2.getDate();
 };
 
-// Function to get the start date of the week (Monday)
 const getStartOfWeek = (date) => {
-  const day = date.getDay(); // Sunday - 0, Monday - 1, ..., Saturday - 6
-  const diff = (day + 6) % 7; // Adjusting to start the week on Monday
+  const day = date.getDay(); 
+  const diff = (day + 6) % 7;
   const startOfWeek = new Date(date);
   startOfWeek.setDate(date.getDate() - diff);
   return startOfWeek;
 };
 
-// Function to get the end date of the week (Sunday)
 const getEndOfWeek = (startOfWeek) => {
   const end = new Date(startOfWeek);
   end.setDate(end.getDate() + 6);
   return end;
 };
 
-// Function to format the week range for display
 const formatWeekRange = (startOfWeek) => {
   const endOfWeek = getEndOfWeek(startOfWeek);
   if (startOfWeek.getMonth() === endOfWeek.getMonth()) {
@@ -90,125 +87,38 @@ const formatWeekRange = (startOfWeek) => {
 };
 
 const Calendar = () => {
-  const [selectedDate, setSelectedDate] = useState(today); // Initialize with today's date
-  const [marginLeft, setMarginLeft] = useState('66px');
+  const [selectedDate, setSelectedDate] = useState(today);
   const [scheduleType, setScheduleType] = useState("Day");
-  const [daysInMonth, setDaysInMonth] = useState(
-    getDaysInMonth(monthNumbers[0], getYearForMonthIndex(0))
-  );
-
-  // State for responsive month display
-  const [visibleMonths, setVisibleMonths] = useState(3);
-  const [startMonthIndex, setStartMonthIndex] = useState(0);
-  const [monthNameButton, setMonthNameButton] = useState(displayMonthNames[0]); // Temporary setting
-
-  // New state to control week view
-  const [showAllWeeks, setShowAllWeeks] = useState(false);
-
-  // Function to set the initial month to the current month if it's in displayMonthNames
-  useEffect(() => {
-    setSelectedDate(today); // Always set selectedDate to today on initial load
+  const [currentMonthIndex, setCurrentMonthIndex] = useState(() => {
     const currentMonthName = monthNames[today.getMonth()];
     const initialMonthIndex = displayMonthNames.indexOf(currentMonthName);
-    if (initialMonthIndex !== -1) {
-      setMonthNameButton(currentMonthName);
-      setStartMonthIndex(initialMonthIndex);
-    } else {
-      // If current month not visible, default to first month
-      setMonthNameButton(displayMonthNames[0]);
-      setStartMonthIndex(0);
-    }
-  }, []);
+    return initialMonthIndex !== -1 ? initialMonthIndex : 0;
+  });
+
+  const [daysInMonth, setDaysInMonth] = useState(
+    getDaysInMonth(monthNumbers[currentMonthIndex], getYearForMonthIndex(currentMonthIndex))
+  );
+
+  useEffect(() => {
+    setDaysInMonth(getDaysInMonth(monthNumbers[currentMonthIndex], getYearForMonthIndex(currentMonthIndex)));
+  }, [currentMonthIndex]);
 
   const handleButtonChangeScheduleType = (value) => {
     setScheduleType(value);
   };
 
-  const handleButtonChangeMonth = (value) => {
-    setMonthNameButton(value);
-    const newIndex = displayMonthNames.indexOf(value);
-    setStartMonthIndex(newIndex);
-    // Removed: setSelectedDate(null); // Do not reset the selection
-  };
-
-  // Determine the number of visible months based on screen width
-  useEffect(() => {
-    const updateVisibleMonths = () => {
-      const width = window.innerWidth;
-      if (width < 700) { // Mobile devices
-        setVisibleMonths(1);
-      } else if (width >= 700 && width < 1280) { // Tablets and small desktops
-        setVisibleMonths(3);
-      } else if (width >= 1280 && width < 1536) { // Large desktops
-        setVisibleMonths(5);
-      } else if (width >= 1536 && width < 1820) {
-        setVisibleMonths(7);
-      } else if (width >= 1820) { // Desktop: Display all 10 months
-        setVisibleMonths(displayMonthNames.length);
-      }
-    };
-
-    updateVisibleMonths();
-    window.addEventListener('resize', updateVisibleMonths);
-
-    return () => {
-      window.removeEventListener('resize', updateVisibleMonths);
-    };
-  }, []);
-
-  useEffect(() => {
-    const monthIndex = displayMonthNames.indexOf(monthNameButton);
-    const monthNumber = monthNumbers[monthIndex];
-    const year = getYearForMonthIndex(monthIndex);
-    setDaysInMonth(getDaysInMonth(monthNumber, year));
-  }, [monthNameButton]);
-
   const handlePrev = () => {
-    setStartMonthIndex((prevIndex) => {
-      const newIndex = Math.max(prevIndex - 1, 0);
-      if (visibleMonths === 1) {
-        setMonthNameButton(displayMonthNames[newIndex]);
-      }
-      // Removed: setSelectedDate(null); // Do not reset the selection
-      return newIndex;
-    });
+    setCurrentMonthIndex((prevIndex) => Math.max(prevIndex - 1, 0));
   };
 
   const handleNext = () => {
-    setStartMonthIndex((prevIndex) => {
-      const newIndex = Math.min(prevIndex + 1, displayMonthNames.length - visibleMonths);
-      if (visibleMonths === 1) {
-        setMonthNameButton(displayMonthNames[newIndex]);
-      }
-      // Removed: setSelectedDate(null); // Do not reset the selection
-      return newIndex;
-    });
+    setCurrentMonthIndex((prevIndex) => Math.min(prevIndex + 1, displayMonthNames.length - 1));
   };
 
-  // Ensure that startMonthIndex stays within valid range when visibleMonths changes
-  useEffect(() => {
-    setStartMonthIndex((prevIndex) => {
-      if (prevIndex + visibleMonths > displayMonthNames.length) {
-        return Math.max(displayMonthNames.length - visibleMonths, 0);
-      }
-      return prevIndex;
-    });
-
-    // On mobile devices, synchronize monthNameButton with startMonthIndex
-    if (visibleMonths === 1) {
-      setMonthNameButton(displayMonthNames[startMonthIndex]);
-      // Removed: setSelectedDate(null); // Do not reset the selection
-    }
-  }, [visibleMonths, startMonthIndex]);
-
-  const displayedMonths = displayMonthNames.slice(startMonthIndex, startMonthIndex + visibleMonths);
-
-  const currentTimePosition = getCurrentTimePosition();
   const calendarStartHour = 7;
   const calendarEndHour = 18;
   const calendarHeight = (calendarEndHour - calendarStartHour) * 66;
 
-  // Helper to get all dates in the current week
   const getCurrentWeekDates = () => {
     const startOfWeek = getStartOfWeek(selectedDate || today);
     return Array.from({ length: 7 }, (_, idx) => {
@@ -218,66 +128,34 @@ const Calendar = () => {
     });
   };
 
-  // Handlers for Week Navigation
-  const handlePrevWeek = () => {
-    setSelectedDate((prevDate) => {
-      const newDate = new Date(prevDate);
-      newDate.setDate(newDate.getDate() - 7);
-      return newDate;
-    });
-  };
-
-  const handleNextWeek = () => {
-    setSelectedDate((prevDate) => {
-      const newDate = new Date(prevDate);
-      newDate.setDate(newDate.getDate() + 7);
-      return newDate;
-    });
-  };
+  const currentTimePosition = getCurrentTimePosition();
 
   return (
     <div className='flex flex-col w-full'>
-      {/* Header */}
       <div className='flex items-center justify-between mb-8 gap-1'>
-        <p className="text-textBg-700 font-bold text-base flex flex-col sm:flex-row">
-        {scheduleType === "Day" ? (
-        selectedDate ? (
-            <>
-              <span className="text-2xl font-semibold">
-                {dayNames[(selectedDate.getDay() + 6) % 7]}, {selectedDate.getDate()}&nbsp;
+        <p className="text-textBg-700 w-full font-bold text-base flex flex-col sm:flex-row">
+          {scheduleType === "Day" ? (
+            selectedDate ? (
+              <>
+                <span className="text-base sm:text-xl lg:text-2xl font-semibold">
+                  {dayNames[(selectedDate.getDay() + 6) % 7]}, {selectedDate.getDate()}&nbsp;
+                </span>
+                <span className="block text-base sm:text-xl lg:text-2xl font-semibold">
+                  {monthNames[selectedDate.getMonth()]} {selectedDate.getFullYear()}
+                </span>
+              </>
+            ) : (
+              <span className="block text-base sm:text-xl lg:text-2xl font-semibold">
+                {monthNames[monthNumbers[currentMonthIndex]]} {getYearForMonthIndex(currentMonthIndex)}
               </span>
-              <span className="block text-2xl font-semibold">
-                {monthNames[selectedDate.getMonth()]} {selectedDate.getFullYear()}
-              </span>
-            </>
+            )
           ) : (
-            <span className="block text-2xl font-semibold">
-              {monthNameButton} {getYearForMonthIndex(displayMonthNames.indexOf(monthNameButton))}
-            </span>
-          )
-        ) : (
-          <div className="flex justify-between items-center gap-6">        
-            <span className="text-2xl font-semibold">
-              {formatWeekRange(getStartOfWeek(selectedDate))}
-            </span>
-            <div className='flex gap-3'>
-              <button
-                onClick={handlePrevWeek}
-                className="bg-textBg-200 grid place-items-center h-8 w-8 rounded text-textBg-700 p-1 hover:bg-textBg-300"
-                aria-label="Previous week"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                onClick={handleNextWeek}
-                className="bg-textBg-200 grid place-items-center h-8 w-8  rounded text-textBg-700 p-1 hover:bg-textBg-300"
-                aria-label="Next week"
-              >
-                <ChevronRight size={20} />
-              </button>
+            <div className="flex justify-between items-center gap-6">
+              <span className="text-base sm:text-xl lg:text-2xl font-semibold">
+                {formatWeekRange(getStartOfWeek(selectedDate))}
+              </span>
             </div>
-          </div>
-        )}  
+          )}
         </p>
         <div className='flex items-center'>
           <Button
@@ -291,115 +169,108 @@ const Calendar = () => {
             size="s"
             text="Week"
             type={scheduleType === "Week" ? "primary" : "link"}
-            className="min-w-[4rem] no-underline"
+            className="min-w-[4rem] no-underline hidden md:block"
             onClick={() => handleButtonChangeScheduleType("Week")}
           />
         </div>
       </div>
 
-      {/* Month Navigation */}
-      <div className="flex w-full items-center justify-between mb-8">
-        {/* Render "Previous" button only if not all months are visible */}
-        {visibleMonths < displayMonthNames.length && (
-          <button
-            onClick={handlePrev}
-            disabled={startMonthIndex === 0}
-            className={`p-2 ${startMonthIndex === 0 ? 'text-gray-400 cursor-not-allowed' : 'text-black hover:text-gray-700'}`}
-            aria-label="Previous month"
-          >
-            <ChevronLeft size={20} />
-          </button>
-        )}
+      <div className='flex flex-col xl:flex-row gap-16'>
+        <div className='xl:w-fit'>
+          <div className='flex justify-between items-center mb-4'>
+              <button
+                onClick={handlePrev}
+                disabled={currentMonthIndex === 0}
+                className={`grid place-content-center w-6 h-6 bg-textBg-200 rounded ${currentMonthIndex === 0 ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-textBg-300 hover:cursor-pointer'}`}
+                aria-label="Previous month"
+              >
+                <ChevronLeft size={16} />
+              </button>
 
-        {/* List of Months */}
-        <div className="flex overflow-x-auto space-x-2">
-          {displayedMonths.map((month, idx) => (
-            <Button
-              key={idx}
-              type={monthNameButton === month ? "primary" : "link"}
-              size="l"
-              text={month}
-              className={`no-underline ${monthNameButton !== month ? 'text-black' : ''}`}
-              onClick={() => handleButtonChangeMonth(month)}
-            />
-          ))}
-        </div>
+              <p className="text-base">
+                {monthNames[monthNumbers[currentMonthIndex]]} {getYearForMonthIndex(currentMonthIndex)}
+              </p>
 
-        {/* Render "Next" button only if not all months are visible */}
-        {visibleMonths < displayMonthNames.length && (
-          <button
-            onClick={handleNext}
-            disabled={startMonthIndex + visibleMonths >= displayMonthNames.length}
-            className={`p-2 ${startMonthIndex + visibleMonths >= displayMonthNames.length ? 'text-gray-400 cursor-not-allowed' : 'text-black hover:text-gray-700'}`}
-            aria-label="Next month"
-          >
-            <ChevronRight size={20} />
-          </button>
-        )}
-      </div>
+              <button
+                onClick={handleNext}
+                disabled={currentMonthIndex === displayMonthNames.length - 1}
+                className={`grid place-content-center w-6 h-6 bg-textBg-200 rounded ${currentMonthIndex === displayMonthNames.length - 1 ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-textBg-300 hover:cursor-pointer'}`}
+                aria-label="Next month"
+              >
+                <ChevronRight size={16} />
+              </button>
+          </div>
 
-      {/* Schedule Type Content */}
-      {scheduleType === "Day" ? (
-        <>
-          {/* Existing Day View Content */}
-          <div className="grid grid-cols-7 gap-4 mb-8">
-            {/* Day Names */}
-            {dayNames.map((dayName, index) => (
-              <div key={index} className="w-full flex justify-center items-center">
-                <p className="text-textBg-900 font-bold text-sm text-center">{dayName}</p>
-              </div>
-            ))}
+          <div className="grid grid-cols-7 gap-4">
+            {dayNames.map((dayName, index) => {
+              const isWeekend = index === 5 || index === 6;
+              return (
+                <div key={index} className="w-full flex justify-center items-center">
+                  <p className={`font-semibold text-xs text-center ${isWeekend ? 'text-primary-600' : 'text-textBg-500'}`}>
+                    {dayName.slice(0,1)}
+                  </p>
+                </div>
+              );
+            })}
 
-            {/* Dates */}
             {(() => {
-              const monthIndex = displayMonthNames.indexOf(monthNameButton);
+              const monthIndex = currentMonthIndex;
               const monthNumber = monthNumbers[monthIndex];
               const year = getYearForMonthIndex(monthIndex);
 
-              if (showAllWeeks) {
-                // Calculate the first day of the month
-                const firstDayOfMonth = new Date(year, monthNumber, 1).getDay();
-                const blanks = (firstDayOfMonth + 6) % 7; // Adjust to start week on Monday
+              const firstDayOfMonth = new Date(year, monthNumber, 1).getDay();
+              const blanks = (firstDayOfMonth + 6) % 7;
 
-                // Days from the previous month to fill the blanks
-                const prevMonthIndex = (monthIndex === 0) ? displayMonthNames.length - 1 : monthIndex - 1;
-                const prevMonthNumber = monthNumbers[prevMonthIndex];
-                const prevMonthYear = getYearForMonthIndex(prevMonthIndex);
-                const daysInPrevMonth = getDaysInMonth(prevMonthNumber, prevMonthYear);
+              const prevMonthIndex = (monthIndex === 0) ? displayMonthNames.length - 1 : monthIndex - 1;
+              const prevMonthNumber = monthNumbers[prevMonthIndex];
+              const prevMonthYear = getYearForMonthIndex(prevMonthIndex);
+              const daysInPrevMonth = getDaysInMonth(prevMonthNumber, prevMonthYear);
 
-                const prevMonthDays = Array.from({ length: blanks }, (_, idx) => {
-                  const date = new Date(prevMonthYear, prevMonthNumber, daysInPrevMonth - blanks + idx + 1);
-                  return date;
-                });
+              const prevMonthDays = Array.from({ length: blanks }, (_, idx) => {
+                const date = new Date(prevMonthYear, prevMonthNumber, daysInPrevMonth - blanks + idx + 1);
+                return date;
+              });
 
-                // Days in the current month
-                const currentMonthDays = Array.from({ length: daysInMonth }, (_, dayIdx) => {
-                  return new Date(year, monthNumber, dayIdx + 1);
-                });
+              const currentMonthDays = Array.from({ length: daysInMonth }, (_, dayIdx) => {
+                return new Date(year, monthNumber, dayIdx + 1);
+              });
 
-                datesToRender = [...prevMonthDays, ...currentMonthDays];
-              } else {
-                // Get the dates of the current week
-                const weekStartDate = getStartOfWeek(selectedDate || today); // Use selectedDate or today
-                datesToRender = [...Array(7)].map((_, idx) => {
-                  const date = new Date(weekStartDate);
-                  date.setDate(weekStartDate.getDate() + idx);
-                  return date;
-                });
-              }
+              const totalDays = prevMonthDays.length + currentMonthDays.length;
+              const weeks = Math.ceil(totalDays / 7);
+
+              const nextMonthIndex = (monthIndex + 1) % displayMonthNames.length;
+              const nextMonthNumber = monthNumbers[nextMonthIndex];
+              const nextMonthYear = getYearForMonthIndex(nextMonthIndex);
+              const remainingDays = weeks * 7 - totalDays;
+              const nextMonthDays = Array.from({ length: remainingDays }, (_, idx) => {
+                const date = new Date(nextMonthYear, nextMonthNumber, idx + 1);
+                return date;
+              });
+
+              datesToRender = [...prevMonthDays, ...currentMonthDays, ...nextMonthDays];
 
               return datesToRender.map((currentDate, idx) => {
                 const dayNumber = currentDate.getDate();
                 const isSelected = areDatesEqual(currentDate, selectedDate);
                 const isCurrentMonth = currentDate.getMonth() === monthNumber && currentDate.getFullYear() === year;
+                const dayOfWeek = currentDate.getDay();
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
                 return (
                   <div key={idx} className="w-full flex flex-col justify-center items-center">
                     <p
-                      className={`w-8 h-8 text-base flex items-center justify-center cursor-pointer
-                        ${isSelected ? 'rounded-full bg-primary-500 text-textBg-100' : isCurrentMonth ? 'text-textBg-700 bg-textBg-100' : 'text-gray-400'}
+                      className={`w-8 h-8 -my-1 text-base flex items-center justify-center
+                        ${isCurrentMonth ? 'cursor-pointer' : 'cursor-not-allowed'}
+                        ${isSelected && isCurrentMonth ? 'rounded-full bg-primary-500 text-textBg-100' : isCurrentMonth ? 'bg-textBg-100' : 'text-gray-300 bg-transparent'}
+                        ${isCurrentMonth && isWeekend ? 'text-primary-600' : ''}
                         focus:outline-none`}
-                      onClick={() => setSelectedDate(currentDate)}
+                      onClick={() => isCurrentMonth && setSelectedDate(currentDate)}
+                      aria-disabled={!isCurrentMonth}
+                      aria-label={`${
+                        isSelected ? 'Selected ' : ''
+                      }${dayNames[(currentDate.getDay() + 6) % 7]}, ${currentDate.getDate()} ${
+                        monthNames[currentDate.getMonth()]
+                      } ${currentDate.getFullYear()}`}
                     >
                       {dayNumber}
                     </p>
@@ -408,18 +279,12 @@ const Calendar = () => {
               });
             })()}
           </div>
-          
-          <div className='w-full flex justify-center'>
-            <Button
-              size="s"
-              text={showAllWeeks ? "Show current week" : "Show all weeks"}
-              type="link"
-              className="min-w-[4rem] no-underline ml-4"
-              onClick={() => setShowAllWeeks(!showAllWeeks)}
-            />
-          </div>  
+        </div>
 
-          <div className="w-full sm:w-full mt-8 max-w-full overflow-x-auto relative">
+        <div className='w-full'>
+        {scheduleType === "Day" ? (
+        <>
+          <div className="w-full sm:w-full mt-1 max-w-full overflow-x-auto relative">
             <div className="relative overflow-hidden" style={{ height: `${calendarHeight}px` }}>
               <div className="grid grid-cols-[auto,1fr] grid-rows-[repeat(11,66px)] w-full h-full">
                 {['07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'].map(
@@ -435,16 +300,9 @@ const Calendar = () => {
                 )}
               </div>
 
-              {/* Render Events */}
               {eventsData
                 .filter(event => {
-                  if (showAllWeeks) {
-                    return areDatesEqual(event.date, selectedDate) ||
-                      (getStartOfWeek(event.date) <= getStartOfWeek(selectedDate || today) &&
-                        getStartOfWeek(event.date) >= getStartOfWeek(selectedDate || today));
-                  } else {
-                    return datesToRender.some(date => areDatesEqual(event.date, date));
-                  }
+                  return areDatesEqual(event.date, selectedDate)
                 })
                 .map((event, eventIdx) => {
                   const eventStart = convertTimeToHours(event.startTime);
@@ -456,7 +314,7 @@ const Calendar = () => {
                     <div
                       key={eventIdx}
                       className={`absolute right-[2px] p-2 rounded-sm ${event.bgColor} ${event.textColor}`}
-                      style={{ top: `${top + 2}px`, height: `${height - 5}px`, width: 'calc(100% - 76px)' }} // Ensure no overflow with padding
+                      style={{ top: `${top + 2}px`, height: `${height - 5}px`, width: 'calc(100% - 76px)' }}
                     >
                       <div className="text-sm font-bold mb-1">{event.title}</div>
                       <div className="text-sm">
@@ -466,13 +324,12 @@ const Calendar = () => {
                   );
                 })}
 
-              {/* Current Time Line */}
               {currentTimePosition < calendarHeight && (
                 <div
-                  className="absolute right-0 left-0 flex items-center"
+                  className="absolute right-0 left-4 flex items-center"
                   style={{ top: `${currentTimePosition}px` }}
                 >
-                  <div className="w-2 h-2 rounded-full bg-red-500 ml-8 sm:ml-12" style={{ marginLeft }} />
+                  <div className="w-2 h-2 rounded-full bg-red-500 ml-8 sm:ml-12" />
                   <div className="h-[1px] w-full bg-red-500" />
                 </div>
               )}
@@ -480,24 +337,26 @@ const Calendar = () => {
           </div>
         </>
       ) : (
-        // *** Weekly View Implementation Starts Here ***
-        <div className="flex flex-col mt-4">
-          {/* Week Header with Day Names and Dates */}
-          <div className="grid grid-cols-[auto,repeat(7,1fr)] gap-4">
-            {/* Empty cell for time labels */}
+        <div className="flex-col mt-4 hidden md:flex">
+          <div className="grid grid-cols-[auto,repeat(5,1fr)] gap-4">
             <div className="pr-1 text-xs invisible">
-              <p>07:00 AM</p>     
+              <p>07:00 AM</p>
             </div>
-            {/* Day Names and Dates */}
             {dayNames.map((dayName, index) => {
               const weekDate = getCurrentWeekDates()[index];
-              const isToday = areDatesEqual(weekDate, today);
+              const dayOfWeek = weekDate.getDay();
+              const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+              if (isWeekend) {
+                return null;
+              }
+
               return (
                 <div key={index} className="w-full flex flex-col items-center gap-2">
-                  <p className={`text-base font-bold ${isToday ? 'text-red-500' : 'text-textBg-500'}`}>
+                  <p className={`text-base ${isWeekend ? 'text-red-500' : 'text-textBg-700'}`}>
                       {weekDate.getDate()}
                   </p>
-                  <p className={`text-base ${isToday ? 'text-red-500' : 'text-textBg-500'}`}>
+                  <p className={`text-base ${isWeekend ? 'text-red-500' : 'text-textBg-500'}`}>
                     {dayName}
                   </p>
                 </div>
@@ -505,21 +364,17 @@ const Calendar = () => {
             })}
           </div>
 
-          {/* Schedule Grid */}
           <div className="relative w-full sm:w-full mt-4 max-w-full overflow-x-auto">
             <div className="relative overflow-hidden" style={{ height: `${calendarHeight}px` }}>
-              <div className="grid grid-cols-[auto,repeat(7,1fr)] grid-rows-[repeat(11,66px)] w-full h-full">
+              <div className="grid grid-cols-[auto,repeat(5,1fr)] grid-rows-[repeat(11,66px)] w-full h-full">
                 {['07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'].map(
                   (time, idx) => (
                     <React.Fragment key={`week-time-row-${idx}`}>
-                      {/* Time Labels */}
                       <div className="flex justify-end pr-4 text-gray-500 text-xs">
                         {time}
                       </div>
-                      {/* Time Slots for Each Day */}
-                      {Array.from({ length: 7 }).map((_, dayIdx) => (
-                        <div key={dayIdx} className={`relative ${idx > 0 ? 'border-x border-b' : 'border'} border-textBg-300`}>
-                          {/* Placeholder for events */}
+                      {Array.from({ length: 5 }).map((_, dayIdx) => (
+                        <div key={dayIdx} className={`relative ${dayIdx === 0 ? 'border-l' : ''} ${idx > 0 ? 'border-r border-b' : 'border-r border-b border-t'} border-textBg-300`}>
                         </div>
                       ))}
                     </React.Fragment>
@@ -527,11 +382,10 @@ const Calendar = () => {
                 )}
               </div>
 
-              {/* Render Events in Weekly View */}
               {eventsData
                 .filter(event => {
                   const weekDates = getCurrentWeekDates();
-                  return weekDates.some(date => areDatesEqual(event.date, date));
+                  return weekDates.some(date => areDatesEqual(date, event.date));
                 })
                 .map((event, eventIdx) => {
                   const eventStart = convertTimeToHours(event.startTime);
@@ -539,50 +393,47 @@ const Calendar = () => {
                   const top = (eventStart - calendarStartHour) * 66;
                   const height = (eventEnd - eventStart) * 66;
 
-                  // Determine the day column (1 to 7)
                   const weekDates = getCurrentWeekDates();
                   const dayIndex = weekDates.findIndex(date => areDatesEqual(date, event.date));
 
-                  if (dayIndex === -1) return null; // Event not in current week
+                  if (dayIndex === -1) return null;
 
                   return (
                     <div
                       key={eventIdx}
-                      className={`absolute p-2 rounded-sm ${event.bgColor} ${event.textColor}`}
+                      className={`absolute mx-auto p-2 rounded-sm ${event.bgColor} ${event.textColor}`}
                       style={{
                         top: `${top + 2}px`,
                         height: `${height - 5}px`,
-                        left: `${(dayIndex + 1) * (100 / 8)}%`, // +1 to account for time labels
-                        width: `${100 / 8 - 2}%`, // Adjust width with some margin
-                        boxSizing: 'border-box',
-                        zIndex: 10,
+                        left: `calc(((100% - 72px) / 5) * ${dayIndex} + 74px)`,
+                        width: 'calc((100% - 98px) / 5)',
                       }}
                     >
                       <div className="text-sm font-bold mb-1">{event.title}</div>
-                      <div className="text-sm">
+                      <div className="text-xs">
                         {event.startTime} - {event.endTime}
                       </div>
                     </div>
                   );
                 })}
 
-              {/* Current Time Line (Only in Today’s Column) */}
               {currentTimePosition < calendarHeight && (
                 <div
-                  className="absolute right-0 left-0 flex items-center"
+                  className="absolute right-0 left-4 flex items-center"
                   style={{ top: `${currentTimePosition}px` }}
                 >
-                  <div className="w-2 h-2 rounded-full bg-red-500 ml-8 sm:ml-12" style={{ marginLeft }} />
+                  <div className="w-2 h-2 rounded-full bg-red-500 ml-8 sm:ml-12" />
                   <div className="h-[1px] w-full bg-red-500" />
                 </div>
               )}
             </div>
           </div>
         </div>
-        // *** Weekly View Implementation Ends Here ***
-      )}
+        )}
+        </div>
+      </div>
     </div>
   );
 };
 
-export default Calendar; 
+export default Calendar;

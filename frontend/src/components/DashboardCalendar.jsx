@@ -25,7 +25,7 @@ const getCurrentTimePosition = () => {
   return (hours - 7) * 66 + (minutes / 60) * 66;
 };
 
-const Calendar = () => {
+const DashboardCalendar = () => {
   const [selectedOffset, setSelectedOffset] = useState(0);
   const [marginLeft, setMarginLeft] = useState('66px');
 
@@ -144,4 +144,4 @@ const Calendar = () => {
   );
 };
 
-export default Calendar;
+export default DashboardCalendar;

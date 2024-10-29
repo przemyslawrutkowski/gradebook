@@ -7,6 +7,7 @@ import {Atom, Calculator, ChevronRight, CircleAlert, Dna, SquareSigma} from 'luc
 import GradeCard from "../components/GradeCard";
 import AttendanceChart from "../components/BarChart";
 import HomeworkCard from "../components/HomeworkCard";
+import DashboardCalendar from "../components/DashboardCalendar";
 
 export function Home() {
   return (
@@ -63,7 +64,7 @@ export function Home() {
 
         {/* Calendar */}
         <div className="flex justify-end">
-          <Calendar />
+          <DashboardCalendar />
         </div>
       </div>
     </main>
