@@ -1,5 +1,4 @@
 import { Mail, Bell, User, ChevronDown, Search } from 'lucide-react';
-import Avatar from './Avatar';
 
 export default function Topbar({messNot, messNotNumber, bellNot, bellNotNumber}) {
   

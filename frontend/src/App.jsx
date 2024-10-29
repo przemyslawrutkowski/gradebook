@@ -7,6 +7,7 @@ import { Home } from './pages/Home';
 import React from "react";
 import {  Boxes,  UserCircle,  LayoutDashboard } from 'lucide-react';
 import { Schedule } from './pages/Schedule';
+import { Messages } from './pages/Messages';
 
 
 export default function App() {
@@ -17,10 +18,12 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/1" element={<Schedule />} />
+        <Route path='/2' element={<Messages />} />
       </Routes>
       <Sidebar>
         <SidebarItem icon={<LayoutDashboard size={20} />} text="Home" path="/" active/>
         <SidebarItem icon={<LayoutDashboard size={20} />} text="Home" path="/1"/>
+        <SidebarItem icon={<LayoutDashboard size={20} />} text="Home" path="/2"/>
       </Sidebar> 
     </div>
     </>
