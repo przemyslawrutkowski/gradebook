@@ -9,7 +9,14 @@ const allUsers = [
   { id: 2, avatar: "https://i.pravatar.cc/150?img=2", name: "Anna Nowak" },
   { id: 3, avatar: "https://i.pravatar.cc/150?img=3", name: "Piotr Wiśniewski" },
   { id: 4, avatar: "https://i.pravatar.cc/150?img=4", name: "Maria Kowalczyk" },
-];
+  { id: 5, avatar: "https://i.pravatar.cc/150?img=5", name: "Krzysztof Zieliński" },
+  { id: 6, avatar: "https://i.pravatar.cc/150?img=6", name: "Ewa Jabłońska" },
+  { id: 7, avatar: "https://i.pravatar.cc/150?img=7", name: "Michał Lewandowski" },
+  { id: 8, avatar: "https://i.pravatar.cc/150?img=8", name: "Natalia Szymańska" },
+  { id: 9, avatar: "https://i.pravatar.cc/150?img=9", name: "Tomasz Mazur" },
+  { id: 10, avatar: "https://i.pravatar.cc/150?img=10", name: "Agata Wójcik" },
+  { id: 11, avatar: "https://i.pravatar.cc/150?img=11", name: "Paweł Dąbrowski" }
+]
 
 export function Messages() {
   const [conversations, setConversations] = useState([
@@ -20,8 +27,8 @@ export function Messages() {
       lastMessage: "Cześć! Jak się masz?",
       lastDate: "2024-04-25",
       messages: [
-        { sender: "Jan Kowalski", text: "Cześć! Jak s się masz?", date: "2024-04-25 10:00" },
-        { sender: "Ty", text: "Dobrze, dziękuję! A Ty?", date: "2024-04-25 10:05" },
+        { sender: "Jan Kowalski", text: "Cześć! Jak się masz?", date: "2024-04-25T10:00:00" },
+        { sender: "Ty", text: "Dobrze, dziękuję! A Ty?", date: "2024-04-25T10:05:00" },
       ],
     },
     {
@@ -31,16 +38,15 @@ export function Messages() {
       lastMessage: "Czy możemy się spotkać jutro?",
       lastDate: "2024-04-24",
       messages: [
-        { sender: "Anna Nowak", text: "Czy możemy się spotkać jutro?", date: "2024-04-24 14:30" },
-        { sender: "Ty", text: "Tak, pasuje mi godzina 15:00.", date: "2024-04-24 14:35" },
-        // Add more messages as needed...
+        { sender: "Anna Nowak", text: "Czy możemy się spotkać jutro?", date: "2024-04-24T14:30:00" },
+        { sender: "Ty", text: "Tak, pasuje mi godzina 15:00.", date: "2024-04-24T14:35:00" },
       ],
     },
-    // Add more conversations as needed...
   ]);
 
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [newMessage, setNewMessage] = useState("");
 
   const filteredConversations = conversations.filter(convo =>
     convo.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -61,13 +67,55 @@ export function Messages() {
         avatar: user.avatar,
         name: user.name,
         lastMessage: "",
-        lastDate: "",
+        lastDate: "", // Pozostawienie lastDate jako pusty ciąg
         messages: [],
       };
       setConversations([newConversation, ...conversations]);
       setSelectedConversation(newConversation);
     }
     setSearchTerm("");
+  };
+
+  const handleSendMessage = () => {
+    if (!newMessage.trim() || !selectedConversation) return;
+
+    const currentDate = new Date().toISOString();
+
+    const updatedConversations = conversations.map(convo => {
+      if (convo.id === selectedConversation.id) {
+        const updatedMessages = [
+          ...convo.messages,
+          {
+            sender: "Ty",
+            text: newMessage,
+            date: currentDate,
+          },
+        ];
+        return {
+          ...convo,
+          lastMessage: newMessage,
+          lastDate: currentDate, 
+          messages: updatedMessages,
+        };
+      }
+      return convo;
+    });
+
+    setConversations(updatedConversations);
+    setSelectedConversation({
+      ...selectedConversation,
+      lastMessage: newMessage,
+      lastDate: currentDate,
+      messages: [
+        ...selectedConversation.messages,
+        {
+          sender: "Ty",
+          text: newMessage,
+          date: currentDate,
+        },
+      ],
+    });
+    setNewMessage("");
   };
 
   return (
@@ -87,7 +135,7 @@ export function Messages() {
               />
             </div>
             {searchTerm && filteredUsers.length > 0 && (
-              <div className="absolute left-0 right-0 bg-textBg-100 border border-textBg-200 rounded -mt-4 max-h-60 overflow-y-auto z-10">
+              <div className="absolute left-0 right-0 bg-textBg-100 border border-textBg-200 rounded -mt-4 max-h-92 overflow-y-auto z-10">
                 {filteredUsers.map(user => (
                   <div
                     key={user.id}
@@ -114,7 +162,11 @@ export function Messages() {
                 <div className="flex-1">
                   <div className="flex justify-between items-center">
                     <span className="font-medium text-textBg-900">{convo.name}</span>
-                    <span className="text-xs text-textBg-600">{new Date(convo.lastDate).toLocaleDateString()}</span>
+                    <span className="text-xs text-textBg-600">
+                      {convo.lastDate && !isNaN(new Date(convo.lastDate).getTime())
+                        ? new Date(convo.lastDate).toLocaleDateString()
+                        : ""}
+                    </span>
                   </div>
                   <div className="text-sm text-textBg-600 truncate block sm:hidden">
                     {convo.lastMessage.length > 20
@@ -145,7 +197,7 @@ export function Messages() {
                   <div key={index} className={`mb-2 ${msg.sender === "Ty" ? "flex justify-end" : "flex justify-start"}`}>
                     <div className={`max-w-xs px-4 py-2 rounded ${
                       msg.sender === "Ty" 
-                        ? "bg-primary-500 text-white rounded rounded-tr-none" 
+                        ? "bg-primary-500 text-white rounded-tr-none" 
                         : "bg-textBg-200 text-textBg-700 rounded rounded-tl-none"
                     }`}>
                       <p>{msg.text}</p>
@@ -167,12 +219,19 @@ export function Messages() {
                   type="text"
                   placeholder="Write a message..."
                   className="w-full border flex-1 border-solid border-textBg-300 rounded px-4 py-2 h-9 focus:outline-none"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSendMessage();
+                    }
+                  }}
                 />
                 <div className="hidden sm:block">
-                  <Button text="Send" icon={<Send size={20}/>} size="m"/>
+                  <Button text="Send" icon={<Send size={20}/>} size="m" onClick={handleSendMessage}/>
                 </div>
                 <div className="block sm:hidden">
-                  <Button icon={<Send size={16}/>} size="m" className="min-w-0 w-9 px-0 py-0"/>
+                  <Button icon={<Send size={16}/>} size="m" className="min-w-0 w-9 px-0 py-0" onClick={handleSendMessage}/>
                 </div>
               </div>
             </>
@@ -185,4 +244,4 @@ export function Messages() {
       </div> 
     </main>
   );
-} 
+}
