@@ -28,6 +28,6 @@ attendancesRouter.patch('/:lessonId/:studentId',
     validateUpdateAttendance(),
     handleInputErrors,
     updateAttendance
-)
+);
 
 export default attendancesRouter;

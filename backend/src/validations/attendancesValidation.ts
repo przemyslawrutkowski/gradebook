@@ -1,20 +1,18 @@
-import { createArrayValidation, createBooleanValidation, createIntValidation } from '../utils/validationHelpers';
+import { createArrayValidation, createBooleanValidation, createNotEmptyValidation } from '../utils/validationHelpers';
 
 export const validateCreateAttendances = () => [
     createArrayValidation('attendances'),
     createBooleanValidation('attendances.*.wasPresent'),
-    createIntValidation('attendances.*.studentId'),
-    createIntValidation('attendances.*.lessonId'),
-    createIntValidation('lessonId', 'param'),
-    createIntValidation('studentId', 'param')
+    createNotEmptyValidation('attendances.*.studentId'),
+    createNotEmptyValidation('attendances.*.lessonId'),
 ];
 
 export const validateGetAttendances = () => [
-    createIntValidation('lessonId', 'param')
+    createNotEmptyValidation('lessonId', 'param')
 ];
 
 export const validateUpdateAttendance = () => [
-    createIntValidation('studentId', 'param'),
-    createIntValidation('lessonId', 'param'),
+    createNotEmptyValidation('studentId', 'param'),
+    createNotEmptyValidation('lessonId', 'param'),
     createBooleanValidation('wasPresent')
 ];
