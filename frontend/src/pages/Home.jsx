@@ -1,13 +1,12 @@
 /* eslint-disable no-unused-vars */
 import React from "react";
 import PageTitle from '../components/PageTitle';
-import Calendar from "../components/DashboardCalendar";
 import ExamCard from "../components/ExamCard";
 import {Atom, Calculator, ChevronRight, CircleAlert, Dna, SquareSigma} from 'lucide-react';
 import GradeCard from "../components/GradeCard";
 import AttendanceChart from "../components/BarChart";
 import HomeworkCard from "../components/HomeworkCard";
-import DashboardCalendar from "../components/DashboardCalendar";
+import DashboardSchedule from "../components/DashboardSchedule";
 
 export function Home() {
   return (
@@ -64,7 +63,7 @@ export function Home() {
 
         {/* Calendar */}
         <div className="flex justify-end">
-          <DashboardCalendar />
+          <DashboardSchedule />
         </div>
       </div>
     </main>
