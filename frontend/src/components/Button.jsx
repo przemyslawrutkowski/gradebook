@@ -19,14 +19,44 @@ export default function Button({ size, text, icon, className, type, onClick }) {
   const sizeClass = sizeClasses[size] || sizeClasses.m;
   const typeClass = typeClasses[type] || typeClasses.primary;
 
-  return (
+  return icon ? (
     <button 
-      className={`min-w-36 rounded flex items-center justify-center gap-2 ${sizeClass} ${typeClass} ${className}`}
+      className={`rounded flex items-center justify-center gap-2 ${sizeClass} ${typeClass} ${className}`}
       onClick={onClick}
     >
       {icon}
+    </button>
+  ) : icon && text ? (
+    <button 
+      className={`min-w-36 rounded flex items-center justify-center gap-2 ${sizeClass} ${typeClass} ${className}`}
+      onClick={onClick}
+    > 
+      {icon}
+      {text}
+    </button>
+  ) :(
+    <button 
+    className={`min-w-36 rounded flex items-center justify-center gap-2 ${sizeClass} ${typeClass} ${className}`}
+    onClick={onClick}
+    > 
       {text}
     </button>
   );
+
+
+  // return (
+  //   {icon ? (
+  //     <button 
+  //     className={`min-w-36 rounded flex items-center justify-center gap-2 ${sizeClass} ${typeClass} ${className}`}
+  //     onClick={onClick}
+  //   >
+  //     {icon}
+  //     {text}
+  //   </button>
+  //   ) : (
+      
+  //   )}
+    
+  // );
 }
 

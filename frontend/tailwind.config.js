@@ -50,6 +50,9 @@ export default {
         epilogue: ['Epilogue', 'sans-serif'],
         inter: ['Inter', 'sans-serif']
       },
+      screens: {
+        'xs': { 'max': '400px' },
+      },
     },
     fontSize: {
       xs: ['12px', '16px'],

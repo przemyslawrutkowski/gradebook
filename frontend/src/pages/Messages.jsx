@@ -28,7 +28,7 @@ export function Messages() {
       lastDate: "2024-04-25",
       messages: [
         { sender: "Jan Kowalski", text: "Cześć! Jak się masz?", date: "2024-04-25T10:00:00" },
-        { sender: "Ty", text: "Dobrze, dziękuję! A Ty?", date: "2024-04-25T10:05:00" },
+        { sender: "You", text: "Dobrze, dziękuję! A Ty?", date: "2024-04-25T10:05:00" },
       ],
     },
     {
@@ -39,7 +39,7 @@ export function Messages() {
       lastDate: "2024-04-24",
       messages: [
         { sender: "Anna Nowak", text: "Czy możemy się spotkać jutro?", date: "2024-04-24T14:30:00" },
-        { sender: "Ty", text: "Tak, pasuje mi godzina 15:00.", date: "2024-04-24T14:35:00" },
+        { sender: "You", text: "Tak, pasuje mi godzina 15:00.", date: "2024-04-24T14:35:00" },
       ],
     },
   ]);
@@ -67,7 +67,7 @@ export function Messages() {
         avatar: user.avatar,
         name: user.name,
         lastMessage: "",
-        lastDate: "", // Pozostawienie lastDate jako pusty ciąg
+        lastDate: "",
         messages: [],
       };
       setConversations([newConversation, ...conversations]);
@@ -86,7 +86,7 @@ export function Messages() {
         const updatedMessages = [
           ...convo.messages,
           {
-            sender: "Ty",
+            sender: "You",
             text: newMessage,
             date: currentDate,
           },
@@ -109,7 +109,7 @@ export function Messages() {
       messages: [
         ...selectedConversation.messages,
         {
-          sender: "Ty",
+          sender: "You",
           text: newMessage,
           date: currentDate,
         },
@@ -195,12 +195,12 @@ export function Messages() {
               <div className="flex-1 overflow-y-auto mb-4">
                 {selectedConversation.messages.map((msg, index) => (
                   <div key={index} className={`mb-2 ${msg.sender === "Ty" ? "flex justify-end" : "flex justify-start"}`}>
-                    <div className={`max-w-xs px-4 py-2 rounded ${
-                      msg.sender === "Ty" 
+                    <div className={`xs:max-w-48 max-w-64 sm:max-w-sm md:max-w-md lg:max-w-lg px-4 py-2 rounded ${
+                      msg.sender === "You" 
                         ? "bg-primary-500 text-white rounded-tr-none" 
                         : "bg-textBg-200 text-textBg-700 rounded rounded-tl-none"
-                    }`}>
-                      <p>{msg.text}</p>
+                    } break-words whitespace-normal`}>
+                      <p className="break-words whitespace-normal">{msg.text}</p>
                       <span className="text-xs block text-right mt-1">
                         {new Date(msg.date).toLocaleString(undefined, {
                           year: 'numeric',
@@ -231,7 +231,7 @@ export function Messages() {
                   <Button text="Send" icon={<Send size={20}/>} size="m" onClick={handleSendMessage}/>
                 </div>
                 <div className="block sm:hidden">
-                  <Button icon={<Send size={16}/>} size="m" className="min-w-0 w-9 px-0 py-0" onClick={handleSendMessage}/>
+                  <Button icon={<Send size={16}/>} size="m" className="w-9 px-0 py-0" onClick={handleSendMessage}/>
                 </div>
               </div>
             </>
