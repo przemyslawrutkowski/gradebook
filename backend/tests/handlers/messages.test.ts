@@ -2,12 +2,9 @@ import prisma from '../../src/db';
 import test, { afterEach, suite } from 'node:test';
 import assert from 'node:assert';
 import { io as Client } from 'socket.io-client';
-import { messageData, student1, student2 } from '../../src/utils/testData';
+import { messageData, student1, student2, teacher1 } from '../../src/utils/testData';
 import {
     sendPostRequest,
-    sendGetRequest,
-    sendPatchRequest,
-    sendDeleteRequest,
 } from '../../src/utils/requestHelpers';
 import { messages } from '@prisma/client';
 import { UserType } from '../../src/enums/userTypes';
@@ -27,6 +24,7 @@ suite('messagesHandler', { only: true }, () => {
     test('Join room and receive unread messages - success', { only: true }, async () => {
         const signUpResponse1 = await sendPostRequest('/auth/signup/student', student1);
         const signUpResponse2 = await sendPostRequest('/auth/signup/student', student2);
+        const signUpResponse3 = await sendPostRequest('/auth/signup/teacher', teacher1);
 
         clientSocket1 = Client(`http://localhost:3000`);
         clientSocket1.emit('join', signUpResponse1.body.data);
@@ -37,6 +35,14 @@ suite('messagesHandler', { only: true }, () => {
             senderTypeId: UserType.Student,
             receiverId: signUpResponse2.body.data,
             receiverTypeId: UserType.Student
+        });
+
+        clientSocket1.emit('send_message', {
+            ...messageData,
+            senderId: signUpResponse3.body.data,
+            senderTypeId: UserType.Teacher,
+            receiverId: signUpResponse3.body.data,
+            receiverTypeId: UserType.Teacher
         });
 
         clientSocket2 = Client(`http://localhost:3000`);
@@ -55,6 +61,7 @@ suite('messagesHandler', { only: true }, () => {
     test('Send and receive message in real-time', { only: true }, async () => {
         const signUpResponse1 = await sendPostRequest('/auth/signup/student', student1);
         const signUpResponse2 = await sendPostRequest('/auth/signup/student', student2)
+        const signUpResponse3 = await sendPostRequest('/auth/signup/teacher', teacher1);
 
         clientSocket1 = Client(`http://localhost:3000`);
         clientSocket1.emit('join', signUpResponse1.body.data);
@@ -76,6 +83,14 @@ suite('messagesHandler', { only: true }, () => {
                 senderTypeId: UserType.Student,
                 receiverId: signUpResponse2.body.data,
                 receiverTypeId: UserType.Student
+            });
+
+            clientSocket1.emit('send_message', {
+                ...messageData,
+                senderId: signUpResponse3.body.data,
+                senderTypeId: UserType.Teacher,
+                receiverId: signUpResponse3.body.data,
+                receiverTypeId: UserType.Teacher
             });
         });
     });
