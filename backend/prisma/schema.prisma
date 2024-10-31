@@ -119,17 +119,17 @@ model lessons {
 }
 
 model messages {
-  id                                                 Bytes       @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
-  subject                                            String      @db.VarChar(255)
-  content                                            String      @db.VarChar(255)
-  date_time                                          DateTime    @default(dbgenerated("(now())")) @db.Timestamp(0)
-  was_read                                           Boolean     @default(dbgenerated("b'0'")) @db.Bit(1)
-  sender_id                                          Bytes       @db.Binary(16)
-  sender_type_id                                     Bytes       @db.Binary(16)
-  receiver_id                                        Bytes       @db.Binary(16)
-  receiver_type_id                                   Bytes       @db.Binary(16)
-  users_types_messages_sender_type_idTousers_types   users_types @relation("messages_sender_type_idTousers_types", fields: [sender_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "messages_ibfk_1")
-  users_types_messages_receiver_type_idTousers_types users_types @relation("messages_receiver_type_idTousers_types", fields: [receiver_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "messages_ibfk_2")
+  id                                                 Bytes      @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
+  subject                                            String     @db.VarChar(255)
+  content                                            String     @db.VarChar(255)
+  date_time                                          DateTime   @default(dbgenerated("(now())")) @db.Timestamp(0)
+  was_read                                           Boolean    @default(dbgenerated("b'0'")) @db.Bit(1)
+  sender_id                                          Bytes      @db.Binary(16)
+  sender_type_id                                     Bytes      @db.Binary(16)
+  receiver_id                                        Bytes      @db.Binary(16)
+  receiver_type_id                                   Bytes      @db.Binary(16)
+  users_types_messages_sender_type_idTousers_types   user_types @relation("messages_sender_type_idTousers_types", fields: [sender_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "messages_ibfk_1")
+  users_types_messages_receiver_type_idTousers_types user_types @relation("messages_receiver_type_idTousers_types", fields: [receiver_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "messages_ibfk_2")
 
   @@index([receiver_type_id], map: "receiver_type_id")
   @@index([sender_type_id], map: "sender_type_id")
@@ -143,7 +143,7 @@ model parents {
   password               String             @db.VarChar(255)
   first_name             String             @db.VarChar(255)
   last_name              String             @db.VarChar(255)
-  reset_password_token   String?            @unique(map: "reset_password_token") @db.VarChar(256)
+  reset_password_token   String?            @unique(map: "reset_password_token") @db.VarChar(512)
   reset_password_expires DateTime?          @db.Timestamp(0)
   students_parents       students_parents[]
 }
@@ -163,7 +163,7 @@ model problems_gradebook {
   user_type_id               Bytes                        @db.Binary(16)
   status_id                  Bytes                        @db.Binary(16)
   problem_types              problem_types                @relation(fields: [problem_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_1")
-  users_types                users_types                  @relation(fields: [user_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_2")
+  users_types                user_types                   @relation(fields: [user_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_2")
   statuses                   statuses                     @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_3")
   problems_history_gradebook problems_history_gradebook[]
 
@@ -213,7 +213,7 @@ model students {
   password               String              @db.VarChar(255)
   first_name             String              @db.VarChar(255)
   last_name              String              @db.VarChar(255)
-  reset_password_token   String?             @unique(map: "reset_password_token") @db.VarChar(256)
+  reset_password_token   String?             @unique(map: "reset_password_token") @db.VarChar(512)
   reset_password_expires DateTime?           @db.Timestamp(0)
   class_id               Bytes?              @db.Binary(16)
   attendances            attendances[]
@@ -302,7 +302,7 @@ model teachers {
   password               String              @db.VarChar(255)
   first_name             String              @db.VarChar(255)
   last_name              String              @db.VarChar(255)
-  reset_password_token   String?             @unique(map: "reset_password_token") @db.VarChar(256)
+  reset_password_token   String?             @unique(map: "reset_password_token") @db.VarChar(512)
   reset_password_expires DateTime?           @db.Timestamp(0)
   classes                classes[]
   grades_gradebook       grades_gradebook[]
@@ -328,14 +328,6 @@ model updates {
   release_time DateTime @default(dbgenerated("(now())")) @db.Timestamp(0)
 }
 
-model users_types {
-  id                                              Bytes                @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
-  name                                            String               @db.VarChar(255)
-  messages_messages_sender_type_idTousers_types   messages[]           @relation("messages_sender_type_idTousers_types")
-  messages_messages_receiver_type_idTousers_types messages[]           @relation("messages_receiver_type_idTousers_types")
-  problems_gradebook                              problems_gradebook[]
-}
-
 model administrators {
   id                     Bytes     @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   pesel                  String    @unique(map: "pesel") @db.VarChar(255)
@@ -344,6 +336,14 @@ model administrators {
   password               String    @db.VarChar(255)
   first_name             String    @db.VarChar(255)
   last_name              String    @db.VarChar(255)
-  reset_password_token   String?   @unique(map: "reset_password_token") @db.VarChar(256)
+  reset_password_token   String?   @unique(map: "reset_password_token") @db.VarChar(512)
   reset_password_expires DateTime? @db.Timestamp(0)
+}
+
+model user_types {
+  id                                              Bytes                @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
+  name                                            String               @unique(map: "name") @db.VarChar(255)
+  messages_messages_sender_type_idTousers_types   messages[]           @relation("messages_sender_type_idTousers_types")
+  messages_messages_receiver_type_idTousers_types messages[]           @relation("messages_receiver_type_idTousers_types")
+  problems_gradebook                              problems_gradebook[]
 }
