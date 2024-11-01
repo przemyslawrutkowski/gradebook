@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { signUp } from './users';
+import { UserType } from '../enums/userTypes';
 
 export const signUpStudent = (req: Request, res: Response) => {
-    return signUp(req, res, 'students');
+    return signUp(req, res, UserType.Student);
 };

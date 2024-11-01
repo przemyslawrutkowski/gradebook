@@ -193,11 +193,11 @@ export const assignStudent = async (req: Request, res: Response) => {
 
 export const deleteClass = async (req: Request, res: Response) => {
     try {
-        const id: string = req.params.classId;
+        const classId: string = req.params.classId;
 
         const existingClass: classes | null = await prisma.classes.findUnique({
             where: {
-                id: Buffer.from(uuidParse(id))
+                id: Buffer.from(uuidParse(classId))
             }
         });
 
@@ -207,7 +207,7 @@ export const deleteClass = async (req: Request, res: Response) => {
 
         const deletedClass = await prisma.classes.delete({
             where: {
-                id: Buffer.from(uuidParse(id))
+                id: Buffer.from(uuidParse(classId))
             }
         });
 

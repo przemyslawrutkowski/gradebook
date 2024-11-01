@@ -1,6 +1,4 @@
 import { Request, Response } from 'express';
-import LoginCredentials from "../interfaces/loginCredentials.js";
-import RegisterCredentials from '../interfaces/registerCredentials.js';
 import prisma from '../db.js';
 import { students, teachers, parents, administrators } from '@prisma/client';
 import { comparePasswords, generateJWT, hashPassword } from '../modules/auth';
@@ -9,6 +7,7 @@ import nodemailer from 'nodemailer';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces.js';
 import { SMTP_USER, SMTP_PASS } from '../modules/validateEnv.js';
 import { stringify as uuidStringify } from 'uuid';
+import { UserType } from '../enums/userTypes.js';
 
 function isStudent(user: students | teachers | parents | administrators): user is students {
     return (user as students).class_id !== undefined;
@@ -16,48 +15,51 @@ function isStudent(user: students | teachers | parents | administrators): user i
 
 export const signIn = async (req: Request, res: Response) => {
     try {
-        const credentials: LoginCredentials = {
-            email: req.body.email,
-            password: req.body.password
-        };
+        const email: string = req.body.email;
+        const password: string = req.body.password;
 
         const criteria = {
             where: {
-                email: credentials.email
+                email: email
             }
         };
 
-        let existingUser: students | teachers | parents | administrators | null = await prisma.students.findUnique(criteria);
-        let role: 'student' | 'teacher' | 'parent' | 'administrator' | 'unknown' = 'unknown';
+        let existingUser: students | teachers | parents | administrators | null = null;
+        let role: UserType = UserType.Unknown;
 
-        if (existingUser) {
-            role = 'student';
-        } else if (!existingUser) {
+        if (!existingUser) {
+            existingUser = await prisma.students.findUnique(criteria);
+            if (existingUser) {
+                role = UserType.Student;
+            }
+        }
+
+        if (!existingUser) {
             existingUser = await prisma.teachers.findUnique(criteria);
             if (existingUser) {
-                role = "teacher";
+                role = UserType.Teacher;
             }
         }
 
         if (!existingUser) {
             existingUser = await prisma.parents.findUnique(criteria);
             if (existingUser) {
-                role = "parent";
+                role = UserType.Parent;
             }
         }
 
         if (!existingUser) {
             existingUser = await prisma.administrators.findUnique(criteria);
             if (existingUser) {
-                role = "administrator";
+                role = UserType.Administrator;
             }
         }
 
-        if (!existingUser || role === 'unknown') {
+        if (!existingUser) {
             return res.status(404).json(createErrorResponse('Invalid credentials.'));
         }
 
-        const isValid = await comparePasswords(credentials.password, existingUser.password);
+        const isValid = await comparePasswords(password, existingUser.password);
         if (!isValid) {
             return res.status(401).json(createErrorResponse('Invalid credentials.'));
         }
@@ -81,80 +83,80 @@ export const signIn = async (req: Request, res: Response) => {
     }
 };
 
-export const signUp = async (req: Request, res: Response, targetGroup: 'students' | 'teachers' | 'parents' | 'administrators') => {
+export const signUp = async (req: Request, res: Response, role: UserType) => {
     try {
-        const credentials: RegisterCredentials = {
-            pesel: req.body.pesel,
-            email: req.body.email,
-            phoneNumber: req.body.phoneNumber,
-            password: req.body.password,
-            passwordConfirm: req.body.passwordConfirm,
-            firstName: req.body.firstName,
-            lastName: req.body.lastName
-        };
+        if (role === UserType.Unknown) {
+            return res.status(422).json(createErrorResponse('Invalid user type.'));
+        }
+
+        const pesel: string = req.body.pesel;
+        const email: string = req.body.email;
+        const phoneNumber: string = req.body.phoneNumber;
+        const password: string = req.body.password;
+        const firstName: string = req.body.firstName;
+        const lastName: string = req.body.lastName;
 
         const criteria = {
             where: {
                 OR: [
                     {
-                        pesel: credentials.pesel
+                        pesel: pesel
                     },
                     {
-                        email: credentials.email
+                        email: email
                     },
                     {
-                        phone_number: credentials.phoneNumber
-                    },
+                        phone_number: phoneNumber
+                    }
                 ],
             }
         }
 
         let existingUsers: students[] | teachers[] | parents[] | administrators[] | null = null;
 
-        switch (targetGroup) {
-            case 'students':
+        switch (role) {
+            case UserType.Student:
                 existingUsers = await prisma.students.findMany(criteria);
                 break;
-            case 'teachers':
+            case UserType.Teacher:
                 existingUsers = await prisma.teachers.findMany(criteria);
                 break;
-            case 'parents':
+            case UserType.Parent:
                 existingUsers = await prisma.parents.findMany(criteria);
                 break;
-            case 'administrators':
+            case UserType.Administrator:
                 existingUsers = await prisma.administrators.findMany(criteria);
                 break;
         }
-
 
         if (existingUsers.length > 0) {
             return res.status(409).json(createErrorResponse('User already exists.'));
         }
 
-        const hashedPassword = await hashPassword(credentials.password);
+        const hashedPassword = await hashPassword(password);
         const dataToCreate = {
             data: {
-                pesel: credentials.pesel,
-                email: credentials.email,
-                phone_number: credentials.phoneNumber,
+                pesel: pesel,
+                email: email,
+                phone_number: phoneNumber,
                 password: hashedPassword,
-                first_name: credentials.firstName,
-                last_name: credentials.lastName,
+                first_name: firstName,
+                last_name: lastName,
             }
         }
 
         let createdUser: students | teachers | parents | administrators;
-        switch (targetGroup) {
-            case 'students':
+        switch (role) {
+            case UserType.Student:
                 createdUser = await prisma.students.create(dataToCreate);
                 break;
-            case 'teachers':
+            case UserType.Teacher:
                 createdUser = await prisma.teachers.create(dataToCreate);
                 break;
-            case 'parents':
+            case UserType.Parent:
                 createdUser = await prisma.parents.create(dataToCreate);
                 break;
-            case 'administrators':
+            case UserType.Administrator:
                 createdUser = await prisma.administrators.create(dataToCreate);
                 break;
         }
@@ -176,33 +178,38 @@ export const forgotPassword = async (req: Request, res: Response) => {
             }
         }
 
-        let existingUser: students | teachers | parents | administrators | null = await prisma.students.findUnique(criteria);
-        let role: 'student' | 'teacher' | 'parent' | 'administrator' | 'unknown' = 'unknown';
+        let existingUser: students | teachers | parents | administrators | null = null;
+        let role: UserType = UserType.Unknown;
 
-        if (existingUser) {
-            role = 'student';
-        } else if (!existingUser) {
+        if (!existingUser) {
+            existingUser = await prisma.students.findUnique(criteria);
+            if (existingUser) {
+                role = UserType.Student;
+            }
+        }
+
+        if (!existingUser) {
             existingUser = await prisma.teachers.findUnique(criteria);
             if (existingUser) {
-                role = "teacher";
+                role = UserType.Teacher;
             }
         }
 
         if (!existingUser) {
             existingUser = await prisma.parents.findUnique(criteria);
             if (existingUser) {
-                role = "parent";
+                role = UserType.Parent;
             }
         }
 
         if (!existingUser) {
             existingUser = await prisma.administrators.findUnique(criteria);
             if (existingUser) {
-                role = "administrator";
+                role = UserType.Administrator;
             }
         }
 
-        if (!existingUser || role === 'unknown') {
+        if (!existingUser) {
             return res.status(404).json(createErrorResponse('Invalid credential.'));
         }
 
@@ -227,16 +234,16 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
         let updatedUser: students | teachers | parents | administrators;
         switch (role) {
-            case 'student':
+            case UserType.Student:
                 updatedUser = await prisma.students.update(dataToUpdate);
                 break;
-            case 'teacher':
+            case UserType.Teacher:
                 updatedUser = await prisma.teachers.update(dataToUpdate);
                 break;
-            case 'parent':
+            case UserType.Parent:
                 updatedUser = await prisma.parents.update(dataToUpdate);
                 break;
-            case 'administrator':
+            case UserType.Administrator:
                 updatedUser = await prisma.administrators.update(dataToUpdate);
                 break;
         }
@@ -275,13 +282,21 @@ export const resetPassword = async (req: Request, res: Response) => {
         const user: AuthUser = req.user as AuthUser;
         const password: string = req.body.password;
 
+        if (user.role === UserType.Unknown) {
+            return res.status(422).json(createErrorResponse('Invalid user type.'));
+        }
+
         const criteria = {
             where: {
                 email: user.email
             }
         }
 
-        let existingUser: students | teachers | parents | administrators | null = await prisma.students.findUnique(criteria);
+        let existingUser: students | teachers | parents | administrators | null = null;
+
+        if (!existingUser) {
+            existingUser = await prisma.students.findUnique(criteria);
+        }
 
         if (!existingUser) {
             existingUser = await prisma.teachers.findUnique(criteria);
@@ -314,16 +329,16 @@ export const resetPassword = async (req: Request, res: Response) => {
 
         let updatedUser: students | teachers | parents | administrators;
         switch (user.role) {
-            case 'student':
+            case UserType.Student:
                 updatedUser = await prisma.students.update(dataToUpdate);
                 break;
-            case 'teacher':
+            case UserType.Teacher:
                 updatedUser = await prisma.teachers.update(dataToUpdate);
                 break;
-            case 'parent':
+            case UserType.Parent:
                 updatedUser = await prisma.parents.update(dataToUpdate);
                 break;
-            case 'administrator':
+            case UserType.Administrator:
                 updatedUser = await prisma.administrators.update(dataToUpdate);
                 break;
         }

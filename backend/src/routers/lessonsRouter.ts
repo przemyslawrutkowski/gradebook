@@ -3,12 +3,13 @@ import { authenticate, authorize } from '../modules/auth.js';
 import { validateGenerateLessons, validateUpdateLesson, validateGetAndDeleteLessons } from '../validations/lessonsValidation.js';
 import { generateLessons, getLessons, updateLesson, deleteLessons } from '../handlers/lessons.js';
 import { handleInputErrors } from '../modules/middleware.js';
+import { UserType } from '../enums/userTypes.js';
 
 const lessonsRouter = Router();
 
 lessonsRouter.post('',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateGenerateLessons(),
     handleInputErrors,
     generateLessons
@@ -16,7 +17,7 @@ lessonsRouter.post('',
 
 lessonsRouter.get('/:classId/:subjectId',
     authenticate,
-    authorize(['administrator', 'teacher', 'parent', 'student']),
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
     validateGetAndDeleteLessons(),
     handleInputErrors,
     getLessons
@@ -24,7 +25,7 @@ lessonsRouter.get('/:classId/:subjectId',
 
 lessonsRouter.patch('/:lessonId',
     authenticate,
-    authorize(['administrator', 'teacher']),
+    authorize([UserType.Administrator, UserType.Teacher]),
     validateUpdateLesson(),
     handleInputErrors,
     updateLesson
@@ -32,7 +33,7 @@ lessonsRouter.patch('/:lessonId',
 
 lessonsRouter.delete('/:classId/:subjectId',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateGetAndDeleteLessons(),
     handleInputErrors,
     deleteLessons

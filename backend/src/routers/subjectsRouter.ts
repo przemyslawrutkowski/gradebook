@@ -3,12 +3,13 @@ import { authenticate, authorize } from '../modules/auth.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { validateSubjectName, validateSubjectId, validateSubjectUpdate } from '../validations/subjectsValidation.js';
 import { createSubject, getSubjects, updateSubject, deleteSubject } from '../handlers/subjects.js';
+import { UserType } from '../enums/userTypes.js';
 
 const subjectsRouter = Router();
 
 subjectsRouter.post('',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateSubjectName(),
     handleInputErrors,
     createSubject
@@ -16,13 +17,13 @@ subjectsRouter.post('',
 
 subjectsRouter.get('',
     authenticate,
-    authorize(['administrator', 'teacher', 'parent', 'student']),
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
     getSubjects
 )
 
 subjectsRouter.patch('/:subjectId',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateSubjectUpdate(),
     handleInputErrors,
     updateSubject
@@ -30,7 +31,7 @@ subjectsRouter.patch('/:subjectId',
 
 subjectsRouter.delete('/:subjectId',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateSubjectId(),
     handleInputErrors,
     deleteSubject

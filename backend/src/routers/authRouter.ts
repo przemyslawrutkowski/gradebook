@@ -7,6 +7,7 @@ import { signUpParent } from '../handlers/parents.js';
 import { signUpAdministrator } from '../handlers/administrators.js';
 import { validateSignIn, validateSignUp, validateForgotPassword, validateResetPassword } from '../validations/authValidation.js';
 import { handleInputErrors } from '../modules/middleware.js';
+import { UserType } from '../enums/userTypes.js';
 
 const authRouter = Router();
 
@@ -18,7 +19,7 @@ authRouter.post('/signin',
 
 authRouter.post('/signup/student',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateSignUp(),
     handleInputErrors,
     signUpStudent
@@ -26,7 +27,7 @@ authRouter.post('/signup/student',
 
 authRouter.post('/signup/teacher',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateSignUp(),
     handleInputErrors,
     signUpTeacher
@@ -34,7 +35,7 @@ authRouter.post('/signup/teacher',
 
 authRouter.post('/signup/parent',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateSignUp(),
     handleInputErrors,
     signUpParent
@@ -42,7 +43,7 @@ authRouter.post('/signup/parent',
 
 authRouter.post('/signup/administrator',
     //authenticate,
-    //authorize(['administrator']),
+    //authorize([UserType.Administrator]),
     validateSignUp(),
     handleInputErrors,
     signUpAdministrator
