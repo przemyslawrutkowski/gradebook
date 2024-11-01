@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
+import http from 'http';
 import { Request, Response, NextFunction } from 'express';
+import { Server } from 'socket.io';
 import authRouter from './routers/authRouter';
 import studentsParentsRouter from './routers/studentsParentsRouter';
 import classesRouter from './routers/classesRouter';
@@ -8,8 +10,12 @@ import studentsRouter from './routers/studentsRouter';
 import lessonsRouter from './routers/lessonsRouter';
 import subjectsRouter from './routers/subjectsRouter';
 import attendancesRouter from './routers/attendancesRouter';
+import userTypesRouter from './routers/userTypesRouter';
+import { messagesHandler } from './handlers/messages';
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -22,6 +28,11 @@ app.use('/student', studentsRouter);
 app.use('/lesson', lessonsRouter);
 app.use('/subject', subjectsRouter);
 app.use('/attendance', attendancesRouter);
+app.use('/user-type', userTypesRouter);
+
+io.on('connection', (socket) => {
+    messagesHandler(io, socket);
+});
 
 app.use(function (err: Error, req: Request, res: Response, next: NextFunction) {
     console.error(err.stack)

@@ -1,3 +1,5 @@
+import { UserType } from "../enums/userTypes";
+
 export const administrator1 = {
     pesel: '11111111111',
     email: 'administrator1@administrator.com',
@@ -157,6 +159,31 @@ export const invalidLessonsData = {
 
 export const invalidLessonUpdate = {
     description: ''
+};
+
+export const messageData = {
+    subject: "Subject",
+    content: "Content",
+};
+
+export const userType1 = {
+    name: UserType.Student
+};
+
+export const userType2 = {
+    name: UserType.Parent
+};
+
+export const userType3 = {
+    name: UserType.Teacher
+};
+
+export const userType4 = {
+    name: UserType.Administrator
+};
+
+export const invalidUserType = {
+    name: ''
 };
 
 export const nonExistentId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';

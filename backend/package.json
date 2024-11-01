@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "clear && node --test --test-concurrency=1",
+    "test": "clear && node --test --test-concurrency=1 --test-only",
     "start": "clear && npx tsc && node --env-file=.env ./dist/src/index.js"
   },
   "keywords": [],
@@ -18,17 +18,19 @@
     "@types/node": "^22.2.0",
     "@types/nodemailer": "^6.4.15",
     "@types/uuid": "^10.0.0",
-    "prisma": "^5.19.1",
+    "prisma": "^5.21.1",
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "@prisma/client": "^5.19.1",
+    "@prisma/client": "^5.21.1",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "express-validator": "^7.2.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.14",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "uuid": "^10.0.0"
   }
 }
