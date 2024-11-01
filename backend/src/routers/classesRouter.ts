@@ -3,12 +3,13 @@ import { authenticate, authorize } from '../modules/auth.js';
 import { validateCreateClass, validateAssignStudent, validateClassUpdate, validateClassId } from '../validations/classesValidation.js';
 import { getClasses, createClass, assignStudent, updateClass, deleteClass, getStudents } from '../handlers/classes.js';
 import { handleInputErrors } from '../modules/middleware.js';
+import { UserType } from '../enums/userTypes.js';
 
 const classesRouter = Router();
 
 classesRouter.post('',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateCreateClass(),
     handleInputErrors,
     createClass
@@ -16,13 +17,13 @@ classesRouter.post('',
 
 classesRouter.get('',
     authenticate,
-    authorize(['administrator', 'teacher']),
+    authorize([UserType.Administrator, UserType.Teacher]),
     getClasses
 );
 
 classesRouter.get('/:classId/students',
     authenticate,
-    authorize(['administrator', 'teacher', 'parent', 'student']),
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
     validateClassId(),
     handleInputErrors,
     getStudents
@@ -30,7 +31,7 @@ classesRouter.get('/:classId/students',
 
 classesRouter.patch('/:classId',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateClassUpdate(),
     handleInputErrors,
     updateClass
@@ -38,7 +39,7 @@ classesRouter.patch('/:classId',
 
 classesRouter.patch('/:classId/assign-student',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateAssignStudent(),
     handleInputErrors,
     assignStudent
@@ -46,7 +47,7 @@ classesRouter.patch('/:classId/assign-student',
 
 classesRouter.delete('/:classId',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateClassId(),
     handleInputErrors,
     deleteClass

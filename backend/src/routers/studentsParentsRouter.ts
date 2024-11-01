@@ -3,12 +3,13 @@ import { authenticate, authorize } from '../modules/auth.js';
 import { validateCreateStudentParentRelationship, validateDeleteStudentParentRelationship } from '../validations/studentsParentsValidation.js';
 import { createStudentParentRelationship, deleteStudentParentRelationship } from '../handlers/studentsParents.js';
 import { handleInputErrors } from '../modules/middleware.js';
+import { UserType } from '../enums/userTypes.js';
 
 const studentsParentsRouter = Router();
 
 studentsParentsRouter.post('/student-parent-relationship',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateCreateStudentParentRelationship(),
     handleInputErrors,
     createStudentParentRelationship
@@ -16,7 +17,7 @@ studentsParentsRouter.post('/student-parent-relationship',
 
 studentsParentsRouter.delete('/student-parent-relationship/:studentId/:parentId',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateDeleteStudentParentRelationship(),
     handleInputErrors,
     deleteStudentParentRelationship

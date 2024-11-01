@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "clear && node --test --test-concurrency=1 --test-only",
+    "test": "clear && node --test --test-concurrency=1",
     "start": "clear && npx tsc && node --env-file=.env ./dist/src/index.js"
   },
   "keywords": [],

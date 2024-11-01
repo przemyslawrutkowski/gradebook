@@ -3,12 +3,13 @@ import { handleInputErrors } from '../modules/middleware.js';
 import { createAttendances, getAttendances, updateAttendance } from '../handlers/attendances.js';
 import { authenticate, authorize } from '../modules/auth.js';
 import { validateCreateAttendances, validateGetAttendances, validateUpdateAttendance } from '../validations/attendancesValidation.js';
+import { UserType } from '../enums/userTypes.js';
 
 const attendancesRouter = Router();
 
 attendancesRouter.post('',
     authenticate,
-    authorize(['administrator', 'teacher']),
+    authorize([UserType.Administrator, UserType.Teacher]),
     validateCreateAttendances(),
     handleInputErrors,
     createAttendances
@@ -16,7 +17,7 @@ attendancesRouter.post('',
 
 attendancesRouter.get('/:lessonId',
     authenticate,
-    authorize(['administrator', 'teacher']),
+    authorize([UserType.Administrator, UserType.Teacher]),
     validateGetAttendances(),
     handleInputErrors,
     getAttendances
@@ -24,7 +25,7 @@ attendancesRouter.get('/:lessonId',
 
 attendancesRouter.patch('/:lessonId/:studentId',
     authenticate,
-    authorize(['administrator', 'teacher']),
+    authorize([UserType.Administrator, UserType.Teacher]),
     validateUpdateAttendance(),
     handleInputErrors,
     updateAttendance

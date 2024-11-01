@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import AuthUser from '../interfaces/authUser.js';
 import { Request, Response, NextFunction } from 'express';
 import { createErrorResponse } from '../interfaces/responseInterfaces.js';
+import { UserType } from '../enums/userTypes.js';
 
 export const comparePasswords = (password: string, hash: string) => {
     return bcrypt.compare(password, hash);
@@ -38,7 +39,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
     }
 }
 
-export const authorize = (roles: string[]) => {
+export const authorize = (roles: UserType[]) => {
     return (req: Request, res: Response, next: NextFunction) => {
         const userRole = req.user?.role;
         if (!userRole || !roles.includes(userRole)) {

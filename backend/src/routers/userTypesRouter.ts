@@ -3,12 +3,13 @@ import { authenticate, authorize } from '../modules/auth.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { createUserType, deleteUserType } from '../handlers/userTypes.js';
 import { validateUserTypeName, validateUserTypeId } from '../validations/userTypesValidation.js';
+import { UserType } from '../enums/userTypes.js';
 
 const userTypesRouter = Router();
 
 userTypesRouter.post('',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateUserTypeName(),
     handleInputErrors,
     createUserType
@@ -16,7 +17,7 @@ userTypesRouter.post('',
 
 userTypesRouter.delete('/:userTypeId',
     authenticate,
-    authorize(['administrator']),
+    authorize([UserType.Administrator]),
     validateUserTypeId(),
     handleInputErrors,
     deleteUserType

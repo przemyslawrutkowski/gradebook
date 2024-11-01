@@ -7,7 +7,7 @@ import {
 } from '../../src/utils/requestHelpers';
 import { userType1, invalidUserType, nonExistentId, invalidIdUrl } from '../../src/utils/testData';
 
-suite('subjectsRouter', () => {
+suite('userTypesRouter', () => {
     afterEach(async () => {
         await prisma.user_types.deleteMany();
     });

@@ -9,19 +9,20 @@ import {
 import { messages } from '@prisma/client';
 import { UserType } from '../../src/enums/userTypes';
 
-suite('messagesHandler', { only: true }, () => {
+suite('messagesHandler', () => {
     let clientSocket1: any;
     let clientSocket2: any;
 
     afterEach(async () => {
         await prisma.messages.deleteMany();
         await prisma.students.deleteMany();
+        await prisma.teachers.deleteMany();
 
         if (clientSocket1) clientSocket1.close();
         if (clientSocket2) clientSocket2.close();
     });
 
-    test('Join room and receive unread messages - success', { only: true }, async () => {
+    test('Join room and receive unread messages - success', async () => {
         const signUpResponse1 = await sendPostRequest('/auth/signup/student', student1);
         const signUpResponse2 = await sendPostRequest('/auth/signup/student', student2);
         const signUpResponse3 = await sendPostRequest('/auth/signup/teacher', teacher1);
@@ -58,7 +59,7 @@ suite('messagesHandler', { only: true }, () => {
         })();
     });
 
-    test('Send and receive message in real-time', { only: true }, async () => {
+    test('Send and receive message in real-time', async () => {
         const signUpResponse1 = await sendPostRequest('/auth/signup/student', student1);
         const signUpResponse2 = await sendPostRequest('/auth/signup/student', student2)
         const signUpResponse3 = await sendPostRequest('/auth/signup/teacher', teacher1);
