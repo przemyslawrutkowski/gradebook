@@ -121,7 +121,7 @@ export function Messages() {
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8 flex flex-col">
       <PageTitle text="Messages"/>
-      <div className="w-full mt-4 h-max flex flex-col xl:flex-row gap-8">
+      <div className="w-full h-max flex flex-col xl:flex-row gap-8">
         <div className="w-full h-full xl:w-fit bg-white border border-solid border-textBg-200 rounded p-4 flex flex-col"> 
           <div className="relative">
             <div className="h-9 flex items-center px-3 py-3 bg-white rounded border border-solid border-textBg-300 text-textBg-700 mb-4">

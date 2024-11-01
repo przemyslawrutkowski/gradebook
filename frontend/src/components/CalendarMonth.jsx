@@ -45,7 +45,7 @@ const Modal = ({ isOpen, onClose, events, date }) => {
         aria-modal="true"
         aria-labelledby="modal-title"
       >
-        <div>
+        <div className=''>
           <div className="flex justify-between items-center">
             <h2 id="modal-title" className="text-xl font-bold text-textBg-900">
               Events
@@ -71,28 +71,23 @@ const Modal = ({ isOpen, onClose, events, date }) => {
           ) : (
             events.map((event, index) => (
               <div key={index}>
-                <p className={`text-sm font-semibold mb-[6px] text-primary-500`}>
+                <p className={`text-sm font-semibold mb-[6px] text-textBg-700`}>
                   {event.title}
                 </p>
-                <div className='flex flex-col gap-2'>
-                  <div className='flex w-full'>
-                    <div className='flex gap-1 items-center w-24'>
-                      <Clock size={14} color="#9095a1" />
-                      <p className='text-sm text-textBg-500'>Time</p>
-                    </div>
-                    <p className='text-sm text-textBg-900'>
+                <div className='flex gap-4'>
+                  <div className='flex gap-1 items-center'>
+                    <Clock size={14} color="#9095a1" />
+                    <p className='text-sm text-textBg-500'>
                       {event.hour}
                     </p>
                   </div>
-                  <div className='flex w-full'>
-                    <div className='flex gap-1 items-center w-24'>
-                      <MapPin size={14} color="#9095a1" />
-                      <p className='text-sm text-textBg-500'>Room</p>
-                    </div>
-                    <p className='text-sm text-textBg-900'>
+                  <div className='flex gap-1 items-center'>
+                    <MapPin size={14} color="#9095a1" />
+                    <p className='text-sm text-textBg-500'>
                       {event.room}
                     </p>
                   </div>
+                  
                 </div>
               </div>
             ))
@@ -309,7 +304,7 @@ export const CalendarMonth = () => {
           return (
             <div key={index} className="w-full flex justify-center items-center">
               <p className={`text-base text-center ${isWeekend ? 'text-primary-600' : 'text-textBg-500'}`}>
-                {dayName}
+                {dayName.slice(0,3)}
               </p>
             </div>
           );
@@ -363,7 +358,7 @@ export const CalendarMonth = () => {
             return (
               <div
                 key={idx}
-                className={`p-2 overflow-hidden h-24 flex flex-col justify-start items-start border-t border-l border-textBg-200 bg-textBg-100
+                className={`p-2 overflow-hidden h-[92px] flex flex-col justify-start items-start border-t border-l border-textBg-200 bg-textBg-100
                 }`}
               >
                 <p className={`text-sm font-medium mb-1
@@ -376,9 +371,9 @@ export const CalendarMonth = () => {
                 </p>
                 
                 {isCurrentMonth && dayEvents.slice(0, MAX_EVENTS_DISPLAY).map((event, eventIdx) => (
-                  <div key={eventIdx} className='flex items-center gap-2'>
-                    <div className={`w-[6px] h-[6px] rounded-full ${event.bgColor}`}/>
-                    <p className={`text-xs font-semibold ${event.textColor}`}>
+                  <div key={eventIdx} className="flex items-center gap-2">
+                    <div className={`w-[6px] h-[6px] lg:hidden xl:block rounded-full ${event.bgColor}`} />
+                    <p className={`text-xs xl:font-semibold ${event.textColor} truncate`}>
                       {event.title}
                     </p>
                   </div>
@@ -388,7 +383,7 @@ export const CalendarMonth = () => {
                 {isCurrentMonth && dayEvents.length > MAX_EVENTS_DISPLAY && (
                   <button
                     onClick={() => openModal(dayEvents.slice(MAX_EVENTS_DISPLAY), currentDate)}
-                    className="ml-3 mt-1 text-xs text-textBg-500 hover:underline"
+                    className="xl:ml-3 mt-1 text-xs text-textBg-500 hover:underline"
                   >
                     +{dayEvents.length - MAX_EVENTS_DISPLAY} events
                   </button>

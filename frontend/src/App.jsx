@@ -24,9 +24,9 @@ export default function App() {
       </Routes>
       <Sidebar>
         <SidebarItem icon={<LayoutDashboard size={20} />} text="Home" path="/" active/>
-        <SidebarItem icon={<LayoutDashboard size={20} />} text="Home" path="/1"/>
-        <SidebarItem icon={<LayoutDashboard size={20} />} text="Home" path="/2"/>
-        <SidebarItem icon={<LayoutDashboard size={20} />} text="Home" path="/3"/>
+        <SidebarItem icon={<LayoutDashboard size={20} />} text="Schedule" path="/1"/>
+        <SidebarItem icon={<LayoutDashboard size={20} />} text="Messages" path="/2"/>
+        <SidebarItem icon={<LayoutDashboard size={20} />} text="Calendar" path="/3"/>
       </Sidebar> 
     </div>
     </>
