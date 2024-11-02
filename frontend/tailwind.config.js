@@ -53,6 +53,7 @@ export default {
       },
       screens: {
         'xs': { 'max': '400px' },
+        'xxs': { 'min': '360px' }
       },
     },
     fontSize: {

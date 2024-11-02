@@ -1,18 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import Button from './Button';
-import Tag from './Tag';
-import { Atom, ChevronLeft, ChevronRight, Clock, MapPin } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, CheckCircle, XCircle, MapPin, Clock, Moon, Hourglass } from 'lucide-react';
 import {
   dayNames,
   monthNames,
   displayMonthNames,
   monthNumbers,
-  convertTimeToHours,
-  getCurrentTimePosition,
   getDaysInMonth,
   areDatesEqual,
-  getStartOfWeek,
-  formatWeekRange,
   getYearForMonthIndex
 } from '../utils/SchedCalUtils';
 
@@ -23,138 +17,69 @@ let baseYear = today.getFullYear();
 if (today.getMonth() < 8) { 
   baseYear -= 1;
 }
-  
-const eventsData = [
+
+const attendanceData = [
     { 
-      title: 'PE Exam', 
-      hour: '07:00 AM', 
-      room: '101', 
-      bgColor: 'bg-[#f3f4f6]', 
       date: new Date(baseYear, 8, 1), 
-      textColor: 'text-[#6f7787]',
-      type: 'Exam' 
+      status: 'Present', 
+      title: 'Mathematics', 
+      hour: '09:00 AM'
     },
     { 
-      title: 'Biology Exam', 
-      hour: '10:00 AM', 
-      room: '102', 
-      bgColor: 'bg-[#1A99EE]', 
-      date: new Date(baseYear, 8, 1), 
-      textColor: 'text-[#000]',
-      type: 'Quiz' 
-    },
-    { 
-      title: 'Biology Exam', 
-      hour: '10:00 AM', 
-      room: '103', 
-      bgColor: 'bg-[#1A99EE]', 
-      date: new Date(baseYear, 8, 1), 
-      textColor: 'text-[#000]',
-      type: 'Exam' 
-    },
-    { 
-      title: 'Chemistry Exam', 
-      hour: '10:00 AM', 
-      room: '104', 
-      bgColor: 'bg-[#1A99EE]', 
-      date: new Date(baseYear, 8, 1), 
-      textColor: 'text-[#000]',
-      type: 'Exam' 
-    },
-    { 
-      title: 'Math Exam', 
-      hour: '10:00 AM', 
-      room: '105', 
-      bgColor: 'bg-[#1A99EE]', 
-      date: new Date(baseYear, 8, 1), 
-      textColor: 'text-[#000]',
-      type: 'Exam' 
-    },
-    { 
-      title: 'Physics Exam', 
-      hour: '10:00 AM', 
-      room: '106', 
-      bgColor: 'bg-[#1A99EE]', 
-      date: new Date(baseYear, 8, 1), 
-      textColor: 'text-[#000]',
-      type: 'Exam' 
-    },
-    { 
-      title: 'Math Exam', 
-      hour: '03:30 PM', 
-      room: '201', 
-      bgColor: 'bg-[#f1f9fe]', 
       date: new Date(baseYear, 8, 2), 
-      textColor: 'text-[#0f7bc4]',
-      type: 'Exam' 
+      status: 'Absent', 
+      title: 'Biology', 
+      hour: '10:00 AM'
     },
     { 
-      title: 'Physics Exam', 
-      hour: '05:00 PM', 
-      room: '202', 
-      bgColor: 'bg-[#F5C747]', 
       date: new Date(baseYear, 8, 3), 
-      textColor: 'text-[#000]',
-      type: 'Exam' 
+      status: 'Late', 
+      title: 'Chemistry', 
+      hour: '11:00 AM'
     },
     { 
-      title: 'Physics Exam', 
-      hour: '05:00 PM', 
-      room: '203', 
-      bgColor: 'bg-[#F5C747]', 
       date: new Date(baseYear, 8, 4), 
-      textColor: 'text-[#000]',
-      type: 'Exam' 
+      status: 'Present', 
+      title: 'Physics', 
+      hour: '01:00 PM'
     },
     { 
-      title: 'Physics Exam', 
-      hour: '05:00 PM', 
-      room: '204', 
-      bgColor: 'bg-[#F5C747]', 
       date: new Date(baseYear, 8, 5), 
-      textColor: 'text-[#000]',
-      type: 'Exam' 
+      status: 'Absent', 
+      title: 'History', 
+      hour: '02:00 PM'
     },
     { 
-      title: 'Physics Exam', 
-      hour: '05:00 PM', 
-      room: '205', 
-      bgColor: 'bg-[#F5C747]', 
       date: new Date(baseYear, 8, 6), 
-      textColor: 'text-[#000]',
-      type: 'Exam' 
+      status: 'Present', 
+      title: 'Geography', 
+      hour: '03:00 PM'
     },
     { 
-      title: 'Physics Exam', 
-      hour: '05:00 PM', 
-      room: '206', 
-      bgColor: 'bg-[#F5C747]', 
       date: new Date(baseYear + 1, 3, 1), 
-      textColor: 'text-[#000]',
-      type: 'Other' 
+      status: 'Present', 
+      title: 'Art', 
+      hour: '04:00 PM'
     },
     { 
-      title: 'Physics Exam', 
-      hour: '05:00 PM', 
-      room: '207', 
-      bgColor: 'bg-[#F5C747]', 
       date: new Date(baseYear, 9, 1), 
-      textColor: 'text-[#000]',
-      type: 'Meeting' 
+      status: 'Absent', 
+      title: 'Music', 
+      hour: '05:00 PM'
     },
-  ];
+];
 
-  const eventTypeColors = {
-    Exam: 'bg-blue-500',
-    Quiz: 'bg-green-500',
-    Other: 'bg-purple-500',
+const attendanceTypeColors = {
+    Present: 'bg-green-500',
+    Late: 'bg-yellow-500',
+    Absent: 'bg-red-500',
 };
 
-const getEventsForDate = (date) => {
-    return eventsData.filter(event => areDatesEqual(event.date, date));
+const getAttendanceForDate = (date) => {
+    return attendanceData.find(attendance => areDatesEqual(attendance.date, date));
 };
 
-const Cal = () => {
+const AttendanceCal = () => {
   const [selectedDate, setSelectedDate] = useState(today);
   const [currentMonthIndex, setCurrentMonthIndex] = useState(() => {
     const currentMonthName = monthNames[today.getMonth()];
@@ -170,6 +95,15 @@ const Cal = () => {
     setDaysInMonth(getDaysInMonth(monthNumbers[currentMonthIndex], getYearForMonthIndex(currentMonthIndex, baseYear)));
   }, [currentMonthIndex, baseYear]);
 
+  const attendanceStats = useMemo(() => {
+    const presentCount = attendanceData.filter(attendance => attendance.status === 'Present').length;
+    const lateCount = attendanceData.filter(attendance => attendance.status === 'Late').length;
+    const absentCount = attendanceData.filter(attendance => attendance.status === 'Absent').length;
+    return { presentCount, lateCount, absentCount };
+  }, []);
+
+  const attendance = getAttendanceForDate(selectedDate);
+  const status = attendance?.status;
 
   const handlePrev = () => {
     setCurrentMonthIndex((prevIndex) => Math.max(prevIndex - 1, 0));
@@ -181,26 +115,6 @@ const Cal = () => {
 
   return (
     <div className='flex flex-col w-full'>
-      <div className='flex items-center justify-between mb-8 gap-1'>
-        <p className="text-textBg-700 w-full font-bold text-base flex flex-col sm:flex-row">
-          {selectedDate ? (
-              <>
-                <span className="text-base sm:text-xl lg:text-2xl font-semibold">
-                  {dayNames[(selectedDate.getDay() + 6) % 7]}, {selectedDate.getDate()}&nbsp;
-                </span>
-                <span className="block text-base sm:text-xl lg:text-2xl font-semibold">
-                  {monthNames[selectedDate.getMonth()]} {selectedDate.getFullYear()}
-                </span>
-              </>
-            ) : (
-              <span className="block text-base sm:text-xl lg:text-2xl font-semibold">
-                {monthNames[monthNumbers[currentMonthIndex]]} {getYearForMonthIndex(currentMonthIndex, baseYear)}
-              </span>
-            )
-          }
-        </p>
-      </div>
-
       <div className='flex flex-col xl:flex-row gap-16'>
         <div className='xl:w-fit'>
           <div className='flex justify-between items-center mb-4'>
@@ -281,7 +195,7 @@ const Cal = () => {
                 const isCurrentMonth = currentDate.getMonth() === monthNumber && currentDate.getFullYear() === year;
                 const dayOfWeek = currentDate.getDay();
                 const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-                const eventsForDate = getEventsForDate(currentDate);
+                const attendanceForDate = getAttendanceForDate(currentDate);
 
                 return (
                     <div key={idx} className="relative w-full flex flex-col justify-center items-center">
@@ -306,24 +220,23 @@ const Cal = () => {
                       >
                         {dayNumber}
                       </p>
-                      <div
-                        className={`absolute -bottom-[6px] flex gap-1 items-center z-10`}
-                      >
-                        {eventsForDate.slice(0, 3).map((event, i) => (
+                      {isCurrentMonth && attendanceForDate && (
+                        <div
+                          className={`absolute -bottom-[6px] flex gap-1 items-center z-10`}
+                        >
                           <span
-                            key={i}
-                            className={`w-1 h-1 rounded-full ${eventTypeColors[event.type]}`}
-                            title={event.title}
+                            className={`w-1 h-1 rounded-full ${attendanceTypeColors[attendanceForDate.status]}`}
+                            title={attendanceForDate.status}
                           ></span>
-                        ))}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   );
               });
             })()}
           </div>
           <div className='w-full flex xl:justify-between justify-between sm:justify-normal gap-4 xl:gap-0 mt-4'>
-            {Object.entries(eventTypeColors).map(([type, colorClass]) => (
+            {Object.entries(attendanceTypeColors).map(([type, colorClass]) => (
                 <li key={type} className="flex items-center">
                     <span className={`w-2 h-2 rounded-full ${colorClass} mr-2`}></span>
                     <span className='text-base text-textBg-900'>{type}</span>
@@ -333,41 +246,81 @@ const Cal = () => {
             
         </div>
 
-        <div className='w-full bg-white rounded'>
+        <div className='w-full bg-white'>
+          <div className='w-full grid md:grid-cols-3 gap-4 mb-8'>
+            <div className='flex items-center gap-2 bg-[#eefdf3] p-4 rounded-md'>
+              <CheckCircle className='text-green-500 mr-2' size={36} />
+              <div>
+                <p className='text-lg font-semibold'>{attendanceStats.presentCount}</p>
+                <p className='text-sm text-green-600'>Obecności</p>
+              </div>
+            </div>
+            <div className='flex items-center gap-2 bg-[#fef9ed] p-4 rounded-md'>
+              <Hourglass className='text-yellow-500 mr-2' size={36} />
+              <div>
+                <p className='text-lg font-semibold'>{attendanceStats.lateCount}</p>
+                <p className='text-sm text-yellow-600'>Spóźnienia</p>
+              </div>
+            </div>
+            <div className='flex items-center gap-2 bg-primary-100 p-4 rounded-md'>
+              <XCircle className='text-red-500 mr-2' size={36} />
+              <div>
+                <p className='text-lg font-semibold'>{attendanceStats.absentCount}</p>
+                <p className='text-sm text-red-600'>Nieobecności</p>
+              </div>
+            </div>
+          </div>
+
           <h2 className='text-xl font-semibold mb-4'>
-            Events on {selectedDate ? `${monthNames[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()}` : 'Select a day'}
+            Attendance on {selectedDate ? `${monthNames[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()}` : 'Select a day'}
           </h2>
           {selectedDate ? (
             <>
-              {getEventsForDate(selectedDate).length > 0 ? (
+              {getAttendanceForDate(selectedDate) ? (
                 <div className='w-full flex flex-col gap-2'>
-                  {getEventsForDate(selectedDate).map((event, idx) => (
-                    <div key={idx} className='flex border border-textBg-200 w-full p-3 rounded-xl gap-4'>
-                      <div className={`w-12 h-12 bg-[#d3cafa] rounded flex items-center justify-center`}>
-                          <Atom size={28} color='#7051EE'/>
-                      </div>
-                      <div className='flex flex-col justify-between py-[2px]'>
-                        <p className='text-textBg-900 font-semibold text-base'>{event.title}</p>
-                        <div className='w-fit flex gap-4'>
-                          <div className='flex items-center gap-2 text-textBg-500'>
-                            <Clock size={16} />
-                            <p className='text-sm'>{event.hour}</p>
-                          </div>
-                          <div className='flex items-center gap-2 text-textBg-500'>
-                            <MapPin size={16} />
-                            <p className='text-sm'>{event.room}</p>
-                          </div>
+                  <div className='flex items-center gap-2 xxs:gap-4 border border-textBg-200 w-full p-3 rounded-xl'>
+                    <div className='w-12 h-12 hidden xxs:flex items-center justify-center'>
+                      {(() => {
+                        switch (status) {
+                          case 'Present':
+                            return <CheckCircle size={44} color='#16a34a' />;
+                          case 'Late':
+                            return <Hourglass size={44} color='#f59e0b' />;
+                          case 'Absent':
+                            return <XCircle size={44} color='#ef4444' />;
+                          default:
+                            return <CheckCircle size={44} color='#16a34a' />;
+                        }
+                      })()}
+                    </div>
+                    <div className='w-full flex justify-between items-center'>
+                      <div className='flex flex-col gap-1'>
+                        <p className='text-textBg-900 font-semibold text-base'>
+                         {getAttendanceForDate(selectedDate).title}
+                        </p>
+                        <div className='flex gap-2 items-center'>
+                          <Clock size={12} />
+                          <p className='text-textBg-700 text-sm'>
+                            {getAttendanceForDate(selectedDate).hour}
+                          </p>
                         </div>
                       </div>
+                      {(() => {
+                        return (
+                          <div className={`w-24 text-center py-1 rounded-md ${status === 'Present' ? 'bg-[#eefdf3]' : status === 'Late' ? 'bg-[#fef9ed]' : 'bg-primary-100'}`}>
+                            <p className={`text-base font-medium ${status === 'Present' ? 'text-[#17a948]' : status === 'Late' ? 'text-[#d29211]' : 'text-primary-600'}`}>{status}</p>
+                          </div>
+                        );
+                      })()}
                     </div>
-                  ))}
+                  </div>
                 </div>
               ) : (
-                <p className='text-textBg-500'>No events for this day.</p>
+                <p className='text-textBg-500'>No attendance record for this day.</p>
               )}
             </>
           ) : (
-            <p className='text-textBg-500'>Select a day to see events.</p>
+            <p className='text-textBg-500'>Select a day to see attendance.</p>
           )}
       </div>
     </div>
@@ -375,4 +328,4 @@ const Cal = () => {
   );
 };
 
-export default Cal;
+export default AttendanceCal;
