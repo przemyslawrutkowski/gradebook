@@ -9,7 +9,6 @@ export function Calendar() {
       <PageTitle text="Calendar"/>
       <div className="flex flex-col 2xl:flex-row justify-between sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8 gap-8 2xl:gap-16">
         <CalendarMonth />
-        {/* <Cal /> */}
       </div>
     </main>
   );
