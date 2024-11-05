@@ -1,22 +1,32 @@
 /* eslint-disable react/prop-types */
-import {CircleAlert, SquareSigma} from 'lucide-react'
+import React from 'react';
+import { CircleAlert, SquareSigma } from 'lucide-react';
 
-const HomeworkCard = () => {
-   
-    return (
-    <div className="flex items-center justify-between gap-3">
+const HomeworkCard = ({ subject, title, dueDate, status }) => {
+  return (
+    <div className="flex items-center justify-between gap-3 p-4 bg-white rounded">
       <div className="flex items-center gap-3">
-        <SquareSigma size={48} color="#1A99EE" strokeWidth={1.25}/>
+        <SquareSigma size={48} color="#1A99EE" strokeWidth={1.25} />
         <div>
-          <p className="text-base text-textBg-700 font-bold mb-1">MATHEMATICS</p>
-          <p className="text-textBg-500 text-sm">Algorithms</p>
+          <p className="text-base text-textBg-700 font-bold uppercase mb-1">{subject}</p>
+          <p className="text-textBg-500 text-sm">{title}</p>
         </div>
-      </div>   
+      </div>
       <div className="flex items-center gap-4">
-          <CircleAlert size={20} color="#EB4C60" className='hidden sm:block'/>
-          <div className="bg-primary-200 rounded px-3 py-1">
-            <p className="text-primary-600 font-bold text-sm text-center">12 JAN 2024</p>
-          </div>
+        {status === 'overdue' && (
+          <CircleAlert size={20} color="#EB4C60" className="hidden sm:block" />
+        )}
+        <div
+          className={`rounded px-3 py-1 text-sm font-bold text-center ${
+            status === 'completed'
+              ? 'bg-green-200 text-green-600'
+              : status === 'pending'
+              ? 'bg-yellow-200 text-yellow-600'
+              : 'bg-red-200 text-red-600'
+          }`}
+        >
+          <p>{dueDate}</p>
+        </div>
       </div>
     </div>
   );

@@ -83,9 +83,9 @@ export default {
           '-webkit-box-orient': 'vertical',
         },
       }
-
       addUtilities(newUtilities, ['responsive', 'hover'])
     }
+    
   ],
 }
 

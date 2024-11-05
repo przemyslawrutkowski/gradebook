@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react/prop-types */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -23,16 +25,42 @@ import {
   Wifi,
   ZapOff,
 } from 'lucide-react';
+import Button from '../components/Button';
 
 export function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [token, setToken] = useState();
 
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+  
+    try {
+      const response = await fetch('http://localhost:3000/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('token', data.token);
+        setToken(localStorage.getItem('token', data.token));
+        onLogin();
+        navigate('/');
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message);
+      }
+    } catch (error) {
+      console.error('Błąd podczas logowania:', error);
+      setError('Wystąpił błąd podczas logowania.');
+    }
   };
 
   return (
@@ -77,12 +105,15 @@ export function Login({ onLogin }) {
           <h2 className="text-2xl sm:text-4xl font-normal text-textBg-600 mb-4">
             Great to have you back!
           </h2>
+          <p>
+            {token}
+          </p>
           <p className="text-textBg-500 text-base">
             Please login to continue accessing your account and stay connected.
           </p>
         </div>
 
-        <div className="border-2 rounded-md px-8 py-24 border-primary-500 bg-white w-full max-w-md shadow-lg">
+        <div className="rounded-md px-8 py-24 border-primary-500 bg-white w-full max-w-md shadow-xl">
           <h2 className="font-epilogue text-3xl font-bold text-center mb-8 text-textBg-900">
             Sign in
           </h2>
@@ -141,12 +172,11 @@ export function Login({ onLogin }) {
                 Forgot password?
               </a>
             </div>
-            <button
+            <Button
+              text="Sign In"
               type="submit"
               className="w-full bg-primary-500 text-white py-2 rounded-md hover:bg-primary-600 transition"
-            >
-              Sign in
-            </button>
+            />
           </form>
         </div>
       </div>

@@ -274,7 +274,7 @@ const ScheduleCalendar = () => {
 
                   {currentTimePosition < calendarHeight && (
                     <div
-                      className="absolute right-0 left-4 flex items-center"
+                      className="absolute right-0 left-8 sm:left-4 flex items-center"
                       style={{ top: `${currentTimePosition}px` }}
                     >
                       <div className="w-2 h-2 rounded-full bg-red-500 ml-8 sm:ml-12" />
@@ -367,7 +367,7 @@ const ScheduleCalendar = () => {
 
                   {currentTimePosition < calendarHeight && (
                     <div
-                      className="absolute right-0 left-4 flex items-center"
+                      className="absolute right-0 left-8 sm:left-4 flex items-center"
                       style={{ top: `${currentTimePosition}px` }}
                     >
                       <div className="w-2 h-2 rounded-full bg-red-500 ml-8 sm:ml-12" />

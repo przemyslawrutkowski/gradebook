@@ -48,7 +48,7 @@ export function Home() {
                     <p className="text-textBg-700 font-bold text-2xl">Homework</p>
                     <p className="text-textBg-700 text-sm underline hover:cursor-pointer">See All Homework</p>
                   </div>
-                  <HomeworkCard />
+                  <HomeworkCard subject="Mathematics" title="Algorithms" dueDate="12 JAN 2024"/>
                 </div>
               </div>
             </div>
