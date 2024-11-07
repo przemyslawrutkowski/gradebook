@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Bell, User, ChevronDown, Search, LogOut } from 'lucide-react';
+import { Mail, Bell, User, ChevronDown, Search, LogOut, Settings } from 'lucide-react';
 
 export default function Topbar({ messNot, messNotNumber, bellNot, bellNotNumber, onLogout }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -41,15 +41,18 @@ export default function Topbar({ messNot, messNotNumber, bellNot, bellNotNumber,
           <ChevronDown size={24} className="text-textBg-700 ml-4" />
         </div>
 
-        {/* Dropdown menu */}
         {isDropdownOpen && (
-          <div className="absolute right-0 mt-2 w-48 bg-white border border-neutral-400 rounded-lg shadow-lg z-50">
+          <div className="absolute right-0 mt-2 w-48 bg-white border border-textBg-300 rounded shadow-2xl z-50 transition">
             <button
               onClick={onLogout}
               className="block w-full text-left px-4 py-2 text-sm text-textBg-700 hover:bg-gray-100"
             >
               <LogOut size={18} className="inline-block mr-2" />
               Logout
+            </button>
+            <button className="block w-full text-left px-4 py-2 text-sm text-textBg-700 hover:bg-gray-100">
+              <Settings size={18} className="inline-block mr-2" />
+              Settings
             </button>
           </div>
         )}

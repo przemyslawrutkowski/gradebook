@@ -1,3 +1,4 @@
+// ./App.jsx
 import React, { useEffect, useState } from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import './App.css';
@@ -11,6 +12,7 @@ import { Calendar } from './pages/Calendar';
 import { Attendance } from './pages/Attendance';
 import { LayoutDashboard, LogOut } from 'lucide-react';
 import { Homework } from './pages/Homework';
+import HomeworkDetail from './pages/HomeworkDetail'; // Import komponentu
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -20,7 +22,7 @@ export default function App() {
     const token = localStorage.getItem('token');
     if (token){
       setIsAuthenticated(true);
-    }else{
+    } else {
       navigate('/login');
     }
   }, [navigate])
@@ -42,37 +44,38 @@ export default function App() {
         <Topbar messNot messNotNumber={10} bellNot bellNotNumber={10} onLogout={handleLogout}/>
       )}
       <div className="flex">
-        <Routes>
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          {isAuthenticated ? (
-            <>
-              <Route path="/" element={<Home />} />
-              <Route path="/1" element={<Schedule />} />
-              <Route path="/2" element={<Messages />} />
-              <Route path="/3" element={<Calendar />} />
-              <Route path="/4" element={<Attendance />} />
-              <Route path="/5" element={<Homework />} />
-            </>
-          ) : (
-            <Route path="*" element={<Login onLogin={handleLogin} />} />
-          )}
-        </Routes>
+      <Routes>
+        <Route path="/login" element={<Login onLogin={handleLogin} />} />
+        {isAuthenticated ? (
+          <>
+            <Route path="/" element={<Home />} />
+            <Route path="/schedule" element={<Schedule />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/calendar" element={<Calendar />} />
+            <Route path="/attendance" element={<Attendance />} />
+            <Route path="/homework" element={<Homework />} />
+            <Route path="/homework/:id" element={<HomeworkDetail />} /> {/* Dodanie trasy */}
+          </>
+        ) : (
+          <Route path="*" element={<Login onLogin={handleLogin} />} />
+        )}
+      </Routes>
         {isAuthenticated && (
-          <Sidebar onLogout={handleLogout}>
-            <SidebarItem icon={<LayoutDashboard size={20} />} text="Home" path="/" active />
-            <SidebarItem icon={<LayoutDashboard size={20} />} text="Schedule" path="/1" />
-            <SidebarItem icon={<LayoutDashboard size={20} />} text="Messages" path="/2" />
-            <SidebarItem icon={<LayoutDashboard size={20} />} text="Calendar" path="/3" />
-            <SidebarItem icon={<LayoutDashboard size={20} />} text="Attendance" path="/4" />
-            <SidebarItem icon={<LayoutDashboard size={20} />} text="Homework" path="/5" />
-            <SidebarItem
-              icon={<LogOut size={20} />}
-              text="Logout"
-              path="#"
-              onClick={handleLogout}
-              className="lg:hidden"
-            />
-          </Sidebar>
+         <Sidebar onLogout={handleLogout}>
+         <SidebarItem icon={<LayoutDashboard size={20} />} text="Home" path="/" active />
+         <SidebarItem icon={<LayoutDashboard size={20} />} text="Schedule" path="/schedule" />
+         <SidebarItem icon={<LayoutDashboard size={20} />} text="Messages" path="/messages" />
+         <SidebarItem icon={<LayoutDashboard size={20} />} text="Calendar" path="/calendar" />
+         <SidebarItem icon={<LayoutDashboard size={20} />} text="Attendance" path="/attendance" />
+         <SidebarItem icon={<LayoutDashboard size={20} />} text="Homework" path="/homework" />
+         <SidebarItem
+           icon={<LogOut size={20} />}
+           text="Logout"
+           path="#"
+           onClick={handleLogout}
+           className="lg:hidden"
+         />
+       </Sidebar>
         )}
       </div>
     </>

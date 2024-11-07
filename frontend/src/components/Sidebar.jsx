@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { LogOut, Menu, X } from "lucide-react";
 import { createContext, useState } from "react";
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const SidebarContext = createContext();
 
@@ -42,15 +42,17 @@ export default function Sidebar({ children, onLogout }) {
   );
 }
 
-export function SidebarItem({ icon, text, path, active, alert, onClick }) {
+export function SidebarItem({ icon, text, path, alert, onClick, className }) {
+  const location = useLocation();
+  const isActive = location.pathname === path;
   return (
     <Link
       to={path}
       onClick={onClick}
       className={`relative flex items-center py-3 px-3 my-1
         font-medium rounded-md cursor-pointer
-        transition-colors
-        ${active ? "bg-primary-100 text-primary-500" : "hover:bg-textBg-200 text-textBg-600"}
+        transition-colors ${className}
+        ${isActive ? "bg-primary-100 text-primary-500" : "hover:bg-textBg-200 text-textBg-600"}
     `}
     >
       {icon}
