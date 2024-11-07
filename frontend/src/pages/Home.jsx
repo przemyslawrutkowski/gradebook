@@ -7,8 +7,13 @@ import GradeCard from "../components/GradeCard";
 import AttendanceChart from "../components/BarChart";
 import HomeworkCard from "../components/HomeworkCard";
 import DashboardSchedule from "../components/DashboardSchedule";
+import homeworkData from '../data/homeworkData';
+import { Link } from "react-router-dom";
 
 export function Home() {
+
+  const dueDate = new Date(homeworkData[0].dueDate);
+
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
       <PageTitle text="Home"/>
@@ -23,10 +28,12 @@ export function Home() {
                 <ExamCard title="Biology" date="20 Nov 2023" time="10.00 AM" className="bg-[#b8f5cd]" icon={<Dna size={40} color="#1dd75b"/>}/>
                 <ExamCard title="Math" date="20 Nov 2023" time="10.00 AM" className="bg-[#bbe1fa]" icon={<SquareSigma size={40} color="#1A99EE"/>}/>
               </div>
-              <div className="flex items-center justify-center gap-2 pt-2 lg:pt-0">
-                <p className="text-textBg-700 text-sm hover:cursor-pointer">See More</p>
-                <ChevronRight color="#323743" size={20}/>
-              </div>
+              <Link to={`/calendar`}>
+                <div className="flex items-center justify-center gap-2 pt-2 lg:pt-0">
+                  <p className="text-textBg-700 text-sm hover:cursor-pointer">See More</p>
+                  <ChevronRight color="#323743" size={20}/>
+                </div>
+              </Link>
             </div>
 
             {/* Last Grades and Homework */}
@@ -46,9 +53,11 @@ export function Home() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-6">
                     <p className="text-textBg-700 font-bold text-2xl">Homework</p>
-                    <p className="text-textBg-700 text-sm underline hover:cursor-pointer">See All Homework</p>
+                    <Link to={`/homework`}>
+                      <p className="text-textBg-700 text-sm underline hover:cursor-pointer">See All Homework</p>
+                    </Link>
                   </div>
-                  <HomeworkCard subject="Mathematics" title="Algorithms" dueDate="12 JAN 2024"/>
+                  <HomeworkCard id={1} subject={homeworkData[0].subject} title={homeworkData[0].subject} dueDate={homeworkData[0].dueDate} status={homeworkData[0].status}/>
                 </div>
               </div>
             </div>

@@ -13,6 +13,7 @@ import { Attendance } from './pages/Attendance';
 import { LayoutDashboard, LogOut } from 'lucide-react';
 import { Homework } from './pages/Homework';
 import HomeworkDetail from './pages/HomeworkDetail'; // Import komponentu
+import { Grades } from './pages/Grades';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -54,7 +55,8 @@ export default function App() {
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/homework" element={<Homework />} />
-            <Route path="/homework/:id" element={<HomeworkDetail />} /> {/* Dodanie trasy */}
+            <Route path="/homework/:id" element={<HomeworkDetail />} />
+            <Route path="/grades" element={<Grades />} />
           </>
         ) : (
           <Route path="*" element={<Login onLogin={handleLogin} />} />
@@ -68,6 +70,7 @@ export default function App() {
          <SidebarItem icon={<LayoutDashboard size={20} />} text="Calendar" path="/calendar" />
          <SidebarItem icon={<LayoutDashboard size={20} />} text="Attendance" path="/attendance" />
          <SidebarItem icon={<LayoutDashboard size={20} />} text="Homework" path="/homework" />
+         <SidebarItem icon={<LayoutDashboard size={20} />} text="Grades" path="/grades" />
          <SidebarItem
            icon={<LogOut size={20} />}
            text="Logout"
