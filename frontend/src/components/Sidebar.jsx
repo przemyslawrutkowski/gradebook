@@ -60,4 +60,4 @@ export function SidebarItem({ icon, text, path, alert, onClick, className }) {
       {alert && <div className="absolute right-2 w-2 h-2 rounded bg-primary-500" />}
     </Link>
   );
-}
+} 

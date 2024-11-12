@@ -1,0 +1,33 @@
+/* customScrollbar.css */
+
+/* WebKit browsers (Chrome, Safari, Edge) */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px; /* Width of the vertical scrollbar */
+    height: 6px; /* Height of the horizontal scrollbar */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent; /* Track background */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.3); /* Color of the scrollbar handle */
+    border-radius: 10px; /* Rounded corners */
+    border: none; /* No border */
+}
+
+/* Hide scroll buttons */
+.custom-scrollbar::-webkit-scrollbar-button {
+    display: none;
+}
+
+/* Firefox */
+.custom-scrollbar {
+    scrollbar-width: thin; /* Thin scrollbar */
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent; /* Handle and track colors */
+}
+
+/* Rounded corners and no arrow buttons in Firefox */
+.custom-scrollbar::-moz-scrollbar-thumb {
+    border-radius: 10px; /* Rounded corners for Firefox */
+}

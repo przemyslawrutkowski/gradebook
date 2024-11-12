@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Button from './Button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import Modal from './Modal'; 
 import {
   dayNames,
   monthNames,
@@ -12,40 +13,98 @@ import {
   areDatesEqual,
   getStartOfWeek,
   formatWeekRange,
-  getYearForMonthIndex
+  getYearForMonthIndex,
 } from '../utils/SchedCalUtils';
+import { getToken, getUserRole, decodeToken } from '../utils/UserRoleUtils';
+import UserRoles from '../data/userRoles';
+import '../customCSS/customScrollbar.css';
 
 let datesToRender = [];
 
 const today = new Date();
 let baseYear = today.getFullYear();
-if (today.getMonth() < 8) { 
+if (today.getMonth() < 8) {
   baseYear -= 1;
 }
-  
+
 const eventsData = [
-  { title: 'PE', startTime: '07:00 AM', endTime: '09:00 AM', bgColor: 'bg-[#f3f4f6]', date: new Date(baseYear, 8, 1), textColor: 'text-[#6f7787]' },
-  { title: 'Biology', startTime: '10:00 AM', endTime: '01:00 PM', bgColor: 'bg-[#1A99EE]', date: new Date(baseYear, 8, 1), textColor: 'text-[#ffffff]' },
-  { title: 'Math', startTime: '03:30 PM', endTime: '05:00 PM', bgColor: 'bg-[#f1f9fe]', date: new Date(baseYear, 8, 2), textColor: 'text-[#0f7bc4]' },
-  { title: 'Physics', startTime: '05:00 PM', endTime: '06:00 PM', bgColor: 'bg-[#F5C747]', date: new Date(baseYear, 8, 3), textColor: 'text-[#ffffff]' },
-  { title: 'Physics', startTime: '05:00 PM', endTime: '06:00 PM', bgColor: 'bg-[#F5C747]', date: new Date(baseYear, 8, 4), textColor: 'text-[#ffffff]' },
-  { title: 'Physics', startTime: '05:00 PM', endTime: '06:00 PM', bgColor: 'bg-[#F5C747]', date: new Date(baseYear, 8, 5), textColor: 'text-[#ffffff]' },
-  { title: 'Physics', startTime: '05:00 PM', endTime: '06:00 PM', bgColor: 'bg-[#F5C747]', date: new Date(baseYear, 8, 6), textColor: 'text-[#ffffff]' },
-  { title: 'Physics', startTime: '05:00 PM', endTime: '06:00 PM', bgColor: 'bg-[#F5C747]', date: new Date(baseYear + 1, 3, 1), textColor: 'text-[#ffffff]' },
+  {
+    id: 1,
+    title: 'Biology',
+    startTime: '10:00 AM',
+    endTime: '01:00 PM',
+    bgColor: 'bg-[#1A99EE]',
+    date: new Date(baseYear, 8, 1),
+    textColor: 'text-[#ffffff]',
+    students: [
+      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
+      { id: 4, name: 'Bob Brown', attendance: 'Present' },
+      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
+      { id: 4, name: 'Bob Brown', attendance: 'Present' },
+      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
+      { id: 4, name: 'Bob Brown', attendance: 'Present' },
+      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
+      { id: 4, name: 'Bob Brown', attendance: 'Present' },
+      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
+      { id: 4, name: 'Bob Brown', attendance: 'Present' },
+      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
+      { id: 4, name: 'Bob Brown', attendance: 'Present' },
+      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
+      { id: 4, name: 'Bob Brown', attendance: 'Present' },
+      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
+      { id: 4, name: 'Bob Brown', attendance: 'Present' },
+      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
+      { id: 4, name: 'Bob Brown', attendance: 'Present' },
+      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
+      { id: 4, name: 'Bob Brown', attendance: 'Present' },
+      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
+    ],
+  },
+  {
+    id: 2,
+    title: 'Chemistry',
+    startTime: '02:00 PM',
+    endTime: '04:00 PM',
+    bgColor: 'bg-[#EE1A99]',
+    date: new Date(baseYear, 8, 2),
+    textColor: 'text-[#ffffff]',
+    students: [
+      { id: 5, name: 'Charlie Davis', attendance: 'Absent' },
+      { id: 6, name: 'Diana Evans', attendance: 'Present' },
+    ],
+  },
 ];
 
 const ScheduleCalendar = () => {
+  const [userRole, setUserRole] = useState(null); 
   const [selectedDate, setSelectedDate] = useState(today);
-  const [scheduleType, setScheduleType] = useState("Day");
+  const [scheduleType, setScheduleType] = useState('Day');
   const [currentMonthIndex, setCurrentMonthIndex] = useState(() => {
     const currentMonthName = monthNames[today.getMonth()];
     const initialMonthIndex = displayMonthNames.indexOf(currentMonthName);
     return initialMonthIndex !== -1 ? initialMonthIndex : 0;
   });
 
+  useEffect(() => {
+    const token = getToken();
+    if (token) {
+      const decoded = decodeToken(token);
+      if (decoded) {
+        const role = getUserRole();
+        setUserRole(role);
+        console.log('Rola użytkownika:', role);
+      } else {
+        setUserRole(null);
+      }
+    }
+  }, []);
+
   const [daysInMonth, setDaysInMonth] = useState(
     getDaysInMonth(monthNumbers[currentMonthIndex], getYearForMonthIndex(currentMonthIndex, baseYear))
   );
+
+  const [isModalOpen, setIsModalOpen] = useState(false); 
+  const [selectedEvent, setSelectedEvent] = useState(null); 
 
   useEffect(() => {
     setDaysInMonth(getDaysInMonth(monthNumbers[currentMonthIndex], getYearForMonthIndex(currentMonthIndex, baseYear)));
@@ -78,11 +137,100 @@ const ScheduleCalendar = () => {
 
   const currentTimePosition = getCurrentTimePosition();
 
+  const openModal = (event) => {
+    if (userRole === UserRoles.Administrator) {
+      setSelectedEvent(event);
+      setIsModalOpen(true);
+    } else {
+      return null;
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedEvent(null);
+  };
+
+  const handleAttendanceChange = (studentId, status) => {
+    if (userRole === UserRoles.Administrator) {
+      setSelectedEvent((prevEvent) => {
+        const updatedStudents = prevEvent.students.map((student) =>
+          student.id === studentId ? { ...student, attendance: status } : student
+        );
+        return { ...prevEvent, students: updatedStudents };
+      });
+    }
+  };
+
   return (
-    <div className='flex flex-col w-full'>
-      <div className='flex items-center justify-between mb-8 gap-1'>
+    <div className="flex flex-col w-full">
+
+<Modal isOpen={isModalOpen} onClose={closeModal} widthHeightClassname="max-w-xl max-h-xl">
+  <div className="flex justify-between items-center mb-6">
+    <h2 className="text-xl font-bold text-textBg-700">Add attendance</h2>
+    <X size={24} className="hover:cursor-pointer" onClick={closeModal}/>
+  </div>
+  {selectedEvent && (
+    <div>
+      <div className='w-full flex mb-2'>
+        <div className='w-2/5'>
+          <p className='text-textBg-700 font-medium'>Student Name</p>
+        </div>
+        <div className='flex justify-evenly w-[calc(60%-18px)]'>
+          <p className='text-textBg-700 font-medium'>Present</p>
+          <p className='text-textBg-700 font-medium'>Late</p>
+          <p className='text-textBg-700 font-medium'>Absent</p>
+        </div>
+      </div>
+
+      <div className="max-h-96 overflow-y-auto custom-scrollbar">
+        {selectedEvent.students.map((student) => (
+          <div className='w-full flex mb-2' key={student.id}>
+            <div className='w-2/5'>
+              <p className='text-base text-textBg-500'>{student.name}</p>
+            </div>
+            <div className='flex items-center justify-evenly w-3/5'> 
+              <input
+                type="radio"
+                name={`attendance-${student.id}`}
+                value="Present"
+                checked={student.attendance === 'Present'}
+                onChange={(e) => handleAttendanceChange(student.id, e.target.value)}
+                className="form-radio h-4 w-4 accent-green-500"
+              />
+              <input
+                type="radio"
+                name={`attendance-${student.id}`}
+                value="Late"
+                checked={student.attendance === 'Late'}
+                onChange={(e) => handleAttendanceChange(student.id, e.target.value)}
+                className="form-radio h-4 w-4 accent-yellow-500"
+              />
+              <input
+                type="radio"
+                name={`attendance-${student.id}`}
+                value="Absent"
+                checked={student.attendance === 'Absent'}
+                onChange={(e) => handleAttendanceChange(student.id, e.target.value)}
+                className="form-radio h-4 w-4 accent-red-600"
+              />                
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Przycisk zamknięcia i dodania */}
+      <div className="mt-4 flex justify-end gap-4">
+        <Button text="Close" type="secondary" onClick={closeModal} />
+        <Button text="Add" type="primary"  />
+      </div>
+    </div>
+    )}
+  </Modal>
+
+      <div className="flex items-center justify-between mb-8 gap-1">
         <p className="text-textBg-700 w-full font-bold text-base flex flex-col sm:flex-row">
-          {scheduleType === "Day" ? (
+          {scheduleType === 'Day' ? (
             selectedDate ? (
               <>
                 <span className="text-base sm:text-xl lg:text-2xl font-semibold">
@@ -105,31 +253,33 @@ const ScheduleCalendar = () => {
             </div>
           )}
         </p>
-        <div className='flex items-center'>
+        <div className="flex items-center">
           <Button
             size="s"
             text="Day"
-            type={scheduleType === "Day" ? "primary" : "link"}
+            type={scheduleType === 'Day' ? 'primary' : 'link'}
             className="min-w-[4rem] no-underline"
-            onClick={() => handleButtonChangeScheduleType("Day")}
+            onClick={() => handleButtonChangeScheduleType('Day')}
           />
           <Button
             size="s"
             text="Week"
-            type={scheduleType === "Week" ? "primary" : "link"}
+            type={scheduleType === 'Week' ? 'primary' : 'link'}
             className="min-w-[4rem] no-underline hidden md:block"
-            onClick={() => handleButtonChangeScheduleType("Week")}
+            onClick={() => handleButtonChangeScheduleType('Week')}
           />
         </div>
       </div>
 
-      <div className='flex flex-col xl:flex-row gap-16'>
-        <div className='xl:w-fit'>
-          <div className='flex justify-between items-center mb-4'>
+      <div className="flex flex-col xl:flex-row gap-16">
+        <div className="xl:w-fit">
+          <div className="flex justify-between items-center mb-4">
             <button
               onClick={handlePrev}
               disabled={currentMonthIndex === 0}
-              className={`grid place-content-center w-6 h-6 bg-textBg-200 rounded ${currentMonthIndex === 0 ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-textBg-300 hover:cursor-pointer'}`}
+              className={`grid place-content-center w-6 h-6 bg-textBg-200 rounded ${
+                currentMonthIndex === 0 ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-textBg-300 hover:cursor-pointer'
+              }`}
               aria-label="Previous month"
             >
               <ChevronLeft size={16} />
@@ -142,7 +292,9 @@ const ScheduleCalendar = () => {
             <button
               onClick={handleNext}
               disabled={currentMonthIndex === displayMonthNames.length - 1}
-              className={`grid place-content-center w-6 h-6 bg-textBg-200 rounded ${currentMonthIndex === displayMonthNames.length - 1 ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-textBg-300 hover:cursor-pointer'}`}
+              className={`grid place-content-center w-6 h-6 bg-textBg-200 rounded ${
+                currentMonthIndex === displayMonthNames.length - 1 ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-textBg-300 hover:cursor-pointer'
+              }`}
               aria-label="Next month"
             >
               <ChevronRight size={16} />
@@ -228,9 +380,8 @@ const ScheduleCalendar = () => {
             })()}
           </div>
         </div>
-
-        <div className='w-full'>
-          {scheduleType === "Day" ? (
+        <div className="w-full">
+          {scheduleType === 'Day' ? (
             <>
               <div className="w-full sm:w-full mt-1 max-w-full overflow-x-auto relative">
                 <div className="relative overflow-hidden" style={{ height: `${calendarHeight}px` }}>
@@ -238,20 +389,15 @@ const ScheduleCalendar = () => {
                     {['07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'].map(
                       (time, idx) => (
                         <React.Fragment key={`time-row-${idx}`}>
-                          <div className="flex justify-end pr-4 text-gray-500 text-xs">
-                            {time}
-                          </div>
-                          <div className={`relative ${idx > 0 ? 'border-x border-b' : 'border'} border-textBg-300`}>
-                          </div>
+                          <div className="flex justify-end pr-4 text-gray-500 text-xs">{time}</div>
+                          <div className={`relative ${idx > 0 ? 'border-x border-b' : 'border'} border-textBg-300`}></div>
                         </React.Fragment>
                       )
                     )}
                   </div>
 
                   {eventsData
-                    .filter(event => {
-                      return areDatesEqual(event.date, selectedDate)
-                    })
+                    .filter((event) => areDatesEqual(event.date, selectedDate))
                     .map((event, eventIdx) => {
                       const eventStart = convertTimeToHours(event.startTime);
                       const eventEnd = convertTimeToHours(event.endTime);
@@ -261,8 +407,9 @@ const ScheduleCalendar = () => {
                       return (
                         <div
                           key={eventIdx}
-                          className={`absolute right-[2px] p-2 rounded-sm ${event.bgColor} ${event.textColor}`}
+                          className={`absolute right-[2px] p-2 rounded-sm ${event.bgColor} ${event.textColor} ${userRole === UserRoles.Administrator ? 'cursor-pointer' : ''} `}
                           style={{ top: `${top + 2}px`, height: `${height - 5}px`, width: 'calc(100% - 76px)' }}
+                          onClick={() => openModal(event)} 
                         >
                           <div className="text-sm font-bold mb-1">{event.title}</div>
                           <div className="text-sm">
@@ -301,12 +448,8 @@ const ScheduleCalendar = () => {
 
                   return (
                     <div key={index} className="w-full flex flex-col items-center gap-2">
-                      <p className={`text-base ${isWeekend ? 'text-red-500' : 'text-textBg-700'}`}>
-                          {weekDate.getDate()}
-                      </p>
-                      <p className={`text-base ${isWeekend ? 'text-red-500' : 'text-textBg-500'}`}>
-                        {dayName}
-                      </p>
+                      <p className={`text-base ${isWeekend ? 'text-red-500' : 'text-textBg-700'}`}>{weekDate.getDate()}</p>
+                      <p className={`text-base ${isWeekend ? 'text-red-500' : 'text-textBg-500'}`}>{dayName}</p>
                     </div>
                   );
                 })}
@@ -318,12 +461,9 @@ const ScheduleCalendar = () => {
                     {['07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'].map(
                       (time, idx) => (
                         <React.Fragment key={`week-time-row-${idx}`}>
-                          <div className="flex justify-end pr-4 text-gray-500 text-xs">
-                            {time}
-                          </div>
+                          <div className="flex justify-end pr-4 text-gray-500 text-xs">{time}</div>
                           {Array.from({ length: 5 }).map((_, dayIdx) => (
-                            <div key={dayIdx} className={`relative ${dayIdx === 0 ? 'border-l' : ''} ${idx > 0 ? 'border-r border-b' : 'border-r border-b border-t'} border-textBg-300`}>
-                            </div>
+                            <div key={dayIdx} className={`relative ${dayIdx === 0 ? 'border-l' : ''} ${idx > 0 ? 'border-r border-b' : 'border-r border-b border-t'} border-textBg-300`}></div>
                           ))}
                         </React.Fragment>
                       )
@@ -331,9 +471,9 @@ const ScheduleCalendar = () => {
                   </div>
 
                   {eventsData
-                    .filter(event => {
+                    .filter((event) => {
                       const weekDates = getCurrentWeekDates();
-                      return weekDates.some(date => areDatesEqual(date, event.date));
+                      return weekDates.some((date) => areDatesEqual(date, event.date));
                     })
                     .map((event, eventIdx) => {
                       const eventStart = convertTimeToHours(event.startTime);
@@ -342,20 +482,21 @@ const ScheduleCalendar = () => {
                       const height = (eventEnd - eventStart) * 66;
 
                       const weekDates = getCurrentWeekDates();
-                      const dayIndex = weekDates.findIndex(date => areDatesEqual(date, event.date));
+                      const dayIndex = weekDates.findIndex((date) => areDatesEqual(date, event.date));
 
                       if (dayIndex === -1) return null;
 
                       return (
                         <div
                           key={eventIdx}
-                          className={`absolute mx-auto p-2 rounded-sm ${event.bgColor} ${event.textColor}`}
+                          className={`absolute mx-auto p-2 rounded-sm ${event.bgColor} ${event.textColor} cursor-pointer`}
                           style={{
                             top: `${top + 2}px`,
                             height: `${height - 5}px`,
                             left: `calc(((100% - 72px) / 5) * ${dayIndex} + 74px)`,
                             width: 'calc((100% - 98px) / 5)',
                           }}
+                          onClick={() => openModal(event)}
                         >
                           <div className="text-sm font-bold mb-1">{event.title}</div>
                           <div className="text-xs">
@@ -384,4 +525,4 @@ const ScheduleCalendar = () => {
   );
 };
 
-export default ScheduleCalendar;
+export default ScheduleCalendar; 

@@ -47,15 +47,20 @@ export function Login({ onLogin }) {
         body: JSON.stringify({ email, password }),
       });
   
+      const data = await response.json();
+      console.log('Odpowiedź z serwera:', data); 
+  
       if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.token);
-        setToken(localStorage.getItem('token', data.token));
+        const token = data.token || data.data?.jwt || data.jwt; 
+        if (!token) {
+          throw new Error('Token nie został znaleziony w odpowiedzi serwera.');
+        }
+        localStorage.setItem('token', token);
+        setToken(token);
         onLogin();
         navigate('/');
       } else {
-        const errorData = await response.json();
-        setError(errorData.message);
+        setError(data.message || 'Wystąpił błąd podczas logowania.');
       }
     } catch (error) {
       console.error('Błąd podczas logowania:', error);

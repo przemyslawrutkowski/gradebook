@@ -39,9 +39,10 @@ export default {
           600: "#E8AD0B",
           700: "#A57B08"
         },
-        accent1: {
-          200: "#BBE0F9",
-          500: "#1A98ED",
+        blueAccent: {
+          100: "#f1f9fe",
+          200: "#bbe1fa",
+          500: "#1A99EE",
         },
         accent2: {
           500: "#6F50ED",

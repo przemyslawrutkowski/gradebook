@@ -1,5 +1,3 @@
-/* eslint-disable react/prop-types */
-
 export default function Button({ size, text, icon, className, type, onClick, disabled }) {
   const sizeClasses = {
     xs: 'px-2 text-xs h-7',
@@ -17,35 +15,44 @@ export default function Button({ size, text, icon, className, type, onClick, dis
   };
 
   const disabledClasses = disabled
-  ? 'opacity-50 cursor-not-allowed'
-  : '';
+    ? 'opacity-50 cursor-not-allowed'
+    : '';
 
   const sizeClass = sizeClasses[size] || sizeClasses.m;
   const typeClass = typeClasses[type] || typeClasses.primary;
 
-  return icon ? (
+  if (icon && text) {
+    return (
+      <button 
+        className={`min-w-36 rounded flex items-center justify-center gap-2 ${sizeClass} ${typeClass} ${className}`}
+        onClick={onClick}
+        disabled={disabled}
+      > 
+        {icon}
+        {text}
+      </button>
+    );
+  }
+
+  if (icon) {
+    return (
+      <button 
+        className={`rounded flex items-center justify-center gap-2 ${sizeClass} ${typeClass} ${className} ${disabledClasses}`}
+        onClick={onClick}
+        disabled={disabled}
+      >
+        {icon}
+      </button>
+    );
+  }
+
+  return (
     <button 
-      className={`rounded flex items-center justify-center gap-2 ${sizeClass} ${typeClass} ${className}`}
+      className={`min-w-36 rounded flex items-center justify-center gap-2 ${sizeClass} ${typeClass} ${className} ${disabledClasses}`}
       onClick={onClick}
-    >
-      {icon}
-    </button>
-  ) : icon && text ? (
-    <button 
-      className={`min-w-36 rounded flex items-center justify-center gap-2 ${sizeClass} ${typeClass} ${className}`}
-      onClick={onClick}
-    > 
-      {icon}
-      {text}
-    </button>
-  ) :(
-    <button 
-    className={`min-w-36 rounded flex items-center justify-center gap-2 ${sizeClass} ${typeClass} ${className} ${disabledClasses}`}
-    onClick={onClick}
-    disabled={disabled}
+      disabled={disabled}
     > 
       {text}
     </button>
   );
 }
-
