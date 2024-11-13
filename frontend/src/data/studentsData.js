@@ -16,7 +16,7 @@ const studentsData = [
     pesel: "92030567890"
   },
   {
-    id: 4,
+    id: 3,
     name: "Maria Wiśniewska",
     classId: 1,
     email: "maria.wisniewska@example.com",
@@ -24,7 +24,7 @@ const studentsData = [
     pesel: "91052845678"
   },
   {
-    id: 3,
+    id: 11,
     name: "Piotr Zieliński",
     classId: 1,
     email: "piotr.zielinski@example.com",
@@ -32,7 +32,7 @@ const studentsData = [
     pesel: "88041534567"
   },
   {
-    id: 3,
+    id: 12,
     name: "Piotr Zieliński",
     classId: 2,
     email: "piotr.zielinski@example.com",

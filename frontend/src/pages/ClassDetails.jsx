@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import PageTitle from '../components/PageTitle';
 import Button from "../components/Button";
 import classesData from '../data/classesData';
@@ -7,6 +7,7 @@ import studentsData from '../data/studentsData';
 import { GraduationCap, Mail, MessageCircle, Pen, Phone, Plus, Trash, User, Users, X } from "lucide-react";
 import Modal from '../components/Modal';
 import Select from 'react-select';
+import StudentCard from "../components/StudentCard";
 
 function ClassDetails() {
   const { id } = useParams();
@@ -80,33 +81,16 @@ function ClassDetails() {
         {students.length > 0 ? (
         <div className="flex flex-col gap-3">
             {students.map(student => (
-                <div
-                    key={student.id}
-                    className="flex justify-between items-center border border-textBg-200 hover:cursor-pointer rounded-lg p-3 w-full"
-                >
-                    <div className="flex flex-col gap-2 w-full">
-                        <p className="text-base font-semibold text-textBg-700">{student.name}</p>
-                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-2 xl:gap-4 w-full">
-                            <div className="flex text-textBg-500 gap-1 items-center">
-                                <Mail size={16} strokeWidth={1.25} />
-                                <p className="text-sm text-textBg-500 col-span-1 overflow-hidden whitespace-nowrap truncate">
-                                    {student.email}
-                                </p>
-                            </div>
-                            <div className="flex text-textBg-500 gap-1 items-center">
-                                <Phone size={16} strokeWidth={1.25}/>
-                                <p className="text-sm text-textBg-500 col-span-1">{student.phoneNumber}</p>
-                            </div>
-                            <div className="flex text-textBg-500 gap-1 items-center">
-                                <User size={16} strokeWidth={1.25}/>
-                                <p className="text-sm text-textBg-500 col-span-1">{student.pesel}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex items-center text-sm text-textBg-700">
-                        <Button type="link" size="s" icon={<Trash />} onClick={() => handleRemoveStudent(student.id)} />
-                    </div>
-                </div>
+              <div key={student.id} >
+                <StudentCard 
+                  name={student.name} 
+                  phone={student.phoneNumber} 
+                  email={student.email} 
+                  pesel={student.pesel}
+                  icon={<Trash />}
+                  onClick={() => handleRemoveStudent(student.id)} 
+                />
+              </div>
             ))}
         </div>
         ) : (

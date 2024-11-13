@@ -17,6 +17,8 @@ import { Classes } from './pages/Classes';
 import ClassDetails from './pages/ClassDetails';
 import UserRoles from './data/userRoles';
 import { getToken, getUserRole, decodeToken } from './utils/UserRoleUtils';
+import { Students } from './pages/Students';
+import StudentDetails from './pages/StudentDetails';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -85,6 +87,7 @@ export default function App() {
            
             {userRole === UserRoles.Administrator && (
               <>
+                <SidebarItem icon={<LayoutDashboard size={20} />} text="Students" path="/students" />
                 <SidebarItem icon={<LayoutDashboard size={20} />} text="Classes" path="/classes" />
                 <SidebarItem icon={<LayoutDashboard size={20} />} text="Schedule" path="/schedule" />
               </>
@@ -118,6 +121,8 @@ export default function App() {
              
               {userRole === UserRoles.Administrator && (
                 <>
+                  <Route path="students" element={<Students />} />
+                  <Route path="/students/:id" element={<StudentDetails />} />
                   <Route path="/classes" element={<Classes />} />
                   <Route path="/classes/:id" element={<ClassDetails />} />
                 </>
