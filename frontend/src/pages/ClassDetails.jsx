@@ -4,8 +4,9 @@ import PageTitle from '../components/PageTitle';
 import Button from "../components/Button";
 import classesData from '../data/classesData';
 import studentsData from '../data/studentsData';
-import Tag from "./Tag";
-import { GraduationCap, Mail, MessageCircle, Pen, Phone, Plus, Trash, User, Users } from "lucide-react";
+import { GraduationCap, Mail, MessageCircle, Pen, Phone, Plus, Trash, User, Users, X } from "lucide-react";
+import Modal from '../components/Modal'; // Upewnij się, że masz komponent Modal
+import Select from 'react-select';
 
 function ClassDetails() {
   const { id } = useParams();
@@ -16,7 +17,9 @@ function ClassDetails() {
 
   const [classInfo, setClassInfo] = useState(null);
   const [students, setStudents] = useState([]);
-  const [newStudent, setNewStudent] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [availableStudents, setAvailableStudents] = useState([]);
+  const [selectedStudents, setSelectedStudents] = useState([]);
 
   useEffect(() => {
     if (selectedClass) {
@@ -26,13 +29,29 @@ function ClassDetails() {
     }
   }, [selectedClass, classId]);
 
-  const handleAddStudent = () => {
-    if (newStudent.trim() === "") return;
-    const newId = students.length > 0 ? Math.max(...students.map(s => s.id)) + 1 : 1;
-    const student = { id: newId, name: newStudent, classId: classId };
-    setStudents([...students, student]);
-    setClassInfo(prev => ({ ...prev, studentCount: prev.studentCount + 1 }));
-    setNewStudent("");
+  useEffect(() => {
+    // Filtruj studentów, którzy nie są jeszcze w klasie
+    const available = studentsData.filter(student => student.classId !== classId);
+    setAvailableStudents(available);
+  }, [classId]);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedStudents([]);
+  };
+
+  const handleAddStudents = () => {
+    if (selectedStudents.length === 0) return;
+
+    const newStudents = selectedStudents.map(student => ({
+      ...student.value,
+      classId: classId
+    }));
+
+    setStudents([...students, ...newStudents]);
+    setClassInfo(prev => ({ ...prev, studentCount: prev.studentCount + newStudents.length }));
+    closeModal();
   };
 
   const handleRemoveStudent = (studentId) => {
@@ -54,8 +73,11 @@ function ClassDetails() {
             <p>{classInfo.teacher}</p>
         </div>
 
-        <p className="text-lg text-textBg-700 font-medium mb-4">Students List ({students.length})</p>
-
+        <div className="flex justify-between items-center mb-4">
+          <p className="text-lg text-textBg-700 font-medium">Students List ({students.length})</p>
+          <Button text="Add Students" icon={<Plus size={18}/>} size="s" onClick={openModal}/>
+        </div>
+        
         {students.length > 0 ? (
         <div className="flex flex-col gap-3">
             {students.map(student => (
@@ -93,6 +115,27 @@ function ClassDetails() {
         )}       
        
       </div>
+
+      <Modal isOpen={isModalOpen} onClose={closeModal} widthHeightClassname="max-w-xl max-h-xl">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-textBg-700">Add Students to Class</h2>
+          <X size={24} className="hover:cursor-pointer" onClick={closeModal}/>
+        </div>
+        <div>
+          <Select
+            options={availableStudents.map((student) => ({ value: student, label: student.name }))}
+            onChange={setSelectedStudents}
+            isMulti
+            placeholder="Select students to add"
+            className="w-full mb-4"
+          />
+          
+          <div className="mt-6 flex justify-end gap-4">
+            <Button text="Cancel" type="secondary" onClick={closeModal} />
+            <Button text="Add" type="primary" onClick={handleAddStudents} />
+          </div>
+        </div>
+      </Modal>
     </main>
   );
 }

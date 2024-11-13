@@ -37,27 +37,26 @@ const eventsData = [
     date: new Date(baseYear, 8, 1),
     textColor: 'text-[#ffffff]',
     students: [
-      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
-      { id: 4, name: 'Bob Brown', attendance: 'Present' },
-      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
-      { id: 4, name: 'Bob Brown', attendance: 'Present' },
-      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
-      { id: 4, name: 'Bob Brown', attendance: 'Present' },
-      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
-      { id: 4, name: 'Bob Brown', attendance: 'Present' },
-      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
-      { id: 4, name: 'Bob Brown', attendance: 'Present' },
-      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
-      { id: 4, name: 'Bob Brown', attendance: 'Present' },
-      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
-      { id: 4, name: 'Bob Brown', attendance: 'Present' },
-      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
-      { id: 4, name: 'Bob Brown', attendance: 'Present' },
-      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
-      { id: 4, name: 'Bob Brown', attendance: 'Present' },
-      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
-      { id: 4, name: 'Bob Brown', attendance: 'Present' },
-      { id: 3, name: 'Alice Johnson', attendance: 'Late' },
+      { id: 1, name: 'Alice Johnson', attendance: 'Late' },
+      { id: 2, name: 'Bob Brown', attendance: 'Present' },
+      { id: 3, name: 'Charlie Smith', attendance: 'Absent' },
+      { id: 4, name: 'Diana Miller', attendance: 'Late' },
+      { id: 5, name: 'Eve Davis', attendance: 'Present' },
+      { id: 6, name: 'Frank Wilson', attendance: 'Absent' },
+      { id: 7, name: 'Grace Lee', attendance: 'Present' },
+      { id: 8, name: 'Henry Clark', attendance: 'Late' },
+      { id: 9, name: 'Ivy Harris', attendance: 'Absent' },
+      { id: 10, name: 'Jack Martinez', attendance: 'Present' },
+      { id: 11, name: 'Kara White', attendance: 'Late' },
+      { id: 12, name: 'Leo Walker', attendance: 'Present' },
+      { id: 13, name: 'Mia Young', attendance: 'Absent' },
+      { id: 14, name: 'Noah King', attendance: 'Present' },
+      { id: 15, name: 'Olivia Scott', attendance: 'Late' },
+      { id: 16, name: 'Paul Green', attendance: 'Present' },
+      { id: 17, name: 'Quincy Adams', attendance: 'Absent' },
+      { id: 18, name: 'Rachel Turner', attendance: 'Present' },
+      { id: 19, name: 'Steve Allen', attendance: 'Late' },
+      { id: 20, name: 'Tina Campbell', attendance: 'Absent' }
     ],
   },
   {
@@ -165,68 +164,67 @@ const ScheduleCalendar = () => {
   return (
     <div className="flex flex-col w-full">
 
-<Modal isOpen={isModalOpen} onClose={closeModal} widthHeightClassname="max-w-xl max-h-xl">
-  <div className="flex justify-between items-center mb-6">
-    <h2 className="text-xl font-bold text-textBg-700">Add attendance</h2>
-    <X size={24} className="hover:cursor-pointer" onClick={closeModal}/>
-  </div>
-  {selectedEvent && (
-    <div>
-      <div className='w-full flex mb-2'>
-        <div className='w-2/5'>
-          <p className='text-textBg-700 font-medium'>Student Name</p>
-        </div>
-        <div className='flex justify-evenly w-[calc(60%-18px)]'>
-          <p className='text-textBg-700 font-medium'>Present</p>
-          <p className='text-textBg-700 font-medium'>Late</p>
-          <p className='text-textBg-700 font-medium'>Absent</p>
-        </div>
+    <Modal isOpen={isModalOpen} onClose={closeModal} widthHeightClassname="max-w-xl max-h-xl">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-textBg-700">Add attendance</h2>
+        <X size={24} className="hover:cursor-pointer" onClick={closeModal}/>
       </div>
-
-      <div className="max-h-96 overflow-y-auto custom-scrollbar">
-        {selectedEvent.students.map((student) => (
-          <div className='w-full flex mb-2' key={student.id}>
+      {selectedEvent && (
+        <div>
+          <div className='w-full flex mb-2'>
             <div className='w-2/5'>
-              <p className='text-base text-textBg-500'>{student.name}</p>
+              <p className='text-textBg-700 font-medium'>Student Name</p>
             </div>
-            <div className='flex items-center justify-evenly w-3/5'> 
-              <input
-                type="radio"
-                name={`attendance-${student.id}`}
-                value="Present"
-                checked={student.attendance === 'Present'}
-                onChange={(e) => handleAttendanceChange(student.id, e.target.value)}
-                className="form-radio h-4 w-4 accent-green-500"
-              />
-              <input
-                type="radio"
-                name={`attendance-${student.id}`}
-                value="Late"
-                checked={student.attendance === 'Late'}
-                onChange={(e) => handleAttendanceChange(student.id, e.target.value)}
-                className="form-radio h-4 w-4 accent-yellow-500"
-              />
-              <input
-                type="radio"
-                name={`attendance-${student.id}`}
-                value="Absent"
-                checked={student.attendance === 'Absent'}
-                onChange={(e) => handleAttendanceChange(student.id, e.target.value)}
-                className="form-radio h-4 w-4 accent-red-600"
-              />                
+            <div className='flex justify-evenly w-[calc(60%-18px)]'>
+              <p className='text-textBg-700 font-medium'>Present</p>
+              <p className='text-textBg-700 font-medium'>Late</p>
+              <p className='text-textBg-700 font-medium'>Absent</p>
             </div>
           </div>
-        ))}
-      </div>
-      
-      {/* Przycisk zamknięcia i dodania */}
-      <div className="mt-4 flex justify-end gap-4">
-        <Button text="Close" type="secondary" onClick={closeModal} />
-        <Button text="Add" type="primary"  />
-      </div>
-    </div>
-    )}
-  </Modal>
+
+          <div className="max-h-96 overflow-y-auto custom-scrollbar">
+            {selectedEvent.students.map((student) => (
+              <div className='w-full flex mb-2' key={student.id}>
+                <div className='w-2/5'>
+                  <p className='text-base text-textBg-500'>{student.name}</p>
+                </div>
+                <div className='flex items-center justify-evenly w-3/5'> 
+                  <input
+                    type="radio"
+                    name={`attendance-${student.id}`}
+                    value="Present"
+                    checked={student.attendance === 'Present'}
+                    onChange={(e) => handleAttendanceChange(student.id, e.target.value)}
+                    className=" h-4 w-4 accent-blueAccent-500 hover:cursor-pointer"
+                  />
+                  <input
+                    type="radio"
+                    name={`attendance-${student.id}`}
+                    value="Late"
+                    checked={student.attendance === 'Late'}
+                    onChange={(e) => handleAttendanceChange(student.id, e.target.value)}
+                    className="form-radio h-4 w-4 accent-blueAccent-500 hover:cursor-pointer"
+                  />
+                  <input
+                    type="radio"
+                    name={`attendance-${student.id}`}
+                    value="Absent"
+                    checked={student.attendance === 'Absent'}
+                    onChange={(e) => handleAttendanceChange(student.id, e.target.value)}
+                    className="form-radio h-4 w-4 accent-blueAccent-500 hover:cursor-pointer"
+                  />                
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-6 flex justify-end gap-4">
+            <Button text="Close" type="secondary" onClick={closeModal} />
+            <Button text="Add" type="primary"  />
+          </div>
+        </div>
+        )}
+      </Modal>
 
       <div className="flex items-center justify-between mb-8 gap-1">
         <p className="text-textBg-700 w-full font-bold text-base flex flex-col sm:flex-row">

@@ -14,7 +14,7 @@ import { Homework } from './pages/Homework';
 import HomeworkDetail from './pages/HomeworkDetail';
 import { Grades } from './pages/Grades';
 import { Classes } from './pages/Classes';
-import ClassDetails from './components/ClassDetails';
+import ClassDetails from './pages/ClassDetails';
 import UserRoles from './data/userRoles';
 import { getToken, getUserRole, decodeToken } from './utils/UserRoleUtils';
 
