@@ -5,7 +5,7 @@ import Button from "../components/Button";
 import classesData from '../data/classesData';
 import studentsData from '../data/studentsData';
 import { GraduationCap, Mail, MessageCircle, Pen, Phone, Plus, Trash, User, Users, X } from "lucide-react";
-import Modal from '../components/Modal'; // Upewnij się, że masz komponent Modal
+import Modal from '../components/Modal';
 import Select from 'react-select';
 
 function ClassDetails() {
@@ -30,7 +30,6 @@ function ClassDetails() {
   }, [selectedClass, classId]);
 
   useEffect(() => {
-    // Filtruj studentów, którzy nie są jeszcze w klasie
     const available = studentsData.filter(student => student.classId !== classId);
     setAvailableStudents(available);
   }, [classId]);
