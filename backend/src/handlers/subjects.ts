@@ -49,12 +49,12 @@ export const getSubjects = async (req: Request, res: Response) => {
 
 export const updateSubject = async (req: Request, res: Response) => {
     try {
-        const id: string = req.params.subjectId;
+        const subjectId: string = req.params.subjectId;
         const name: string = req.body.name;
 
         const existingSubject: subjects | null = await prisma.subjects.findUnique({
             where: {
-                id: Buffer.from(uuidParse(id))
+                id: Buffer.from(uuidParse(subjectId))
             }
         });
 
@@ -64,7 +64,7 @@ export const updateSubject = async (req: Request, res: Response) => {
 
         const updatedSubject = await prisma.subjects.update({
             where: {
-                id: Buffer.from(uuidParse(id))
+                id: Buffer.from(uuidParse(subjectId))
             },
             data: {
                 name: name
@@ -85,11 +85,11 @@ export const updateSubject = async (req: Request, res: Response) => {
 
 export const deleteSubject = async (req: Request, res: Response) => {
     try {
-        const id: string = req.params.subjectId;
+        const subjectId: string = req.params.subjectId;
 
         const existingSubject: subjects | null = await prisma.subjects.findUnique({
             where: {
-                id: Buffer.from(uuidParse(id))
+                id: Buffer.from(uuidParse(subjectId))
             }
         });
 
@@ -99,7 +99,7 @@ export const deleteSubject = async (req: Request, res: Response) => {
 
         const deletedSubject = await prisma.subjects.delete({
             where: {
-                id: Buffer.from(uuidParse(id))
+                id: Buffer.from(uuidParse(subjectId))
             }
         });
 

@@ -11,6 +11,10 @@ import lessonsRouter from './routers/lessonsRouter';
 import subjectsRouter from './routers/subjectsRouter';
 import attendancesRouter from './routers/attendancesRouter';
 import userTypesRouter from './routers/userTypesRouter';
+import schoolYearsRouter from './routers/schoolYearsRouter';
+import semestersRouter from './routers/semestersRouter';
+import gradesRouter from './routers/gradesRouter';
+import classNamesRouter from './routers/classNamesRouter';
 import { messagesHandler } from './handlers/messages';
 
 const app = express();
@@ -32,6 +36,10 @@ app.use('/lesson', lessonsRouter);
 app.use('/subject', subjectsRouter);
 app.use('/attendance', attendancesRouter);
 app.use('/user-type', userTypesRouter);
+app.use('/school-year', schoolYearsRouter);
+app.use('/semester', semestersRouter);
+app.use('/grade', gradesRouter);
+app.use('/class-name', classNamesRouter)
 
 io.on('connection', (socket) => {
     messagesHandler(io, socket);

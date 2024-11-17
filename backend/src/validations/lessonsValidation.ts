@@ -1,11 +1,12 @@
 import { createDateValidation, createNotEmptyValidation, createArrayValidation, createIntValidation, createTimeValidation } from '../utils/validationHelpers';
 
-export const validateGenerateLessons = () => [
+export const validateCreateLessons = () => [
     createDateValidation('startDate'),
     createDateValidation('endDate'),
-    createNotEmptyValidation('teacherId', 'body'),
-    createNotEmptyValidation('classId', 'body'),
-    createNotEmptyValidation('subjectId', 'body'),
+    createNotEmptyValidation('teacherId'),
+    createNotEmptyValidation('classId'),
+    createNotEmptyValidation('subjectId'),
+    createNotEmptyValidation('semesterId'),
     createArrayValidation('lessonSchedules'),
     createIntValidation('lessonSchedules.*.dayOfWeek', 'body', 0, 6),
     createTimeValidation('lessonSchedules.*.startTime'),

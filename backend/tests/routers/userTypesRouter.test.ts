@@ -5,7 +5,7 @@ import {
     sendPostRequest,
     sendDeleteRequest,
 } from '../../src/utils/requestHelpers';
-import { userType1, invalidUserType, nonExistentId, invalidIdUrl } from '../../src/utils/testData';
+import { userType1, nonExistentId, invalidIdUrl, emptyString } from '../../src/utils/testData';
 
 suite('userTypesRouter', () => {
     afterEach(async () => {
@@ -19,7 +19,9 @@ suite('userTypesRouter', () => {
     });
 
     test('createUserType() - validation error', async () => {
-        const createUserTypeResponse = await sendPostRequest('/user-type', invalidUserType);
+        const createUserTypeResponse = await sendPostRequest('/user-type', {
+            name: emptyString
+        });
         assert.strictEqual(createUserTypeResponse.statusCode, 400, 'Expected the status code to be 400 for a validation error.');
         assert.strictEqual(createUserTypeResponse.body.errors.length, 1, 'Expected the number of validation errors to be 1.');
     });

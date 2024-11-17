@@ -40,11 +40,11 @@ export const createUserType = async (req: Request, res: Response) => {
 
 export const deleteUserType = async (req: Request, res: Response) => {
     try {
-        const id: string = req.params.userTypeId;
+        const userTypeId: string = req.params.userTypeId;
 
         const existingUserType: user_types | null = await prisma.user_types.findUnique({
             where: {
-                id: Buffer.from(uuidParse(id))
+                id: Buffer.from(uuidParse(userTypeId))
             }
         });
 
@@ -54,7 +54,7 @@ export const deleteUserType = async (req: Request, res: Response) => {
 
         const deletedUserType = await prisma.user_types.delete({
             where: {
-                id: Buffer.from(uuidParse(id))
+                id: Buffer.from(uuidParse(userTypeId))
             }
         });
 

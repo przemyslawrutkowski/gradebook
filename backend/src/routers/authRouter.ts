@@ -42,8 +42,8 @@ authRouter.post('/signup/parent',
 );
 
 authRouter.post('/signup/administrator',
-    //authenticate,
-    //authorize([UserType.Administrator]),
+    authenticate,
+    authorize([UserType.Administrator]),
     validateSignUp(),
     handleInputErrors,
     signUpAdministrator

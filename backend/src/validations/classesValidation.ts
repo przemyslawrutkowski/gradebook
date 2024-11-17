@@ -3,15 +3,15 @@ import { createNotEmptyValidation } from '../utils/validationHelpers';
 
 const atLeastOneFieldValidation = () => {
     return body().custom((value, { req }) => {
-        const name: string = req.body.name;
-        const yearbook: string = req.body.yearbook;
+        const classNameId: string = req.body.classNameId;
+        const schoolYearId: string = req.body.schoolYearId;
         const teacherId: string = req.body.teacherId;
 
-        if (!name && !yearbook && !teacherId)
+        if (!classNameId && !schoolYearId && !teacherId)
             throw new Error('At least one field must be provided.')
 
-        if (name) createNotEmptyValidation('name').run(req);
-        if (yearbook) createNotEmptyValidation('yearbook').run(req);
+        if (classNameId) createNotEmptyValidation('classNameId').run(req);
+        if (schoolYearId) createNotEmptyValidation('schoolYearId').run(req);
         if (teacherId) createNotEmptyValidation('teacherId').run(req);
 
         const result = validationResult(req);
@@ -20,10 +20,9 @@ const atLeastOneFieldValidation = () => {
     });
 };
 
-
 export const validateCreateClass = () => [
-    createNotEmptyValidation('name'),
-    createNotEmptyValidation('yearbook')
+    createNotEmptyValidation('classNameId'),
+    createNotEmptyValidation('schoolYearId')
 ];
 
 export const validateAssignStudent = () => [
@@ -31,7 +30,7 @@ export const validateAssignStudent = () => [
     createNotEmptyValidation('studentId')
 ];
 
-export const validateClassUpdate = () => [
+export const validateUpdateClass = () => [
     createNotEmptyValidation('classId', 'param'),
     atLeastOneFieldValidation(),
 ];

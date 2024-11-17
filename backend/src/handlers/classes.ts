@@ -1,19 +1,41 @@
 import { Request, Response } from 'express';
 import prisma from '../db';
-import { students, classes, teachers } from '@prisma/client';
+import { students, classes, teachers, class_names, school_years } from '@prisma/client';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces';
 import { parse as uuidParse, stringify as uuidStringify } from 'uuid';
 import { Buffer } from 'node:buffer';
 
 export const createClass = async (req: Request, res: Response) => {
     try {
-        const name: string = req.body.name;
-        const yearbook: string = req.body.yearbook;
+        const classNameId: string = req.body.classNameId;
+        const schoolYearId: string = req.body.schoolYearId;
 
-        const existingClass: classes | null = await prisma.classes.findFirst({
+        const existingClassName: class_names | null = await prisma.class_names.findUnique({
             where: {
-                name: name,
-                yearbook: yearbook
+                id: Buffer.from(uuidParse(classNameId))
+            }
+        });
+
+        if (!existingClassName) {
+            return res.status(404).json(createErrorResponse(`Class name does not exist.`));
+        }
+
+        const existingSchoolYear: school_years | null = await prisma.school_years.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(schoolYearId))
+            }
+        });
+
+        if (!existingSchoolYear) {
+            return res.status(404).json(createErrorResponse(`School year does not exist.`));
+        }
+
+        const existingClass: classes | null = await prisma.classes.findUnique({
+            where: {
+                class_name_id_school_year_id: {
+                    class_name_id: Buffer.from(uuidParse(classNameId)),
+                    school_year_id: Buffer.from(uuidParse(schoolYearId))
+                }
             }
         });
 
@@ -23,15 +45,16 @@ export const createClass = async (req: Request, res: Response) => {
 
         const createdClass = await prisma.classes.create({
             data: {
-                name: name,
-                yearbook: yearbook
+                class_name_id: Buffer.from(uuidParse(classNameId)),
+                school_year_id: Buffer.from(uuidParse(schoolYearId))
             }
         });
 
         const responseData = {
             ...createdClass,
             id: uuidStringify(createdClass.id),
-            teacher_id: createdClass.teacher_id ? uuidStringify(createdClass.teacher_id) : null
+            class_name_id: uuidStringify(createdClass.class_name_id),
+            school_year_id: uuidStringify(createdClass.school_year_id),
         };
 
         return res.status(200).json(createSuccessResponse(responseData, `Class created successfully.`));
@@ -48,6 +71,8 @@ export const getClasses = async (req: Request, res: Response) => {
         const responseData = classes.map(cls => ({
             ...cls,
             id: uuidStringify(cls.id),
+            class_name_id: uuidStringify(cls.class_name_id),
+            school_year_id: uuidStringify(cls.school_year_id),
             teacher_id: cls.teacher_id ? uuidStringify(cls.teacher_id) : null
         }));
 
@@ -94,9 +119,9 @@ export const getStudents = async (req: Request, res: Response) => {
 export const updateClass = async (req: Request, res: Response) => {
     try {
         const classId: string = req.params.classId;
-        const name: string = req.body.name;
-        const yearbook: string = req.body.yearbook;
-        const teacherId: string = req.body.teacherId;
+        const classNameId: string | undefined = req.body.classNameId;
+        const schoolYearId: string | undefined = req.body.schoolYearId;
+        const teacherId: string | undefined = req.body.teacherId;
 
         const existingClass: classes | null = await prisma.classes.findUnique({
             where: {
@@ -108,21 +133,49 @@ export const updateClass = async (req: Request, res: Response) => {
             return res.status(404).json(createErrorResponse(`Class does not exist.`));
         }
 
-        const existingTeacher: teachers | null = await prisma.teachers.findUnique({
-            where: {
-                id: Buffer.from(uuidParse(teacherId))
-            }
-        });
+        const data: { class_name_id?: Buffer, school_year_id?: Buffer, teacher_id?: Buffer } = {};
 
-        if (!existingTeacher) {
-            return res.status(404).json(createErrorResponse(`Teacher does not exist.`));
+        if (classNameId) {
+            const existingClassName: class_names | null = await prisma.class_names.findUnique({
+                where: {
+                    id: Buffer.from(uuidParse(classNameId))
+                }
+            });
+
+            if (!existingClassName) {
+                return res.status(404).json(createErrorResponse(`Class name does not exist.`));
+            }
+
+            data.class_name_id = Buffer.from(uuidParse(classNameId));
         }
 
-        const data: { name?: string, yearbook?: string, teacher_id?: Buffer } = {};
+        if (schoolYearId) {
+            const existingSchoolYear: school_years | null = await prisma.school_years.findUnique({
+                where: {
+                    id: Buffer.from(uuidParse(schoolYearId))
+                }
+            });
 
-        if (name) data.name = name;
-        if (yearbook) data.yearbook = yearbook;
-        if (teacherId) data.teacher_id = Buffer.from(uuidParse(teacherId));
+            if (!existingSchoolYear) {
+                return res.status(404).json(createErrorResponse(`School year does not exist.`));
+            }
+
+            data.school_year_id = Buffer.from(uuidParse(schoolYearId));
+        }
+
+        if (teacherId) {
+            const existingTeacher: teachers | null = await prisma.teachers.findUnique({
+                where: {
+                    id: Buffer.from(uuidParse(teacherId))
+                }
+            });
+
+            if (!existingTeacher) {
+                return res.status(404).json(createErrorResponse(`Teacher does not exist.`));
+            }
+
+            data.teacher_id = Buffer.from(uuidParse(teacherId));
+        }
 
         const updatedClass = await prisma.classes.update({
             where: {
@@ -134,6 +187,8 @@ export const updateClass = async (req: Request, res: Response) => {
         const responseData = {
             ...updatedClass,
             id: uuidStringify(updatedClass.id),
+            class_name_id: uuidStringify(updatedClass.class_name_id),
+            school_year_id: uuidStringify(updatedClass.school_year_id),
             teacher_id: updatedClass.teacher_id ? uuidStringify(updatedClass.teacher_id) : null
         };
 

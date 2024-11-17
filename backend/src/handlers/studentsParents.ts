@@ -76,10 +76,30 @@ export const deleteStudentParentRelationship = async (req: Request, res: Respons
             }
         };
 
+        const existingStudent: students | null = await prisma.students.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(studentId))
+            }
+        });
+
+        if (!existingStudent) {
+            return res.status(404).json(createErrorResponse(`Student does not exist.`));
+        }
+
+        const existingParent: parents | null = await prisma.parents.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(parentId))
+            }
+        });
+
+        if (!existingParent) {
+            return res.status(404).json(createErrorResponse(`Parent does not exist.`));
+        }
+
         const existingEntry: students_parents | null = await prisma.students_parents.findUnique(criteria);
 
         if (!existingEntry) {
-            return res.status(404).json(createErrorResponse(`Relationship not found.`));
+            return res.status(404).json(createErrorResponse(`Relationship does not exist.`));
         }
 
         const removedBond = await prisma.students_parents.delete(criteria);

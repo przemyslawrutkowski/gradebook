@@ -7,7 +7,7 @@ import {
     sendPatchRequest,
     sendDeleteRequest,
 } from '../../src/utils/requestHelpers';
-import { subject1, subject2, invalidSubject, nonExistentId, invalidIdUrl } from '../../src/utils/testData';
+import { subject1, subject2, nonExistentId, invalidIdUrl, emptyString } from '../../src/utils/testData';
 
 suite('subjectsRouter', () => {
     afterEach(async () => {
@@ -21,7 +21,9 @@ suite('subjectsRouter', () => {
     });
 
     test('createSubject() - validation error', async () => {
-        const createSubjectResponse = await sendPostRequest('/subject', invalidSubject);
+        const createSubjectResponse = await sendPostRequest('/subject', {
+            name: emptyString
+        });
         assert.strictEqual(createSubjectResponse.statusCode, 400, 'Expected the status code to be 400 for a validation error.');
         assert.strictEqual(createSubjectResponse.body.errors.length, 1, 'Expected the number of validation errors to be 1.');
     });
@@ -60,7 +62,9 @@ suite('subjectsRouter', () => {
 
     test('updateSubject() - validation error', async () => {
         const updateSubjectResponse = await sendPatchRequest(
-            `/subject/${invalidIdUrl}`, invalidSubject);
+            `/subject/${invalidIdUrl}`, {
+            name: emptyString
+        });
         assert.strictEqual(updateSubjectResponse.statusCode, 400, 'Expected the status code to be 400 for a validation error.');
         assert.strictEqual(updateSubjectResponse.body.errors.length, 2, 'Expected the number of validation errors to be 2.');
     });

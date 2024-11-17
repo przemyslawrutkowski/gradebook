@@ -2,9 +2,9 @@ import { createArrayValidation, createBooleanValidation, createNotEmptyValidatio
 
 export const validateCreateAttendances = () => [
     createArrayValidation('attendances'),
+    createNotEmptyValidation('lessonId'),
     createBooleanValidation('attendances.*.wasPresent'),
     createNotEmptyValidation('attendances.*.studentId'),
-    createNotEmptyValidation('attendances.*.lessonId'),
 ];
 
 export const validateGetAttendances = () => [
@@ -12,7 +12,6 @@ export const validateGetAttendances = () => [
 ];
 
 export const validateUpdateAttendance = () => [
-    createNotEmptyValidation('studentId', 'param'),
-    createNotEmptyValidation('lessonId', 'param'),
+    createNotEmptyValidation('attendanceId', 'param'),
     createBooleanValidation('wasPresent')
 ];

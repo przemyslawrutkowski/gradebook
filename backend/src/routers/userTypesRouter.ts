@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { createUserType, deleteUserType } from '../handlers/userTypes.js';
-import { validateUserTypeName, validateUserTypeId } from '../validations/userTypesValidation.js';
+import { validateCreateUserType, validateDeleteUserType } from '../validations/userTypesValidation.js';
 import { UserType } from '../enums/userTypes.js';
 
 const userTypesRouter = Router();
@@ -10,7 +10,7 @@ const userTypesRouter = Router();
 userTypesRouter.post('',
     authenticate,
     authorize([UserType.Administrator]),
-    validateUserTypeName(),
+    validateCreateUserType(),
     handleInputErrors,
     createUserType
 )
@@ -18,7 +18,7 @@ userTypesRouter.post('',
 userTypesRouter.delete('/:userTypeId',
     authenticate,
     authorize([UserType.Administrator]),
-    validateUserTypeId(),
+    validateDeleteUserType(),
     handleInputErrors,
     deleteUserType
 )

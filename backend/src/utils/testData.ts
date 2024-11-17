@@ -80,47 +80,12 @@ export const student2 = {
     lastName: 'Student'
 };
 
-export const invalidUser = {
-    pesel: '',
-    email: '',
-    phoneNumber: '',
-    password: 'a',
-    passwordConfirm: 'b',
-    firstName: '1',
-    lastName: '1'
-};
-
-export const class1 = {
-    name: 'IA',
-    yearbook: '2024/2025'
-};
-
-export const class2 = {
-    name: 'IIA',
-    yearbook: '2024/2025'
-};
-
-export const invalidClass = {
-    name: '',
-    yearbook: ''
-};
-
-export const invalidClassUpdate = {
-    name: '',
-    yearbook: '',
-    teacherId: ''
-};
-
 export const subject1 = {
     name: 'Math'
 };
 
 export const subject2 = {
     name: 'Geography'
-};
-
-export const invalidSubject = {
-    name: ''
 };
 
 export const lessonsData = {
@@ -139,26 +104,6 @@ export const lessonsData = {
             frequency: 2
         }
     ],
-};
-
-export const invalidLessonsData = {
-    startDate: '',
-    endDate: '',
-    teacherId: '',
-    classId: '',
-    subjectId: '',
-    lessonSchedules: [
-        {
-            dayOfWeek: 7,
-            startTime: '',
-            endTime: '',
-            frequency: ''
-        }
-    ],
-};
-
-export const invalidLessonUpdate = {
-    description: ''
 };
 
 export const messageData = {
@@ -182,13 +127,52 @@ export const userType4 = {
     name: UserType.Administrator
 };
 
-export const invalidUserType = {
-    name: ''
+export const schoolYear1 = {
+    name: '2023/2024',
+    startDate: '2023-10-01',
+    endDate: '2024-06-28'
+};
+
+export const schoolYear2 = {
+    name: '2025/2026',
+    startDate: '2024-10-01',
+    endDate: '2025-06-29'
+};
+
+export const semester1 = {
+    semester: 1,
+    startDate: '2024-10-01',
+    endDate: '2025-02-10'
+};
+
+export const semester2 = {
+    semester: 2,
+    startDate: '2025-02-26',
+    endDate: '2025-06-29'
+};
+
+export const className1 = {
+    name: 'IA'
+};
+
+export const className2 = {
+    name: 'IIA'
+};
+
+export const grade1 = {
+    grade: 3,
+    description: 'Activity during the lesson'
+};
+
+export const grade2 = {
+    grade: 6,
+    description: 'Graphing geometry shadows in axonometry'
 };
 
 export const nonExistentId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
 export const invalidIdUrl = '%20';
-export const invalidIdBody = '';
+export const emptyString = '';
+
 export const nonExistentPassword = 'nonexistentpassword';
 export const nonExistentEmail = 'user@user.com';
 export const newPassword = 'newpassword';

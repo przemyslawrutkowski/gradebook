@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { validateGenerateLessons, validateUpdateLesson, validateGetAndDeleteLessons } from '../validations/lessonsValidation.js';
-import { generateLessons, getLessons, updateLesson, deleteLessons } from '../handlers/lessons.js';
+import { validateCreateLessons, validateUpdateLesson, validateGetAndDeleteLessons } from '../validations/lessonsValidation.js';
+import { createLessons, getLessons, updateLesson, deleteLessons } from '../handlers/lessons.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { UserType } from '../enums/userTypes.js';
 
@@ -10,9 +10,9 @@ const lessonsRouter = Router();
 lessonsRouter.post('',
     authenticate,
     authorize([UserType.Administrator]),
-    validateGenerateLessons(),
+    validateCreateLessons(),
     handleInputErrors,
-    generateLessons
+    createLessons
 )
 
 lessonsRouter.get('/:classId/:subjectId',

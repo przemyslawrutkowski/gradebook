@@ -7,7 +7,7 @@ import { UserType } from '../enums/userTypes.js';
 
 const studentsParentsRouter = Router();
 
-studentsParentsRouter.post('/student-parent-relationship',
+studentsParentsRouter.post('',
     authenticate,
     authorize([UserType.Administrator]),
     validateCreateStudentParentRelationship(),
@@ -15,7 +15,7 @@ studentsParentsRouter.post('/student-parent-relationship',
     createStudentParentRelationship
 );
 
-studentsParentsRouter.delete('/student-parent-relationship/:studentId/:parentId',
+studentsParentsRouter.delete('/:studentId/:parentId',
     authenticate,
     authorize([UserType.Administrator]),
     validateDeleteStudentParentRelationship(),

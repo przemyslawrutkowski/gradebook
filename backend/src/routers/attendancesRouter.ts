@@ -23,7 +23,7 @@ attendancesRouter.get('/:lessonId',
     getAttendances
 );
 
-attendancesRouter.patch('/:lessonId/:studentId',
+attendancesRouter.patch('/:attendanceId',
     authenticate,
     authorize([UserType.Administrator, UserType.Teacher]),
     validateUpdateAttendance(),

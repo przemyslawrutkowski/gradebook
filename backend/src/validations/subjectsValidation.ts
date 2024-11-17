@@ -1,14 +1,14 @@
 import { createNotEmptyValidation } from '../utils/validationHelpers';
 
-export const validateSubjectName = () => [
+export const validateCreateSubject = () => [
     createNotEmptyValidation('name')
 ];
 
-export const validateSubjectId = () => [
+export const validateDeleteSubject = () => [
     createNotEmptyValidation('subjectId', 'param')
 ];
 
-export const validateSubjectUpdate = () => [
+export const validateUpdateSubject = () => [
     createNotEmptyValidation('subjectId', 'param'),
     createNotEmptyValidation('name')
 ];

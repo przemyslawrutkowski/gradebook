@@ -1,21 +1,23 @@
 import { Request, Response } from 'express';
 import prisma from '../db';
-import { teachers, classes, subjects, lessons } from '@prisma/client';
+import { teachers, classes, subjects, lessons, semesters } from '@prisma/client';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces';
 import LessonSchedule from '../interfaces/lessonSchedule';
 import { parse as uuidParse, stringify as uuidStringify } from 'uuid';
 import { Buffer } from 'node:buffer';
 
-export const generateLessons = async (req: Request, res: Response) => {
+export const createLessons = async (req: Request, res: Response) => {
     try {
-        const startDate = new Date(req.body.startDate as string);
-        const endDate = new Date(req.body.endDate as string);
+        // startDate and endDate are the same values as these that are present in specific semester
+        const startDate = new Date(req.body.startDate);
+        const endDate = new Date(req.body.endDate);
 
         const lessonSchedules: LessonSchedule[] = req.body.lessonSchedules;
 
         const teacherId: string = req.body.teacherId;
         const classId: string = req.body.classId;
         const subjectId: string = req.body.subjectId;
+        const semesterId: string = req.body.semesterId;
 
         const existingTeacher: teachers | null = await prisma.teachers.findUnique({
             where: {
@@ -47,6 +49,29 @@ export const generateLessons = async (req: Request, res: Response) => {
             return res.status(404).json(createErrorResponse(`Subject does not exist.`));
         }
 
+        const existingSemester: semesters | null = await prisma.semesters.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(semesterId))
+            }
+        });
+
+        if (!existingSemester) {
+            return res.status(404).json(createErrorResponse(`Semester does not exist.`));
+        }
+
+        const existingLesson: lessons | null = await prisma.lessons.findFirst({
+            where: {
+                teacher_id: Buffer.from(uuidParse(teacherId)),
+                class_id: Buffer.from(uuidParse(classId)),
+                subject_id: Buffer.from(uuidParse(subjectId)),
+                semester_id: Buffer.from(uuidParse(semesterId))
+            }
+        });
+
+        if (existingLesson) {
+            return res.status(409).json(createErrorResponse(`Lessons already exists.`));
+        }
+
         const dayMilliseconds = 24 * 60 * 60 * 1000;
         const weekMilliseconds = 7 * dayMilliseconds;
 
@@ -58,6 +83,7 @@ export const generateLessons = async (req: Request, res: Response) => {
             teacher_id: Buffer;
             class_id: Buffer;
             subject_id: Buffer;
+            semester_id: Buffer;
         }[] = [];
 
         lessonSchedules.forEach((schedule: LessonSchedule) => {
@@ -87,7 +113,8 @@ export const generateLessons = async (req: Request, res: Response) => {
                         is_completed: false,
                         teacher_id: Buffer.from(uuidParse(teacherId)),
                         class_id: Buffer.from(uuidParse(classId)),
-                        subject_id: Buffer.from(uuidParse(subjectId))
+                        subject_id: Buffer.from(uuidParse(subjectId)),
+                        semester_id: Buffer.from(uuidParse(semesterId))
                     });
                 }
 
@@ -141,16 +168,19 @@ export const getLessons = async (req: Request, res: Response) => {
         const responseData = lessons.map(lesson => ({
             ...lesson,
             id: uuidStringify(lesson.id),
+            date: lesson.date.toISOString(),
+            start_time: lesson.start_time.toISOString(),
+            end_time: lesson.end_time.toISOString(),
             teacher_id: uuidStringify(lesson.teacher_id),
             class_id: uuidStringify(lesson.class_id),
-            subject_id: uuidStringify(lesson.subject_id)
+            subject_id: uuidStringify(lesson.subject_id),
+            semester_id: uuidStringify(lesson.semester_id)
         }));
 
         return res.status(200).json(createSuccessResponse(responseData, `Lessons retrieved successfully.`));
     } catch (err) {
         console.error('Error retrieving lessons', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving lessons. Please try again later.'));
-
     }
 };
 
@@ -181,16 +211,19 @@ export const updateLesson = async (req: Request, res: Response) => {
         const responseData = {
             ...updatedLesson,
             id: uuidStringify(updatedLesson.id),
+            date: updatedLesson.date.toISOString(),
+            start_time: updatedLesson.start_time.toISOString(),
+            end_time: updatedLesson.end_time.toISOString(),
             teacher_id: uuidStringify(updatedLesson.teacher_id),
             class_id: uuidStringify(updatedLesson.class_id),
-            subject_id: uuidStringify(updatedLesson.subject_id)
+            subject_id: uuidStringify(updatedLesson.subject_id),
+            semester_id: uuidStringify(updatedLesson.semester_id)
         };
 
         return res.status(200).json(createSuccessResponse(responseData, `Lesson updated successfully.`));
     } catch (err) {
         console.error('Error updating lesson', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while updating lesson. Please try again later.'));
-
     }
 };
 
@@ -198,6 +231,26 @@ export const deleteLessons = async (req: Request, res: Response) => {
     try {
         const classId: string = req.params.classId;
         const subjectId: string = req.params.subjectId;
+
+        const existingClass: classes | null = await prisma.classes.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(classId))
+            }
+        });
+
+        if (!existingClass) {
+            return res.status(404).json(createErrorResponse(`Class does not exist.`));
+        }
+
+        const existingSubject: subjects | null = await prisma.subjects.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(subjectId))
+            }
+        });
+
+        if (!existingSubject) {
+            return res.status(404).json(createErrorResponse(`Subject does not exist.`));
+        }
 
         const payload = await prisma.lessons.deleteMany({
             where: {
