@@ -40,7 +40,13 @@ export const createClassName = async (req: Request, res: Response) => {
 export const getClassNames = async (req: Request, res: Response) => {
     try {
         const classNames = await prisma.class_names.findMany();
-        return res.status(200).json(createSuccessResponse(classNames, 'Class names retrieved successfully.'));
+
+        const responeData = classNames.map(className => ({
+            ...className,
+            id: uuidStringify(className.id)
+        }));
+
+        return res.status(200).json(createSuccessResponse(responeData, 'Class names retrieved successfully.'));
     } catch (err) {
         console.error('Error retrieving class names', err);
         return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving class names. Please try again later.'));
