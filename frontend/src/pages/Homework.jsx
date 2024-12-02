@@ -28,7 +28,7 @@ export function Homework() {
       <PageTitle text="Homework"/>
 
       <div className="flex flex-col justify-between sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8 gap-8">
-        <div className="grid grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className='flex items-center gap-2 bg-[#eefdf3] p-4 rounded-md'>
             <CheckCircle className='text-green-500 mr-2' size={36} />
             <div>

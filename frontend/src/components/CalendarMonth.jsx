@@ -42,40 +42,13 @@ const eventsData = [
       type: 'Quiz' 
     },
     { 
-      title: 'Biology Exam', 
-      hour: '10:00 AM', 
-      room: '103', 
-      bgColor: 'bg-[#1A99EE]', 
-      date: new Date(baseYear, 8, 1), 
-      textColor: 'text-[#000]',
-      type: 'Exam' 
-    },
-    { 
-      title: 'Chemistry Exam', 
-      hour: '10:00 AM', 
-      room: '104', 
-      bgColor: 'bg-[#1A99EE]', 
-      date: new Date(baseYear, 8, 1), 
-      textColor: 'text-[#000]',
-      type: 'Exam' 
-    },
-    { 
-      title: 'Math Exam', 
-      hour: '10:00 AM', 
-      room: '105', 
-      bgColor: 'bg-[#1A99EE]', 
-      date: new Date(baseYear, 8, 1), 
-      textColor: 'text-[#000]',
-      type: 'Exam' 
-    },
-    { 
       title: 'Physics Exam', 
       hour: '10:00 AM', 
       room: '106', 
       bgColor: 'bg-[#1A99EE]', 
       date: new Date(baseYear, 8, 1), 
       textColor: 'text-[#000]',
-      type: 'Exam' 
+      type: 'Other' 
     },
     { 
       title: 'Math Exam', 

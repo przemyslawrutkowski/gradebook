@@ -1,32 +1,61 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PageTitle from '../components/PageTitle';
 import { Search, Plus, X } from 'lucide-react';
 import Button from "../components/Button";
 import ClassCard from "../components/ClassCard";
-import classesData from '../data/classesData';
-// import CreateClassForm from "../components/CreateClassForm";
+import axios from 'axios';
 import Modal from "../components/Modal";
+import CreateClassForm from "../components/forms/CreateClassForm";
+import { getToken } from "../utils/UserRoleUtils";
 
 export function Classes() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterTeacher, setFilterTeacher] = useState("All Teachers");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [classes, setClasses] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const token = getToken();
+
+  const fetchClasses = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('http://localhost:3000/class',
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, 
+        }
+      });
+      if(!response.ok){
+        throw new Error(`Error: ${response.status}`);
+      }
+      const result = await response.json();
+      console.log(result.data);
+      setClasses(result.data);
+    }catch(err){
+      setError(err.message);
+    }finally{
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchClasses();
+  }, []);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  const handleFilter = (e) => {
-    setFilterTeacher(e.target.value);
-  };
-
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
-  const filteredClasses = classesData.filter(cls => {
-    const matchesSearch = cls.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTeacher = filterTeacher === "All Teachers" || cls.teacher === filterTeacher;
-    return matchesSearch && matchesTeacher;
+  const filteredClasses = classes.filter(cls => {
+    const className = cls.class_name_id?.name || "";
+    return className.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   return (
@@ -39,22 +68,12 @@ export function Classes() {
               <Search size={20} className='mr-2 text-textBg-600' />
               <input
                 type='text'
-                placeholder='Search'
+                placeholder='Search by Class Name'
                 value={searchTerm}
                 onChange={handleSearch}
                 className="w-full focus:outline-none text-sm lg:text-base"
               />
             </div>
-            <select
-              value={filterTeacher}
-              onChange={handleFilter}
-              className="h-9 w-full sm:w-[calc(50%-8px)] md:w-56 px-3 bg-white rounded border border-solid border-textBg-200 text-textBg-600 focus:outline-none lg:text-base"
-            >
-              <option>All Teachers</option>
-              <option>Mr. Smith</option>
-              <option>Ms. Johnson</option>
-              <option>Dr. Brown</option>
-            </select>
           </div>
         </div>
         <div className='w-full md:w-auto'>
@@ -69,15 +88,16 @@ export function Classes() {
         </div>
       </div>
 
+      {error && <p className="text-red-500">{error}</p>}
+
       <div className="grid grid-cols-1 gap-4">
         {filteredClasses.length > 0 ? (
           filteredClasses.map(cls => (
             <ClassCard
               key={cls.id}
               id={cls.id}
-              name={cls.name}
-              studentCount={cls.studentCount}
-              teacher={cls.teacher}
+              name={cls.class_name_id?.name || "Unnamed Class"}
+              // studentCount={cls.students.length}
             />
           ))
         ) : (
@@ -91,106 +111,11 @@ export function Classes() {
           <X size={24} className="hover:cursor-pointer" onClick={closeModal}/>
         </div>
         
-        <CreateClassForm  onClose={closeModal}/>
+        <CreateClassForm
+          onSuccess={fetchClasses}
+          onClose={closeModal}
+        />
       </Modal>
     </main>
-  );
-}
-
-
-function CreateClassForm({ onSuccess, onClose }) {
-  const [name, setName] = useState('');
-  const [yearbook, setYearbook] = useState('');
-  const [teacherId, setTeacherId] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-//   const handleCreate = async (e) => {
-//     e.preventDefault();
-//     setLoading(true);
-//     setError(null);
-//     try {
-//       const token = localStorage.getItem('token');
-//       const response = await fetch('http://localhost:3000/api/classes', { // Upewnij się, że endpoint jest poprawny
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//           'Authorization': `Bearer ${token}`,
-//         },
-//         body: JSON.stringify({ name, yearbook, teacherId }),
-//       });
-
-//       const data = await response.json();
-
-//       if (!response.ok) {
-//         throw new Error(data.message || 'Nie udało się utworzyć klasy.');
-//       }
-
-//       // Po pomyślnym utworzeniu, odśwież listę klas
-//       onSuccess();
-//       onClose();
-//     } catch (err) {
-//       console.error('Błąd podczas tworzenia klasy:', err);
-//       setError(err.message || 'Wystąpił błąd podczas tworzenia klasy.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-  return (
-    <form className="flex flex-col gap-6">
-      {error && <p className="text-red-500">{error}</p>}
-      <div className="flex flex-col gap-2">
-        <label className="text-base text-textBg-700" htmlFor="name">Exam Title</label>
-        <input
-          id="name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          className="w-full text-textBg-900 px-3 py-2 border border-textBg-200 rounded text-base focus:outline-none focus:border-textBg-500"
-          placeholder="IA"
-        />
-      </div>
-      <div className="flex flex-col gap-2">
-        <label className="text-base text-textBg-700" htmlFor="yearbook">Yearbook</label>
-        <input
-          id="yearbook"
-          type="text"
-          value={yearbook}
-          onChange={(e) => setYearbook(e.target.value)}
-          required
-          className="w-full text-textBg-900 px-3 py-2 border border-textBg-200 rounded text-base focus:outline-none focus:border-textBg-500"
-          placeholder="2024/2025"
-        />
-      </div>
-      <div className="flex flex-col gap-2 mb-2">
-        <label className="text-base text-textBg-700" htmlFor="name">Teacher</label>
-        <select
-          className="w-full text-textBg-900 px-3 py-2 border border-textBg-200 rounded text-base focus:outline-none focus:border-textBg-500"
-        >
-          <option disabled hidden className="text-textBg-500">Select Teacher</option>
-          <option className="text-textBg-900">Mr. Smith</option>
-          <option className="text-textBg-900">Ms. Johnson</option>
-          <option className="text-textBg-900">Dr. Brown</option>
-        </select>
-      </div>
-      
-      <div className="flex justify-end gap-4">
-        <Button
-          text="Cancel"
-          type="secondary"
-          onClick={onClose}
-          className="px-4 py-2"
-        />
-        <Button
-          text={loading ? "Creating..." : "Create"}
-          type="primary"
-          disabled={loading}
-          className="px-4 py-2"
-        //   onClick={handleCreate}
-        />
-      </div>
-    </form>
   );
 }

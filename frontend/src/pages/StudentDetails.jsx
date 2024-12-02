@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import studentsData from '../data/studentsData';
 import classesData from '../data/classesData';
-import parentsData from "../utils/parentsData";
+import parentsData from "../data/parentsData";
 import PageTitle from '../components/PageTitle';
 import Button from "../components/Button";
 import Modal from '../components/Modal';

@@ -1,4 +1,4 @@
-export default function Button({ size, text, icon, className, type, onClick, disabled }) {
+export default function Button({ size, text, icon, className, type, onClick, disabled, btnType }) {
   const sizeClasses = {
     xs: 'px-2 text-xs h-7',
     s: 'px-2 text-xs h-8',
@@ -27,6 +27,7 @@ export default function Button({ size, text, icon, className, type, onClick, dis
         className={`min-w-36 rounded flex items-center justify-center gap-2 ${sizeClass} ${typeClass} ${className}`}
         onClick={onClick}
         disabled={disabled}
+        type={btnType}
       > 
         {icon}
         {text}
@@ -40,6 +41,7 @@ export default function Button({ size, text, icon, className, type, onClick, dis
         className={`rounded flex items-center justify-center gap-2 ${sizeClass} ${typeClass} ${className} ${disabledClasses}`}
         onClick={onClick}
         disabled={disabled}
+        type={btnType}
       >
         {icon}
       </button>
@@ -51,6 +53,7 @@ export default function Button({ size, text, icon, className, type, onClick, dis
       className={`min-w-36 rounded flex items-center justify-center gap-2 ${sizeClass} ${typeClass} ${className} ${disabledClasses}`}
       onClick={onClick}
       disabled={disabled}
+      type={btnType}
     > 
       {text}
     </button>

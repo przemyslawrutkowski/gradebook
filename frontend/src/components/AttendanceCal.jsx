@@ -22,8 +22,26 @@ const attendanceData = [
     { 
       date: new Date(baseYear, 8, 1), 
       status: 'Present', 
-      title: 'Mathematics', 
+      title: 'Biology', 
       hour: '09:00 AM'
+    },
+    { 
+      date: new Date(baseYear, 8, 1), 
+      status: 'Present', 
+      title: 'Mathematics', 
+      hour: '10:00 AM'
+    },
+    { 
+      date: new Date(baseYear, 8, 1), 
+      status: 'Late', 
+      title: 'Physics', 
+      hour: '11:00 AM'
+    },
+    { 
+      date: new Date(baseYear, 8, 1), 
+      status: 'Absent', 
+      title: 'PE', 
+      hour: '12:00 AM'
     },
     { 
       date: new Date(baseYear, 8, 2), 

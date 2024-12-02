@@ -19,6 +19,8 @@ import UserRoles from './data/userRoles';
 import { getToken, getUserRole, decodeToken } from './utils/UserRoleUtils';
 import { Students } from './pages/Students';
 import StudentDetails from './pages/StudentDetails';
+import ClassNames from './pages/ClassNames';
+import SchoolYears from './pages/SchoolYears';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -90,6 +92,9 @@ export default function App() {
                 <SidebarItem icon={<LayoutDashboard size={20} />} text="Students" path="/students" />
                 <SidebarItem icon={<LayoutDashboard size={20} />} text="Classes" path="/classes" />
                 <SidebarItem icon={<LayoutDashboard size={20} />} text="Schedule" path="/schedule" />
+                <SidebarItem icon={<LayoutDashboard size={20} />} text="Class Names" path="/class-names" />
+                <SidebarItem icon={<LayoutDashboard size={20} />} text="School Years" path="/school-years" />
+                
               </>
             )}
             
@@ -125,6 +130,9 @@ export default function App() {
                   <Route path="/students/:id" element={<StudentDetails />} />
                   <Route path="/classes" element={<Classes />} />
                   <Route path="/classes/:id" element={<ClassDetails />} />
+                  <Route path="/class-names" element={<ClassNames />} />
+                  <Route path="/class-names/:id" element={<ClassNames />} />
+                  <Route path="/school-years" element={<SchoolYears />} />
                 </>
               )}
             </>
