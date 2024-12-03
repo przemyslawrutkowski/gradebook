@@ -131,7 +131,6 @@ export default function App() {
                   <Route path="/classes" element={<Classes />} />
                   <Route path="/classes/:id" element={<ClassDetails />} />
                   <Route path="/class-names" element={<ClassNames />} />
-                  <Route path="/class-names/:id" element={<ClassNames />} />
                   <Route path="/school-years" element={<SchoolYears />} />
                 </>
               )}

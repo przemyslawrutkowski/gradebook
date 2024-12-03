@@ -1,12 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import studentsData from '../data/studentsData';
-import classesData from '../data/classesData';
-import parentsData from "../data/parentsData";
 import PageTitle from '../components/PageTitle';
 import Button from "../components/Button";
-import Modal from '../components/Modal';
-import Select from 'react-select'; 
+import AssignParentForm from "../components/forms/AssignParentForm";
 import { 
   Fingerprint, 
   GraduationCap, 
@@ -16,25 +12,47 @@ import {
   User, 
   X 
 } from "lucide-react";
+import { getToken } from "../utils/UserRoleUtils";
 
 function StudentDetails() {
   const { id } = useParams();
-  const studentId = parseInt(id, 10);
-  const student = studentsData.find(s => s.id === studentId);
+  const token = getToken();
 
+  const [studentInfo, setStudentInfo] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedParent, setSelectedParent] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  if (!student) {
-    return <div>Student not found.</div>;
+
+  const fetchStudentInfo = async () => {
+    setLoading(true);
+    setError(null);
+    try{
+      const response = await fetch(`http://localhost:3000/student/${id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          }
+        });
+      if(!response.ok){
+        throw new Error(`Error: ${response.status}`);
+      }
+      const result = await response.json();
+      console.log(result.data)
+      setStudentInfo(result.data);
+    } catch (err){
+      setError(err.message);
+    } finally{
+      setLoading(false);
+    }
   }
 
-  const studentClass = classesData.find(cls => cls.id === student.classId);
-  const currentParent = parentsData.find(parent => parent.id === student.parentId);
-
-  const availableParents = parentsData.filter(parent => 
-    !studentsData.some(s => s.parentId === parent.id && s.id !== studentId)
-  );
+  useEffect(() => {
+    fetchStudentInfo();
+  }, [])
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => {
@@ -44,89 +62,73 @@ function StudentDetails() {
 
   const handleAssignParent = () => {
     if (selectedParent) {
-      student.parentId = selectedParent.value.id;
       closeModal();
     }
   };
 
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
-      <PageTitle text={`Details of ${student.name}`} />
-      <div className="flex flex-col sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-semibold text-textBg-700">{student.name}</h2>
-          <Button 
-            text="Assign Parent" 
-            icon={<Link size={16} />} 
-            size="m"
-            onClick={openModal}
-          />
-        </div>
-        <div className="flex flex-col 2xl:flex-row gap-16">
-          <div className="flex flex-col gap-2 w-full 2xl:w-[30%]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Mail size={20} color="#F37986"/>
-                <p className="text-textBg-550">Email</p>
-              </div>
-              <p>{student.email}</p>
+      {loading && <p>Loading...</p>}
+      {error && <p className="text-red-500">Error: {error}</p>}
+      {studentInfo ? (
+        <>
+          <PageTitle text={`Details of ${studentInfo.first_name} ${studentInfo.last_name}`} />
+          <div className="flex flex-col sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-semibold text-textBg-700">
+                {studentInfo.first_name} {studentInfo.last_name}
+              </h2>
+              <Button 
+                text="Assign Parent" 
+                icon={<Link size={16} />} 
+                size="m"
+                onClick={openModal}
+              />
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Phone size={20} color="#F37986"/>
-                <p className="text-textBg-550">Phone</p>
+            <div className="flex flex-col 2xl:flex-row gap-16">
+              <div className="flex flex-col gap-2 w-full 2xl:w-[30%]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail size={20} color="#F37986"/>
+                    <p className="text-textBg-550">Email</p>
+                  </div>
+                  <p>{studentInfo.email}</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Phone size={20} color="#F37986"/>
+                    <p className="text-textBg-550">Phone</p>
+                  </div>
+                  <p>{studentInfo.phone_number}</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Fingerprint size={20} color="#F37986"/>
+                    <p className="text-textBg-550">Pesel</p>
+                  </div>
+                  <p>{studentInfo.pesel}</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <GraduationCap size={20} color="#F37986"/>
+                    <p className="text-textBg-550">Class</p>
+                  </div>
+                  <p>{studentInfo.className}</p>
+                </div>
               </div>
-              <p>{student.phoneNumber}</p>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Fingerprint size={20} color="#F37986"/>
-                <p className="text-textBg-550">Pesel</p>
-              </div>
-              <p>{student.pesel}</p>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <GraduationCap size={20} color="#F37986"/>
-                <p className="text-textBg-550">Class</p>
-              </div>
-              <p>{studentClass ? studentClass.name : 'N/A'}</p>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <User size={20} color="#F37986"/>
-                <p className="text-textBg-550">Parent</p>
-              </div>
-              <p>{currentParent ? currentParent.name : 'N/A'}</p>
-            </div>
+            </div>  
           </div>
-        </div>  
-      </div>
+        </>
+      ) : (
+        !loading && <p>No student data available.</p>
+      )}
 
-      <Modal isOpen={isModalOpen} onClose={closeModal} widthHeightClassname="max-w-md max-h-md">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-textBg-700">Assign Parent to {student.name}</h2>
-          <X size={24} className="hover:cursor-pointer" onClick={closeModal}/>
-        </div>
-        <div>
-          <Select
-            options={availableParents.map(parent => ({ value: parent, label: parent.name }))}
-            onChange={setSelectedParent}
-            placeholder="Select a parent to assign"
-            className="w-full mb-4"
-          />
-          
-          <div className="mt-6 flex justify-end gap-4">
-            <Button text="Cancel" type="secondary" onClick={closeModal} />
-            <Button 
-              text="Assign" 
-              type="primary" 
-              onClick={handleAssignParent} 
-              disabled={!selectedParent}
-            />
-          </div>
-        </div>
-      </Modal>
+      <AssignParentForm 
+        isOpen={isModalOpen}
+        onSuccess={fetchStudentInfo}
+        closeModal={closeModal}
+        studentName={studentInfo.first_name + " " + studentInfo.last_name}
+      />
     </main>
   );
 }

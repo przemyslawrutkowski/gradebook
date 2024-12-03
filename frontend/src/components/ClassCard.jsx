@@ -1,9 +1,8 @@
-// src/components/ClassCard.jsx
 import { GraduationCap } from "lucide-react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-function ClassCard({ id, name, studentCount, teacher }) {
+function ClassCard({ id, name, studentCount, schoolYear }) {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -25,7 +24,7 @@ function ClassCard({ id, name, studentCount, teacher }) {
             </div>
         </div>
         <div className="flex items-center text-sm text-textBg-700">
-            <p>{teacher}</p>
+            <p>{schoolYear}</p>
         </div>
     </div>
   );

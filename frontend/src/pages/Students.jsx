@@ -1,15 +1,48 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import PageTitle from '../components/PageTitle';
 import studentsData from '../data/studentsData';
 import classesData from '../data/classesData';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, Search, Trash, User } from "lucide-react";
 import StudentCard from "../components/StudentCard";
+import { getToken } from "../utils/UserRoleUtils";
 
 export function Students() {
   const [searchTerm, setSearchTerm] = useState('');
-
   const [sortOption, setSortOption] = useState('');
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const token = getToken();
+
+  const fetchStudents = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('http://localhost:3000/student', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      const result = await response.json();
+      console.log(result.data);
+      setStudents(result.data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };  
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -20,7 +53,7 @@ export function Students() {
   };
 
   const filteredAndSortedStudents = useMemo(() => {
-    const filtered = studentsData.filter(student =>
+    const filtered = students.filter(student =>
       student.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
     const sorted = [...filtered].sort((a, b) => {
@@ -54,7 +87,7 @@ export function Students() {
       <PageTitle text="Students" />
       
       <div className='flex flex-col sm:flex-row gap-4 flex-wrap mb-6'>
-        <div className="flex h-9 w-full sm:w-auto md:w-56 items-center px-3 py-2 bg-white rounded border border-solid border-textBg-200 text-textBg-600">
+        <div className="flex h-9 w-full sm:w-auto md:w-92 items-center px-3 py-2 bg-white rounded border border-solid border-textBg-200 text-textBg-600">
           <Search size={20} className='mr-2 text-textBg-600' />
           <input
             type='text'
@@ -78,21 +111,25 @@ export function Students() {
         </select>
       </div>
 
+      {error && <p className="text-red-500">{error}</p>}
+      {loading && <p>Loading...</p>}
+
       <div className="grid grid-cols-1 gap-4">
-        {filteredAndSortedStudents.map(student => {
-          const studentClass = classesData.find(cls => cls.id === student.classId);
+        {students.map(student => {
           return (
             <Link 
               to={`/students/${student.id}`} 
               key={student.id} 
               className="block"
             >
-              <StudentCard 
-                name={student.name} 
-                phone={student.phoneNumber} 
+              <StudentCard
+                key={student.id}
+                id={student.id} 
+                name={student.first_name + " " + student.last_name} 
+                phone={student.phone_Number} 
                 email={student.email} 
                 pesel={student.pesel} 
-                stClass={studentClass ? studentClass.name : 'N/A'}
+                stClass={student.className}
               />
             </Link>
           );

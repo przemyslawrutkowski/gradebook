@@ -66,20 +66,107 @@ export const createClass = async (req: Request, res: Response) => {
 
 export const getClasses = async (req: Request, res: Response) => {
     try {
-        const classes = await prisma.classes.findMany();
+        const classesData: (classes & { 
+            class_names: class_names; 
+            school_years: school_years; 
+            teachers: teachers | null; 
+            _count: { students: number } 
+        })[] = await prisma.classes.findMany({
+            include: {
+                class_names: true,
+                school_years: true, 
+                teachers: true, 
+                _count: {
+                    select: { students: true }, 
+                },
+            },
+        });
 
-        const responseData = classes.map(cls => ({
+        const responseData = classesData.map(cls => ({
             ...cls,
             id: uuidStringify(cls.id),
             class_name_id: uuidStringify(cls.class_name_id),
             school_year_id: uuidStringify(cls.school_year_id),
-            teacher_id: cls.teacher_id ? uuidStringify(cls.teacher_id) : null
+            teacher_id: cls.teacher_id ? uuidStringify(cls.teacher_id) : null,
+            class_names: {
+                ...cls.class_names,
+                id: uuidStringify(cls.class_names.id),
+            },
+            school_years: {
+                ...cls.school_years,
+                id: uuidStringify(cls.school_years.id),
+            },
+            teachers: cls.teachers ? {
+                ...cls.teachers,
+                id: uuidStringify(cls.teachers.id),
+            } : null,
+            studentCount: cls._count.students,
         }));
 
         return res.status(200).json(createSuccessResponse(responseData, 'Classes retrieved successfully.'));
     } catch (err) {
         console.error('Error retrieving classes', err);
         return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving classes. Please try again later.'));
+    }
+};
+
+export const getClassById = async (req: Request, res: Response) => {
+    try {
+        const classId = req.params.classId;
+        let classIdBuffer: Buffer;
+        try {
+            classIdBuffer = Buffer.from(uuidParse(classId));
+        } catch (parseError) {
+            return res.status(400).json(createErrorResponse('Invalid UUID format.'));
+        }
+
+        const cls = await prisma.classes.findUnique({
+            where: { id: classIdBuffer },
+            include: {
+                class_names: true,
+                school_years: true,
+                teachers: true,
+                _count: {
+                    select: { students: true },
+                },
+                students: true,
+            },
+        });
+
+        if (!cls) {
+            return res.status(404).json(createErrorResponse('Class not found.'));
+        }
+
+        const responseData = {
+            ...cls,
+            id: uuidStringify(cls.id),
+            class_name_id: uuidStringify(cls.class_name_id),
+            school_year_id: uuidStringify(cls.school_year_id),
+            teacher_id: cls.teacher_id ? uuidStringify(cls.teacher_id) : null,
+            class_names: {
+                ...cls.class_names,
+                id: uuidStringify(cls.class_names.id),
+            },
+            school_years: {
+                ...cls.school_years,
+                id: uuidStringify(cls.school_years.id),
+            },
+            teachers: cls.teachers ? {
+                ...cls.teachers,
+                id: uuidStringify(cls.teachers.id),
+            } : null,
+            studentCount: cls._count.students,
+            students: cls.students.map(student => ({
+                ...student,
+                id: uuidStringify(student.id),
+                class_id: student.class_id ? uuidStringify(student.class_id) : null,
+            })),
+        };
+
+        return res.status(200).json(createSuccessResponse(responseData, 'Class details retrieved successfully.'));
+    } catch (err) {
+        console.error('Error retrieving class by ID', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving the class. Please try again later.'));
     }
 };
 
@@ -250,20 +337,21 @@ export const deleteClass = async (req: Request, res: Response) => {
     try {
         const classId: string = req.params.classId;
 
-        const existingClass: classes | null = await prisma.classes.findUnique({
-            where: {
-                id: Buffer.from(uuidParse(classId))
-            }
+        const existingClass = await prisma.classes.findUnique({
+            where: { id: Buffer.from(uuidParse(classId)) }
         });
 
         if (!existingClass) {
             return res.status(404).json(createErrorResponse(`Class does not exist.`));
         }
 
+        await prisma.students.updateMany({
+            where: { class_id: Buffer.from(uuidParse(classId)) },
+            data: { class_id: null }
+        });
+
         const deletedClass = await prisma.classes.delete({
-            where: {
-                id: Buffer.from(uuidParse(classId))
-            }
+            where: { id: Buffer.from(uuidParse(classId)) }
         });
 
         const responseData = {
@@ -275,6 +363,49 @@ export const deleteClass = async (req: Request, res: Response) => {
         return res.status(200).json(createSuccessResponse(responseData, `Class deleted successfully.`));
     } catch (err) {
         console.error('Error deleting class', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while deleting class. Please try again later.'));
+        res.status(500).json(createErrorResponse('An unexpected error occurred while deleting the class. Please try again later.'));
+    }
+};
+
+export const removeStudentFromClass = async (req: Request, res: Response) => {
+    try {
+        const classId: string = req.params.classId;
+        const studentId: string = req.body.studentId;
+
+        const existingClass = await prisma.classes.findUnique({
+            where: { id: Buffer.from(uuidParse(classId)) }
+        });
+
+        if (!existingClass) {
+            return res.status(404).json(createErrorResponse(`Class does not exist.`));
+        }
+
+        const existingStudent = await prisma.students.findUnique({
+            where: { id: Buffer.from(uuidParse(studentId)) }
+        });
+
+        if (!existingStudent) {
+            return res.status(404).json(createErrorResponse(`Student does not exist.`));
+        }
+
+        if (!existingStudent.class_id || uuidStringify(existingStudent.class_id) !== classId) {
+            return res.status(400).json(createErrorResponse(`Student is not assigned to this class.`));
+        }
+
+        const updatedStudent = await prisma.students.update({
+            where: { id: Buffer.from(uuidParse(studentId)) },
+            data: { class_id: null }
+        });
+
+        const responseData = {
+            ...updatedStudent,
+            id: uuidStringify(updatedStudent.id),
+            class_id: null
+        };
+
+        return res.status(200).json(createSuccessResponse(responseData, `Student removed from class successfully.`));
+    } catch (err) {
+        console.error('Error removing student from class', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while removing the student from the class. Please try again later.'));
     }
 };

@@ -3,7 +3,6 @@ import PageTitle from '../components/PageTitle';
 import { Search, Plus, X } from 'lucide-react';
 import Button from "../components/Button";
 import ClassCard from "../components/ClassCard";
-import axios from 'axios';
 import Modal from "../components/Modal";
 import CreateClassForm from "../components/forms/CreateClassForm";
 import { getToken } from "../utils/UserRoleUtils";
@@ -21,7 +20,7 @@ export function Classes() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:3000/class',
+      const response = await fetch('http://localhost:3000/class', 
       {
         method: 'GET',
         headers: {
@@ -33,11 +32,10 @@ export function Classes() {
         throw new Error(`Error: ${response.status}`);
       }
       const result = await response.json();
-      console.log(result.data);
       setClasses(result.data);
-    }catch(err){
+    } catch(err){
       setError(err.message);
-    }finally{
+    } finally{
       setLoading(false);
     }
   };
@@ -54,7 +52,7 @@ export function Classes() {
   const closeModal = () => setIsModalOpen(false);
 
   const filteredClasses = classes.filter(cls => {
-    const className = cls.class_name_id?.name || "";
+    const className = cls.class_names?.name || "";
     return className.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
@@ -64,7 +62,7 @@ export function Classes() {
       <div className='flex flex-wrap justify-between mb-8'>
         <div className='w-full md:w-auto mb-4 md:mb-0'>
           <div className='flex gap-4 flex-wrap'>
-            <div className="flex h-9 w-full sm:w-[calc(50%-8px)] md:w-56 items-center px-3 py-3 bg-white rounded border border-solid border-textBg-200 text-textBg-600">
+            <div className="flex h-9 w-full md:w-96 items-center px-3 py-3 bg-white rounded border border-solid border-textBg-200 text-textBg-600">
               <Search size={20} className='mr-2 text-textBg-600' />
               <input
                 type='text'
@@ -89,6 +87,7 @@ export function Classes() {
       </div>
 
       {error && <p className="text-red-500">{error}</p>}
+      {loading && <p>Loading...</p>}
 
       <div className="grid grid-cols-1 gap-4">
         {filteredClasses.length > 0 ? (
@@ -96,26 +95,23 @@ export function Classes() {
             <ClassCard
               key={cls.id}
               id={cls.id}
-              name={cls.class_name_id?.name || "Unnamed Class"}
-              // studentCount={cls.students.length}
+              name={cls.class_names?.name || "Unnamed Class"}
+              schoolYear={cls.school_years?.name || "Unknown Year"}
+              teacher={cls.teachers?.name || "No Teacher Assigned"}
+              studentCount={cls.studentCount} 
             />
           ))
         ) : (
           <p className="text-textBg-900 text-lg">No classes found.</p>
         )}
       </div>
-
-      <Modal isOpen={isModalOpen} onClose={closeModal} widthHeightClassname="max-w-lg">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-textBg-700">Create New Class</h2>
-          <X size={24} className="hover:cursor-pointer" onClick={closeModal}/>
-        </div>
-        
-        <CreateClassForm
-          onSuccess={fetchClasses}
-          onClose={closeModal}
-        />
-      </Modal>
+ 
+      <CreateClassForm
+        isOpen={isModalOpen}
+        onSuccess={fetchClasses}
+        closeModal={closeModal}
+      />
+  
     </main>
   );
 }
