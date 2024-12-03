@@ -53,12 +53,26 @@ export const getStudentById = async (req: Request, res: Response) => {
                         class_names: true,
                     },
                 },
+                students_parents: {
+                    include: {
+                        parents: true,
+                    },
+                },
             },
         });
 
         if (!studentData) {
             return res.status(404).json(createErrorResponse('Student not found.'));
         }
+
+        const parents = studentData.students_parents.map((sp) => ({
+            id: uuidStringify(sp.parents.id),
+            first_name: sp.parents.first_name,
+            last_name: sp.parents.last_name,
+            email: sp.parents.email,
+            phone_number: sp.parents.phone_number,
+            pesel: sp.parents.pesel,
+        }));
 
         const responseData = {
             id: uuidStringify(studentData.id),
@@ -68,6 +82,7 @@ export const getStudentById = async (req: Request, res: Response) => {
             email: studentData.email,
             pesel: studentData.pesel,
             className: studentData.classes?.class_names?.name || 'N/A',
+            parents: parents,
         };
 
         return res.status(200).json(createSuccessResponse(responseData, 'Student retrieved successfully.'));

@@ -16,6 +16,7 @@ import semestersRouter from './routers/semestersRouter';
 import gradesRouter from './routers/gradesRouter';
 import classNamesRouter from './routers/classNamesRouter';
 import { messagesHandler } from './handlers/messages';
+import parentsRouter from './routers/parentsRouter';
 
 const app = express();
 const server = http.createServer(app);
@@ -32,6 +33,7 @@ app.use('/auth', authRouter);
 app.use('/student-parent', studentsParentsRouter);
 app.use('/class', classesRouter);
 app.use('/student', studentsRouter);
+app.use('/parent', parentsRouter);
 app.use('/lesson', lessonsRouter);
 app.use('/subject', subjectsRouter);
 app.use('/attendance', attendancesRouter);
