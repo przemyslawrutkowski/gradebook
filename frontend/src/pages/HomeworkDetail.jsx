@@ -4,10 +4,10 @@ import PageTitle from '../components/PageTitle';
 import homeworkData from '../data/homeworkData';
 import { useDropzone } from 'react-dropzone';
 import Button from "../components/Button";
-import axios from 'axios'; // Import axios
+import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify'; 
 import 'react-toastify/dist/ReactToastify.css';
-import { BookA, Calendar, CloudUpload, File, FileUp, Presentation, X } from 'lucide-react';
+import { BookA, Calendar, CloudUpload, File, X } from 'lucide-react';
 import Tag from '../components/Tag';
 
 const HomeworkDetail = () => {

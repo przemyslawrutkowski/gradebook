@@ -17,17 +17,25 @@ import gradesRouter from './routers/gradesRouter';
 import classNamesRouter from './routers/classNamesRouter';
 import { messagesHandler } from './handlers/messages';
 import parentsRouter from './routers/parentsRouter';
+import teachersRouter from './routers/teachersRouter';
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, { 
+    cors: {
+        origin: 'http://localhost:5173',
+        methods: ['GET', 'POST'],
+        credentials: true,
+    },
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
     origin: 'http://localhost:5173', 
     credentials: true,
-  }));
+    methods: ["GET", "POST"],
+}));
 
 app.use('/auth', authRouter);
 app.use('/student-parent', studentsParentsRouter);
@@ -41,6 +49,7 @@ app.use('/user-type', userTypesRouter);
 app.use('/school-year', schoolYearsRouter);
 app.use('/semester', semestersRouter);
 app.use('/grade', gradesRouter);
+app.use('/teacher', teachersRouter);
 app.use('/class-name', classNamesRouter)
 
 io.on('connection', (socket) => {
@@ -52,4 +61,4 @@ app.use(function (err: Error, req: Request, res: Response, next: NextFunction) {
     res.status(500).send('Something broke!')
 })
 
-export default app;
+export { app, server };

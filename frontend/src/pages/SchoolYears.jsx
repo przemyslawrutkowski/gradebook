@@ -3,7 +3,6 @@ import PageTitle from '../components/PageTitle';
 import { Search, Plus } from 'lucide-react';
 import Button from "../components/Button";
 import SchoolYearCard from "../components/SchoolYearCard";
-import Modal from "../components/Modal";
 import CreateSchoolYearForm from "../components/forms/CreateSchoolYearForm";
 import { getToken } from "../utils/UserRoleUtils";
 import { validate as validateUUID } from 'uuid'; 

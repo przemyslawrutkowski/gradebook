@@ -4,6 +4,10 @@ export const getToken = () => {
     return localStorage.getItem('token');
 };
 
+export const getUserId = () => {
+  return localStorage.getItem('userId');
+};
+
 export const decodeToken = (token) => {
     if (!token) return null;
     
@@ -24,3 +28,18 @@ export const getUserRole = () => {
     }
     return null;
 };
+
+export function getUser() {
+    const token = getToken();
+    if (token) {
+        const decoded = decodeToken(token);
+        if (decoded) {
+            return {
+                id: getUserId(),
+                typeId: decoded.typeId || 0,
+                role: decoded.role, 
+            };
+        }
+    }
+    return null;
+}

@@ -62,7 +62,8 @@ function ClassDetails() {
             throw new Error(`Error: ${response.status}`);
         }
         const result = await response.json();
-        const available = result.data.filter(student => !student.class_id);
+        console.log(result.data);
+        const available = result.data.filter(student => !student.className);
         setAvailableStudents(available);
     } catch (err) {
         console.error('Error fetching available students', err);

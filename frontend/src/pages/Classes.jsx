@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import PageTitle from '../components/PageTitle';
-import { Search, Plus, X } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import Button from "../components/Button";
 import ClassCard from "../components/ClassCard";
-import Modal from "../components/Modal";
 import CreateClassForm from "../components/forms/CreateClassForm";
 import { getToken } from "../utils/UserRoleUtils";
 

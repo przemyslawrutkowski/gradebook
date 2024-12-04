@@ -2,7 +2,7 @@
 import React from "react";
 import PageTitle from '../components/PageTitle';
 import ExamCard from "../components/ExamCard";
-import {Atom, Calculator, ChevronRight, CircleAlert, Dna, SquareSigma} from 'lucide-react';
+import {Atom, ChevronRight,  Dna, SquareSigma} from 'lucide-react';
 import GradeCard from "../components/GradeCard";
 import AttendanceChart from "../components/BarChart";
 import HomeworkCard from "../components/HomeworkCard";

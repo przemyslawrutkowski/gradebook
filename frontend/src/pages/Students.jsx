@@ -1,9 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import PageTitle from '../components/PageTitle';
-import studentsData from '../data/studentsData';
-import classesData from '../data/classesData';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, Search, Trash, User } from "lucide-react";
+import { Search } from "lucide-react";
 import StudentCard from "../components/StudentCard";
 import { getToken } from "../utils/UserRoleUtils";
 
@@ -52,35 +50,35 @@ export function Students() {
     setSortOption(e.target.value);
   };
 
-  const filteredAndSortedStudents = useMemo(() => {
-    const filtered = students.filter(student =>
-      student.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    const sorted = [...filtered].sort((a, b) => {
-      switch (sortOption) {
-        case 'class-asc':
-          {
-            const classA = classesData.find(cls => cls.id === a.classId)?.name || '';
-            const classB = classesData.find(cls => cls.id === b.classId)?.name || '';
-            return classA.localeCompare(classB);
-          }
-        case 'class-desc':
-          {
-            const classA = classesData.find(cls => cls.id === a.classId)?.name || '';
-            const classB = classesData.find(cls => cls.id === b.classId)?.name || '';
-            return classB.localeCompare(classA);
-          }
-        case 'name-asc':
-          return a.name.localeCompare(b.name);
-        case 'name-desc':
-          return b.name.localeCompare(a.name);
-        default:
-          return 0;
-      }
-    });
+  // const filteredAndSortedStudents = useMemo(() => {
+  //   const filtered = students.filter(student =>
+  //     student.name.toLowerCase().includes(searchTerm.toLowerCase())
+  //   );
+  //   const sorted = [...filtered].sort((a, b) => {
+  //     switch (sortOption) {
+  //       case 'class-asc':
+  //         {
+  //           const classA = classesData.find(cls => cls.id === a.classId)?.name || '';
+  //           const classB = classesData.find(cls => cls.id === b.classId)?.name || '';
+  //           return classA.localeCompare(classB);
+  //         }
+  //       case 'class-desc':
+  //         {
+  //           const classA = classesData.find(cls => cls.id === a.classId)?.name || '';
+  //           const classB = classesData.find(cls => cls.id === b.classId)?.name || '';
+  //           return classB.localeCompare(classA);
+  //         }
+  //       case 'name-asc':
+  //         return a.name.localeCompare(b.name);
+  //       case 'name-desc':
+  //         return b.name.localeCompare(a.name);
+  //       default:
+  //         return 0;
+  //     }
+  //   });
 
-    return sorted;
-  }, [searchTerm, sortOption, studentsData, classesData]);
+  //   return sorted;
+  // }, [searchTerm, sortOption, studentsData, classesData]);
 
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">

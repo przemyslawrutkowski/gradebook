@@ -1,49 +1,25 @@
 /* eslint-disable no-unused-vars */
 import React, { useState } from "react";
 import PageTitle from '../components/PageTitle';
-import { Search, Send } from "lucide-react";
+import { Search, Send, User } from "lucide-react";
 import Button from "../components/Button";
 
 const allUsers = [
-  { id: 1, avatar: "https://i.pravatar.cc/150?img=1", name: "Jan Kowalski" },
-  { id: 2, avatar: "https://i.pravatar.cc/150?img=2", name: "Anna Nowak" },
-  { id: 3, avatar: "https://i.pravatar.cc/150?img=3", name: "Piotr Wiśniewski" },
-  { id: 4, avatar: "https://i.pravatar.cc/150?img=4", name: "Maria Kowalczyk" },
-  { id: 5, avatar: "https://i.pravatar.cc/150?img=5", name: "Krzysztof Zieliński" },
-  { id: 6, avatar: "https://i.pravatar.cc/150?img=6", name: "Ewa Jabłońska" },
-  { id: 7, avatar: "https://i.pravatar.cc/150?img=7", name: "Michał Lewandowski" },
-  { id: 8, avatar: "https://i.pravatar.cc/150?img=8", name: "Natalia Szymańska" },
-  { id: 9, avatar: "https://i.pravatar.cc/150?img=9", name: "Tomasz Mazur" },
-  { id: 10, avatar: "https://i.pravatar.cc/150?img=10", name: "Agata Wójcik" },
-  { id: 11, avatar: "https://i.pravatar.cc/150?img=11", name: "Paweł Dąbrowski" }
-]
+  { id: 1, name: "Jan Kowalski" },
+  { id: 2, name: "Anna Nowak" },
+  { id: 3, name: "Piotr Wiśniewski" },
+  { id: 4, name: "Maria Kowalczyk" },
+  { id: 5, name: "Krzysztof Zieliński" },
+  { id: 6, name: "Ewa Jabłońska" },
+  { id: 7, name: "Michał Lewandowski" },
+  { id: 8, name: "Natalia Szymańska" },
+  { id: 9, name: "Tomasz Mazur" },
+  { id: 10, name: "Agata Wójcik" },
+  { id: 11, name: "Paweł Dąbrowski" }
+];
 
 export function Messages() {
-  const [conversations, setConversations] = useState([
-    {
-      id: 1,
-      avatar: "https://i.pravatar.cc/150?img=1",
-      name: "Jan Kowalski",
-      lastMessage: "Cześć! Jak się masz?",
-      lastDate: "2024-04-25",
-      messages: [
-        { sender: "Jan Kowalski", text: "Cześć! Jak się masz?", date: "2024-04-25T10:00:00" },
-        { sender: "You", text: "Dobrze, dziękuję! A Ty?", date: "2024-04-25T10:05:00" },
-      ],
-    },
-    {
-      id: 2,
-      avatar: "https://i.pravatar.cc/150?img=2",
-      name: "Anna Nowak",
-      lastMessage: "Czy możemy się spotkać jutro?",
-      lastDate: "2024-04-24",
-      messages: [
-        { sender: "Anna Nowak", text: "Czy możemy się spotkać jutro?", date: "2024-04-24T14:30:00" },
-        { sender: "You", text: "Tak, pasuje mi godzina 15:00.", date: "2024-04-24T14:35:00" },
-      ],
-    },
-  ]);
-
+  const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [newMessage, setNewMessage] = useState("");
@@ -64,7 +40,6 @@ export function Messages() {
     } else {
       const newConversation = {
         id: user.id,
-        avatar: user.avatar,
         name: user.name,
         lastMessage: "",
         lastDate: "",
@@ -94,7 +69,7 @@ export function Messages() {
         return {
           ...convo,
           lastMessage: newMessage,
-          lastDate: currentDate, 
+          lastDate: currentDate,
           messages: updatedMessages,
         };
       }
@@ -142,7 +117,9 @@ export function Messages() {
                     className="flex items-center p-2 hover:bg-textBg-200 cursor-pointer"
                     onClick={() => handleUserSelect(user)}
                   >
-                    <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full mr-2"/>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-textBg-300 mr-2">
+                      <User size={16} className="text-textBg-700"/>
+                    </div>
                     <span className="text-sm text-textBg-700">{user.name}</span>
                   </div>
                 ))}
@@ -158,7 +135,9 @@ export function Messages() {
                 }`}
                 onClick={() => setSelectedConversation(convo)}
               >
-                <img src={convo.avatar} alt={convo.name} className="w-10 h-10 rounded-full mr-3"/>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-textBg-300 mr-3">
+                  <User size={20} className="text-textBg-700"/>
+                </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-center">
                     <span className="font-medium text-textBg-900">{convo.name}</span>
@@ -189,7 +168,9 @@ export function Messages() {
           {selectedConversation ? (
             <>
               <div className="flex items-center mb-4 border-b pb-2">
-                <img src={selectedConversation.avatar} alt={selectedConversation.name} className="w-10 h-10 rounded-full mr-3"/>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-textBg-300 mr-3">
+                  <User size={20} className="text-textBg-700"/>
+                </div>
                 <h2 className="text-lg font-medium text-textBg-700">{selectedConversation.name}</h2>
               </div>
               <div className="flex-1 overflow-y-auto mb-4">

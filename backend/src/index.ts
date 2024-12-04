@@ -1,6 +1,6 @@
-import { PORT } from './modules/validateEnv.js'
-import app from './server.js';
+import { PORT } from './modules/validateEnv.js';
+import { server } from './server.js';
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}.`);
 });

@@ -32,6 +32,7 @@ export function Login({ onLogin }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [token, setToken] = useState();
+  const [userId, setUserId] = useState();
 
   const navigate = useNavigate();
 
@@ -55,8 +56,18 @@ export function Login({ onLogin }) {
         if (!token) {
           throw new Error('Token nie został znaleziony w odpowiedzi serwera.');
         }
+  
+        const userId = data.data?.id || data.id;
+        if (!userId) {
+          throw new Error('ID użytkownika nie zostało znalezione w odpowiedzi serwera.');
+        }
+        console.log(userId);
+  
         localStorage.setItem('token', token);
+        localStorage.setItem('userId', userId);
+  
         setToken(token);
+        setUserId(userId);
         onLogin();
         navigate('/');
       } else {
@@ -67,7 +78,6 @@ export function Login({ onLogin }) {
       setError('Wystąpił błąd podczas logowania.');
     }
   };
-
   return (
     <div className="relative h-svh sm:h-screen w-screen flex items-center justify-center bg-white overflow-hidden">
 
@@ -110,9 +120,6 @@ export function Login({ onLogin }) {
           <h2 className="text-2xl sm:text-4xl font-normal text-textBg-600 mb-4">
             Great to have you back!
           </h2>
-          <p>
-            {token}
-          </p>
           <p className="text-textBg-500 text-base">
             Please login to continue accessing your account and stay connected.
           </p>
