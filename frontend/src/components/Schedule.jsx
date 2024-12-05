@@ -176,7 +176,7 @@ const ScheduleCalendar = () => {
   const currentTimePosition = getCurrentTimePosition();
 
   const openModal = (event) => {
-    if (userRole === UserRoles.Administrator) {
+    if (userRole === UserRoles.Teacher) {
       setSelectedEvent(event);
       setIsModalOpen(true);
     } else {
@@ -190,7 +190,7 @@ const ScheduleCalendar = () => {
   };
 
   const handleAttendanceChange = (studentId, status) => {
-    if (userRole === UserRoles.Administrator) {
+    if (userRole === UserRoles.Teacher) {
       setSelectedEvent((prevEvent) => {
         const updatedStudents = prevEvent.students.map((student) =>
           student.id === studentId ? { ...student, attendance: status } : student
@@ -444,7 +444,7 @@ const ScheduleCalendar = () => {
                       return (
                         <div
                           key={eventIdx}
-                          className={`absolute right-[2px] p-2 rounded-sm ${event.bgColor} ${event.textColor} ${userRole === UserRoles.Administrator ? 'cursor-pointer' : ''} `}
+                          className={`absolute right-[2px] p-2 rounded-sm ${event.bgColor} ${event.textColor} ${userRole === UserRoles.Teacher ? 'cursor-pointer' : ''} `}
                           style={{ top: `${top + 2}px`, height: `${height - 5}px`, width: 'calc(100% - 76px)' }}
                           onClick={() => openModal(event)} 
                         >

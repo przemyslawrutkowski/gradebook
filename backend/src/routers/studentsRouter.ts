@@ -7,7 +7,7 @@ const studentsRouter = Router();
 
 studentsRouter.get('',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher]),
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
     getAllStudents
 );
 

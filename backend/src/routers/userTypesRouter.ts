@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { handleInputErrors } from '../modules/middleware.js';
-import { createUserType, deleteUserType } from '../handlers/userTypes.js';
+import { createUserType, deleteUserType, getUserTypes } from '../handlers/userTypes.js';
 import { validateCreateUserType, validateDeleteUserType } from '../validations/userTypesValidation.js';
 import { UserType } from '../enums/userTypes.js';
 
@@ -22,5 +22,10 @@ userTypesRouter.delete('/:userTypeId',
     handleInputErrors,
     deleteUserType
 )
+userTypesRouter.get('',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Student, UserType.Parent]),
+    getUserTypes
+  );
 
 export default userTypesRouter;

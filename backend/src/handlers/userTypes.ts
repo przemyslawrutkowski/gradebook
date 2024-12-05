@@ -69,3 +69,19 @@ export const deleteUserType = async (req: Request, res: Response) => {
         res.status(500).json(createErrorResponse('An unexpected error occurred while deleting user type. Please try again later.'));
     }
 }
+
+export const getUserTypes = async (req: Request, res: Response) => {
+  try {
+    const userTypes = await prisma.user_types.findMany();
+
+    const data = userTypes.map(type => ({
+      id: uuidStringify(type.id),
+      name: type.name,
+    }));
+
+    res.status(200).json({ data });
+  } catch (err) {
+    console.error('Error fetching user types', err);
+    res.status(500).json({ error: 'Failed to fetch user types' });
+  }
+};

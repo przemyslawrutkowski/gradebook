@@ -18,6 +18,7 @@ import classNamesRouter from './routers/classNamesRouter';
 import { messagesHandler } from './handlers/messages';
 import parentsRouter from './routers/parentsRouter';
 import teachersRouter from './routers/teachersRouter';
+import messagesRouter from './routers/messagesRouter';
 
 const app = express();
 const server = http.createServer(app);
@@ -51,6 +52,7 @@ app.use('/semester', semestersRouter);
 app.use('/grade', gradesRouter);
 app.use('/teacher', teachersRouter);
 app.use('/class-name', classNamesRouter)
+app.use('/message', messagesRouter);
 
 io.on('connection', (socket) => {
     messagesHandler(io, socket);
