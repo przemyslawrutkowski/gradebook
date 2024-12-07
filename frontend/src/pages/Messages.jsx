@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import io from "socket.io-client";
 import PageTitle from '../components/PageTitle';
 import { Search, Send, User } from "lucide-react";
 import Button from "../components/Button";
@@ -19,9 +20,19 @@ export function Messages() {
   const [userRole, setUserRole] = useState(null); 
   const [currentUserId, setCurrentUserId] = useState(null);
   const [recentMessages, setRecentMessages] = useState([]);
-  
 
   const token = getToken();
+  const socketRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [selectedConversation?.messages]);
 
   const fetchTeachers = async () => {
     try {
@@ -88,7 +99,7 @@ export function Messages() {
 
   const fetchRecentMessages = async () => {
     if (!currentUserId) {
-      console.error('Current user ID is not set 1');
+      console.error('Current user ID is not set.');
       return [];
     }
     try {
@@ -103,8 +114,9 @@ export function Messages() {
         throw new Error(`Error: ${response.status}`); 
       }
       const result = await response.json();
-      console.log(result.data);
-      setRecentMessages(result.data);
+      console.log('Ostatnie wiadomości:', result.data);
+      const sortedMessages = result.data.sort((a, b) => new Date(b.lastMessage.dateTime) - new Date(a.lastMessage.dateTime));
+      setRecentMessages(sortedMessages);
     } catch (err) {
       setError(err.message);
       return [];
@@ -117,7 +129,7 @@ export function Messages() {
       try {
         const role = getUserRole();
         setUserRole(role);
-  
+
         const userId = getUserId();
         setCurrentUserId(userId);
 
@@ -156,6 +168,37 @@ export function Messages() {
     }
   }, [currentUserId]);
 
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    socketRef.current = io("http://localhost:3000"); 
+
+    socketRef.current.emit("join", currentUserId);
+
+    socketRef.current.on("receive_message", (message) => {
+      if (
+        selectedConversation &&
+        (message.senderId === selectedConversation.id ||
+          message.receiverId === currentUserId)
+      ) {
+        setSelectedConversation((prev) => ({
+          ...prev,
+          messages: [...prev.messages, message],
+        }));
+      }
+
+      fetchRecentMessages();
+    });
+
+    socketRef.current.on("error", (errorMessage) => {
+      setError(errorMessage);
+    });
+
+    return () => {
+      socketRef.current.disconnect();
+    };
+  }, [currentUserId, selectedConversation]);
+
   const handleUserSelect = async (user) => {
     setSearchTerm("");
     const conversation = { id: user.id, name: `${user.first_name} ${user.last_name}`, messages: [] };
@@ -168,12 +211,80 @@ export function Messages() {
     }
   };
 
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation) return;
+  
+    const messageData = {
+      subject: "New Message",
+      content: newMessage,
+      senderId: currentUserId,
+      senderTypeId: userRole === UserRoles.Student 
+        ? "7d8462e8-b280-11ef-920d-3a47b4b364d8" 
+        : "8bbd68fd-b280-11ef-920d-3a47b4b364d8",
+      receiverId: selectedConversation.id,
+      receiverTypeId: userRole === UserRoles.Student 
+        ? "8bbd68fd-b280-11ef-920d-3a47b4b364d8" 
+        : "7d8462e8-b280-11ef-920d-3a47b4b364d8",
+    };
+  
+    try {
+      socketRef.current.emit("send_message", messageData, (response) => {
+        if (response.status === 'ok') {
+          fetchRecentMessages();
+        } else {
+          setError(response.message);
+        }
+      });
+  
+      const optimisticMessage = {
+        ...messageData,
+        id: Date.now(),
+        dateTime: new Date().toISOString(),
+        wasRead: true,
+        senderId: currentUserId,
+      };
+  
+      setSelectedConversation((prev) => ({
+        ...prev,
+        messages: [...prev.messages, optimisticMessage],
+      }));
+
+
+      setRecentMessages((prev) => {
+        const existingIndex = prev.findIndex(
+          (msg) => msg.otherUserId === selectedConversation.id
+        );
+        if (existingIndex !== -1) {
+          const updatedConversations = [...prev];
+          updatedConversations.splice(existingIndex, 1);
+          return [
+            {
+              ...prev[existingIndex],
+              lastMessage: optimisticMessage,
+            },
+            ...updatedConversations,
+          ];
+        } else {
+          return [
+            {
+              otherUserId: selectedConversation.id,
+              firstName: selectedConversation.name.split(' ')[0],
+              lastName: selectedConversation.name.split(' ')[1],
+              lastMessage: optimisticMessage,
+            },
+            ...prev,
+          ];
+        }
+      });
+  
+      setNewMessage("");
+    } catch (err) {
+      setError("Nie udało się wysłać wiadomości. Spróbuj ponownie.");
+    }
+  };
+
   const filteredUsers = usersToSearch.filter(user => 
     `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredConversations = conversations.filter(convo =>
-    convo.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -192,6 +303,7 @@ export function Messages() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+
             {searchTerm && filteredUsers.length > 0 && (
               <div className="absolute left-0 right-0 bg-textBg-100 border border-textBg-200 rounded -mt-4 max-h-92 overflow-y-auto z-10">
                 {filteredUsers.map(user => (
@@ -211,39 +323,50 @@ export function Messages() {
               </div>
             )}
           </div>
+
           <div className="flex-1 overflow-y-auto">
             {recentMessages.length > 0 ? (
-              recentMessages.map((msg) => (
-                <div
-                  key={msg.lastMessage.id}
-                  className={`flex items-center py-2 px-3 mb-2 rounded cursor-pointer ${
-                    selectedConversation?.otherUserId === msg.otherUserId ? 'bg-textBg-100' : 'hover:bg-textBg-200'
-                  }`}
-                  onClick={() => handleUserSelect({ id: msg.otherUserId, first_name: msg.firstName, last_name: msg.lastName })}
-                >
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-textBg-300 mr-3">
-                    <User size={20} className="text-textBg-700" />
+              recentMessages.map((msg) => {
+                const isLastMessageFromCurrentUser = msg.lastMessage.senderId === currentUserId;
+
+                return (
+                  <div
+                    key={msg.lastMessage.id}
+                    className={`flex items-center py-2 px-3 mb-2 rounded cursor-pointer ${
+                      selectedConversation?.id === msg.otherUserId ? 'bg-textBg-100' : 'hover:bg-textBg-200'
+                    }`}
+                    onClick={() => handleUserSelect({ id: msg.otherUserId, first_name: msg.firstName, last_name: msg.lastName })}
+                  >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-500 mr-3">
+                      <User size={20} className="text-textBg-100" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-textBg-900">{`${msg.firstName} ${msg.lastName}`}</span>
+                        <span className="text-xs text-textBg-600">
+                          {new Date(msg.lastMessage.dateTime).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="text-sm text-textBg-600 truncate hidden sm:block">
+                        {isLastMessageFromCurrentUser ? `You: ${msg.lastMessage.content.length > 32
+                          ? `${msg.lastMessage.content.slice(0, 32)}...`
+                          : msg.lastMessage.content}` 
+                          : msg.lastMessage.content.length > 32
+                            ? `${msg.lastMessage.content.slice(0, 32)}...`
+                            : msg.lastMessage.content}
+                      </div>
+                      <div className="text-sm text-textBg-600 truncate block sm:hidden">
+                        {isLastMessageFromCurrentUser ? `You: ${msg.lastMessage.content.length > 20
+                          ? `${msg.lastMessage.content.slice(0, 20)}...`
+                          : msg.lastMessage.content}` 
+                          : msg.lastMessage.content.length > 20
+                            ? `${msg.lastMessage.content.slice(0, 20)}...`
+                            : msg.lastMessage.content}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-textBg-900">{`${msg.firstName} ${msg.lastName}`}</span>
-                      <span className="text-xs text-textBg-600">
-                        {new Date(msg.lastMessage.dateTime).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="text-sm text-textBg-600 truncate hidden sm:block">
-                      {msg.lastMessage.content.length > 32
-                        ? `${msg.lastMessage.content.slice(0, 32)}...`
-                        : msg.lastMessage.content}
-                    </div>
-                    <div className="text-sm text-textBg-600 truncate block sm:hidden">
-                      {msg.lastMessage.content.length > 20
-                        ? `${msg.lastMessage.content.slice(0, 20)}...`
-                        : msg.lastMessage.content}
-                    </div>
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="text-gray-500 text-sm text-center mt-4">
                 No recent conversations found.
@@ -252,40 +375,41 @@ export function Messages() {
           </div>
         </div>
 
-        <div className="flex-1 bg-white border border-solid border-textBg-200 rounded p-4 flex flex-col h-[44rem]">
+        <div className="flex-1 bg-white border border-solid border-textBg-200 rounded p-4 flex flex-col h-[48rem]">
           {selectedConversation ? (
             <>
               <div className="flex items-center mb-4 border-b pb-2">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-textBg-300 mr-3">
-                  <User size={20} className="text-textBg-700"/>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-500 mr-3">
+                  <User size={20} className="text-textBg-100"/>
                 </div>
                 <h2 className="text-lg font-medium text-textBg-700">{selectedConversation.name}</h2>
               </div>
+
               <div className="flex-1 overflow-y-auto mb-4 custom-scrollbar">
                 {selectedConversation.messages.map((msg, index) => {
                   const isSentByCurrentUser = msg.senderId === currentUserId;
+                  const formattedDate = new Date(msg.dateTime).toLocaleString('pl-PL', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  });
+
                   return (
                     <div key={index} className={`mb-2 ${isSentByCurrentUser ? "flex justify-end" : "flex justify-start"}`}>
-                      <div className={`xs:max-w-48 max-w-64 sm:max-w-sm md:max-w-md lg:max-w-lg px-4 py-2 rounded ${
-                        isSentByCurrentUser
-                          ? "bg-primary-500 text-white rounded-tr-none"
-                          : "bg-textBg-200 text-textBg-700 rounded rounded-tl-none"
-                      } break-words whitespace-normal`}>
-                        <p className="break-words whitespace-normal">{msg.content}</p>
-                        <span className="text-xs block text-right mt-1">
-                          {new Date(msg.dateTime).toLocaleString(undefined, {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                      <div className={`px-4 py-2 max-w-[60%] ${isSentByCurrentUser ? "bg-primary-500 text-textBg-100 rounded-l-xl rounded-b-xl" : "bg-textBg-200 text-textBg-800 rounded-r-xl rounded-b-xl"}`}>
+                        <p className="text-base font-medium">{msg.content}</p>
+                        <span className="text-[11px] block text-right mt-1">
+                          {formattedDate}
                         </span>
                       </div>
                     </div>
                   );
                 })}
+                <div ref={messagesEndRef} />
               </div>
+
               <div className="flex items-center gap-4">
                 <input
                   type="text"
@@ -295,15 +419,25 @@ export function Messages() {
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      // handleSendMessage();
+                      handleSendMessage();
                     }
                   }}
                 />
                 <div className="hidden sm:block">
-                  {/* <Button text="Send" icon={<Send size={20}/>} size="m" onClick={handleSendMessage}/> */}
+                  <Button
+                    text="Send"
+                    icon={<Send size={20} />}
+                    size="m"
+                    onClick={handleSendMessage}
+                  />
                 </div>
                 <div className="block sm:hidden">
-                  {/* <Button icon={<Send size={16}/>} size="m" className="w-9 px-0 py-0" onClick={handleSendMessage}/> */}
+                  <Button
+                    icon={<Send size={16} />}
+                    size="m"
+                    className="w-9 px-0 py-0"
+                    onClick={handleSendMessage}
+                  />
                 </div>
               </div>
             </>
