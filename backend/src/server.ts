@@ -19,14 +19,16 @@ import { messagesHandler } from './handlers/messages';
 import parentsRouter from './routers/parentsRouter';
 import teachersRouter from './routers/teachersRouter';
 import messagesRouter from './routers/messagesRouter';
+import homeworksRouter from './routers/homeworksRouter';
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { 
     cors: {
         origin: 'http://localhost:5173',
-        methods: ['GET', 'POST'],
+        methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
         credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization']
     },
 });
 
@@ -35,7 +37,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors({
     origin: 'http://localhost:5173', 
     credentials: true,
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use('/auth', authRouter);
@@ -53,6 +56,7 @@ app.use('/grade', gradesRouter);
 app.use('/teacher', teachersRouter);
 app.use('/class-name', classNamesRouter)
 app.use('/message', messagesRouter);
+app.use('/homework', homeworksRouter);
 
 io.on('connection', (socket) => {
     messagesHandler(io, socket);

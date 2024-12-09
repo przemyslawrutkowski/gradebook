@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useEffect, useState, createContext } from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import './App.css';
@@ -8,7 +7,7 @@ import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Schedule } from './pages/Schedule';
 import { Messages } from './pages/Messages';
-import { Calendar } from './pages/Calendar';
+import { CalendarEvents } from './pages/CalendarEvents';
 import { Attendance } from './pages/Attendance';
 import { LayoutDashboard, LogOut } from 'lucide-react';
 import { Homework } from './pages/Homework';
@@ -103,7 +102,7 @@ export default function App() {
                 </>
               )}  
              
-              {userRole === UserRoles.Teacher && (
+              {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
                 <>
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Students" path="/students" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Classes" path="/classes" />
@@ -132,7 +131,7 @@ export default function App() {
                   <>
                     <Route path="/" element={<Home />} />
                     <Route path="/messages" element={<Messages />} />
-                    <Route path="/calendar" element={<Calendar />} />
+                    <Route path="/calendar" element={<CalendarEvents />} />
                     <Route path="/attendance" element={<Attendance />} />
                     <Route path="/homework" element={<Homework />} />
                     <Route path="/homework/:id" element={<HomeworkDetail />} />
@@ -140,7 +139,7 @@ export default function App() {
                   </>
                 )}
                
-                {userRole === UserRoles.Teacher && (
+                {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
                   <>
                     <Route path="students" element={<Students />} />
                     <Route path="/students/:id" element={<StudentDetails />} />
