@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import Button from '../Button';
+import Button from '../../Button';
 import { validate as validateUUID } from 'uuid';
-import Modal from '../Modal';
+import Modal from '../../Modal';
 import { X } from 'lucide-react';
-import { getToken } from '../../utils/UserRoleUtils';
+import { getToken } from '../../../utils/UserRoleUtils';
 
 const EditSchoolYearForm = ({ id, currentName, currentStartDate, currentEndDate, isOpen, onSuccess, onClose }) => {
   const [name, setName] = useState(currentName);

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import PageTitle from '../components/PageTitle';
 import Button from "../components/Button";
-import AssignParentForm from "../components/forms/AssignParentForm";
+import AssignParentForm from "../components/forms/students/AssignParentForm";
 import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm";
 import { 
   Fingerprint, 

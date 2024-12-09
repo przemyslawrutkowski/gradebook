@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import Button from "../Button"; 
-import Modal from '../Modal';
+import Button from "../../Button"; 
+import Modal from '../../Modal';
 import { X } from 'lucide-react';
-import { getToken } from '../../utils/UserRoleUtils';
+import { getToken } from '../../../utils/UserRoleUtils';
 
 function CreateSchoolYearForm({isOpen, onSuccess, onClose }) {
   const [name, setName] = useState('');

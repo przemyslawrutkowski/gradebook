@@ -3,7 +3,7 @@ import PageTitle from '../components/PageTitle';
 import { Search, Plus } from 'lucide-react';
 import Button from "../components/Button";
 import ClassCard from "../components/ClassCard";
-import CreateClassForm from "../components/forms/CreateClassForm";
+import CreateClassForm from "../components/forms/classes/CreateClassForm";
 import { getToken } from "../utils/UserRoleUtils";
 
 export function Classes() {

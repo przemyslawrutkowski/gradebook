@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import Button from "../Button";
+import Button from "../../Button";
 import { X } from 'lucide-react';
-import Modal from '../Modal';
-import { getToken } from '../../utils/UserRoleUtils';
+import Modal from '../../Modal';
+import { getToken } from '../../../utils/UserRoleUtils';
 
-function CreateClassNameForm({ onSuccess, onClose, isOpen }) {
+function CreateSubjectForm({ onSuccess, onClose, isOpen }) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -17,7 +17,7 @@ function CreateClassNameForm({ onSuccess, onClose, isOpen }) {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:3000/class-name', {
+      const response = await fetch('http://localhost:3000/subject', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -41,13 +41,13 @@ function CreateClassNameForm({ onSuccess, onClose, isOpen }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} widthHeightClassname="max-w-lg">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-textBg-700">Create Class Name</h2>
+        <h2 className="text-xl font-bold text-textBg-700">Create Subject</h2>
         <X size={24} className="hover:cursor-pointer" onClick={onClose}/>
       </div>
       <form className="flex flex-col gap-6" onSubmit={handleCreate}>
         {error && <p className="text-red-500">{error}</p>}
         <div className="flex flex-col gap-2">
-          <label className="text-base text-textBg-700" htmlFor="className">Class Name</label>
+          <label className="text-base text-textBg-700" htmlFor="className">Subject</label>
           <input
             id="className"
             type="text"
@@ -55,7 +55,7 @@ function CreateClassNameForm({ onSuccess, onClose, isOpen }) {
             onChange={(e) => setName(e.target.value)}
             required
             className="w-full text-textBg-900 px-3 py-2 border border-textBg-200 rounded text-base focus:outline-none focus:border-textBg-500"
-            placeholder="e.g., Grade 10 A"
+            placeholder="e.g., Mathematics"
           />
         </div>
 
@@ -78,4 +78,4 @@ function CreateClassNameForm({ onSuccess, onClose, isOpen }) {
   );
 }
 
-export default CreateClassNameForm;
+export default CreateSubjectForm;

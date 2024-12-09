@@ -2,95 +2,95 @@ import React, { useState, useEffect } from "react";
 import PageTitle from '../components/PageTitle';
 import { Search, Plus } from 'lucide-react';
 import Button from "../components/Button";
-import SchoolYearCard from "../components/SchoolYearCard";
-import CreateSchoolYearForm from "../components/forms/schoolyears/CreateSchoolYearForm";
-import { getToken } from "../utils/UserRoleUtils";
+import SubjectCard from "../components/SubjectCard";
 import { validate as validateUUID } from 'uuid'; 
+import { getToken } from '../utils/UserRoleUtils';
 import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm";
-import EditSchoolYearForm from "../components/forms/schoolyears/EditSchoolYearForm";
+import CreateSubjectForm from "../components/forms/subjects/CreateSubjectForm"
+import EditSubjectForm from "../components/forms/subjects/EditSubjectForm"
 
-export function SchoolYears() {
+export function Subjects() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [editingSchoolYear, setEditingSchoolYear] = useState(null);
-  const [schoolYearToDelete, setSchoolYearToDelete] = useState(null);
+  const [editingSubject, setEditingSubject] = useState(null);
+  const [subjectToDelete, setSubjectToDelete] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  const [schoolYears, setSchoolYears] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const token = getToken();
 
-  const fetchSchoolYears = async () => {
+  const fetchSubjects = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:3000/school-year',{
+      const response = await fetch('http://localhost:3000/subject', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        }
+          'Authorization': `Bearer ${token}`, 
+        },
       });
-      if(!response.ok){
+      if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
       const result = await response.json();
-      setSchoolYears(result.data);
+      setSubjects(result.data);
     } catch (err) {
-      setError(err.message);
+      setError(err.message); 
     } finally {
-      setLoading(false);
+      setLoading(false); 
     }
   };
 
   useEffect(() => {
-    fetchSchoolYears();
+    fetchSubjects();
   }, []);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  const filteredSchoolYears = Array.isArray(schoolYears) ? schoolYears.filter(sy => 
-    sy.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ) : [];
+  const filteredData = subjects.filter(sub =>
+    sub.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const openCreateModal = () => setIsCreateModalOpen(true);
   const closeCreateModal = () => setIsCreateModalOpen(false);
 
-  const openEditModal = (id, name, startDate, endDate) => {
-    if(!validateUUID(id)){
+  const openEditModal = (id, name) => {
+    if (!validateUUID(id)) {
       return;
     }
-    setEditingSchoolYear({id, name, startDate, endDate});
+    setEditingSubject({ id, name });
     setIsEditModalOpen(true);
   };
 
   const closeEditModal = () => {
-    setEditingSchoolYear(null);
+    setEditingSubject(null);
     setIsEditModalOpen(false);
   };
 
   const openDeleteModal = (id) => {
-    if(!validateUUID(id)){
-      return;
+    if (validateUUID(id)) {
+      setSubjectToDelete(id);
+      setIsDeleteModalOpen(true);
     }
-    setSchoolYearToDelete(id);
-    setIsDeleteModalOpen(true);
-  }
+  };
 
   const closeDeleteModal = () => {
-    setSchoolYearToDelete(null);
+    setSubjectToDelete(null);
     setIsDeleteModalOpen(false);
   };
 
+
   const handleConfirmDelete = async () => {
-    if (!schoolYearToDelete) return;
+    if (!subjectToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:3000/school-year/${schoolYearToDelete}`, {
+      const response = await fetch(`http://localhost:3000/subject/${subjectToDelete}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +100,7 @@ export function SchoolYears() {
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
-      setSchoolYears(prev => prev.filter(cls => cls.id !== schoolYearToDelete));
+      setSubjects(prev => prev.filter(cls => cls.id !== subjectToDelete));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -110,15 +110,15 @@ export function SchoolYears() {
 
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
-      <PageTitle text="School Years"/>
+      <PageTitle text="Class Names"/>
       <div className='flex flex-wrap justify-between mb-8'>
         <div className='w-full md:w-auto mb-4 md:mb-0'>
           <div className='flex gap-4 flex-wrap'>
-            <div className="flex h-9 w-full sm:w-[calc(50%-8px)] md:w-56 items-center px-3 py-3 bg-white rounded border border-solid border-textBg-200 text-textBg-600">
+            <div className="flex h-9 w-full md:w-96 items-center px-3 py-3 bg-white rounded border border-solid border-textBg-200 text-textBg-600">
               <Search size={20} className='mr-2 text-textBg-600' />
               <input
                 type='text'
-                placeholder='Search School Years'
+                placeholder='Search Class Names'
                 value={searchTerm}
                 onChange={handleSearch}
                 className="w-full focus:outline-none text-sm lg:text-base"
@@ -130,7 +130,7 @@ export function SchoolYears() {
           <Button
             size="m"
             icon={<Plus size={16} />}
-            text="Create School Year"
+            text="Create Class Name"
             className='w-full md:w-auto'
             type="primary"
             onClick={openCreateModal}
@@ -144,43 +144,39 @@ export function SchoolYears() {
         <p className="text-red-500">{error}</p>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {filteredSchoolYears.length > 0 ? (
-            filteredSchoolYears.map(sy => (
-              <SchoolYearCard
-                key={sy.id}
-                id={sy.id}
-                name={sy.name}
-                startDate={sy.start_date}
-                endDate={sy.end_date}
+          {filteredData.length > 0 ? (
+            filteredData.map(sub => (
+              <SubjectCard
+                key={sub.id}
+                id={sub.id}
+                name={sub.name}
                 onEdit={openEditModal}
                 onDelete={openDeleteModal}
               />
             ))
           ) : (
-            <p className="text-textBg-900 text-lg">No school years found.</p>
+            <p className="text-textBg-900 text-lg">No subjects found.</p>
           )}
         </div>
       )}
 
-      <CreateSchoolYearForm
+      <CreateSubjectForm
         isOpen={isCreateModalOpen}
         onSuccess={() => {
-          fetchSchoolYears();
+          fetchSubjects(); 
           closeCreateModal();
         }}
         onClose={closeCreateModal}
       />
 
-      {editingSchoolYear && (
-        <EditSchoolYearForm
+      {editingSubject && (
+        <EditSubjectForm
           isOpen={isEditModalOpen}
           onClose={closeEditModal}
-          id={editingSchoolYear.id}
-          currentName={editingSchoolYear.name}
-          currentStartDate={editingSchoolYear.startDate}
-          currentEndDate={editingSchoolYear.endDate}
+          id={editingSubject.id}
+          currentName={editingSubject.name}
           onSuccess={() => {
-            fetchSchoolYears();
+            fetchSubjects();
             closeEditModal();
           }}
         />
@@ -191,10 +187,10 @@ export function SchoolYears() {
         onClose={closeDeleteModal}
         onConfirm={handleConfirmDelete}
         title="Confirm Deletion"
-        description="Are you sure you want to delete this school year? This action is irreversible."
+        description="Are you sure you want to delete this class name? This action is irreversible."
       />
     </main>
   );
 }
 
-export default SchoolYears;
+export default Subjects;

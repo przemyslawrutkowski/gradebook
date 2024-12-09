@@ -22,6 +22,7 @@ import StudentDetails from './pages/StudentDetails';
 import ClassNames from './pages/ClassNames';
 import SchoolYears from './pages/SchoolYears';
 import { SocketProvider } from './context/SocketContext';
+import { Subjects } from './pages/Subjects';
 
 export const AuthContext = createContext();
 
@@ -110,6 +111,7 @@ export default function App() {
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Class Names" path="/class-names" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="School Years" path="/school-years" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Messages" path="/messages" />
+                  <SidebarItem icon={<LayoutDashboard size={20} />} text="Subjects" path="/subjects" />
                 </>
               )}
               
@@ -148,6 +150,7 @@ export default function App() {
                     <Route path="/class-names" element={<ClassNames />} />
                     <Route path="/school-years" element={<SchoolYears />} />
                     <Route path="/messages" element={<Messages />} />
+                    <Route path="/subjects" element={<Subjects />} />
                   </>
                 )}
               </>

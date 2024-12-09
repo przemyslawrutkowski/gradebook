@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import Modal from '../Modal';
-import Button from '../Button';
+import Modal from '../../Modal';
+import Button from '../../Button';
 import Select from 'react-select'; 
 import { X } from 'lucide-react';
-import { getToken } from '../../utils/UserRoleUtils';
+import { getToken } from '../../../utils/UserRoleUtils';
 
 function AssignParentForm({ onSuccess, isOpen, closeModal, studentId, studentName }) {
   const [availableParents, setAvailableParents] = useState([]);
@@ -42,7 +42,7 @@ function AssignParentForm({ onSuccess, isOpen, closeModal, studentId, studentNam
       }));
       setAvailableParents(parentsData);
     } catch (err) {
-      setError('Nie udało się pobrać dostępnych rodziców.');
+      setError('Failed to fetch available parents.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -69,14 +69,14 @@ function AssignParentForm({ onSuccess, isOpen, closeModal, studentId, studentNam
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Nie udało się przypisać rodzica.');
+        throw new Error(errorData.message || 'Failed to assign parent.');
       }
 
       const result = await response.json();
       onSuccess();
       closeModal();
     } catch (err) {
-      setError(err.message || 'Wystąpił błąd podczas przypisywania rodzica.');
+      setError(err.message || 'An error occurred while assigning the parent.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -86,25 +86,25 @@ function AssignParentForm({ onSuccess, isOpen, closeModal, studentId, studentNam
   return (
     <Modal isOpen={isOpen} onClose={closeModal} widthHeightClassname="max-w-md max-h-md">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-textBg-700">Przypisz rodzica do {studentName}</h2>
+        <h2 className="text-xl font-bold text-textBg-700">Assign Parent to {studentName}</h2>
         <X size={24} className="hover:cursor-pointer" onClick={closeModal} />
       </div>
       <div>
-        {loading && <p>Ładowanie...</p>}
+        {loading && <p>Loading...</p>}
         {error && <p className="text-red-500">{error}</p>}
         {!loading && !error && (
           <Select
             options={availableParents}
             onChange={setSelectedParent}
-            placeholder="Wybierz rodzica do przypisania"
+            placeholder="Select a parent to assign"
             className="w-full mb-4"
             isClearable
           />
         )}
         <div className="mt-6 flex justify-end gap-4">
-          <Button text="Anuluj" type="secondary" onClick={closeModal} />
+          <Button text="Cancel" type="secondary" onClick={closeModal} />
           <Button 
-            text="Przypisz" 
+            text="Assign" 
             type="primary" 
             onClick={handleAssignParent} 
             disabled={!selectedParent || loading}

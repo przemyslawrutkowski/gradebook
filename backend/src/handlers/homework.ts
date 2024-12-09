@@ -9,12 +9,10 @@ export const createHomework = async (req: Request, res: Response) => {
     try {
         const { description, deadline, lessonId, teacherId } = req.body;
 
-        // Walidacja obecności wymaganych pól
         if (!description || !deadline || !lessonId || !teacherId) {
             return res.status(400).json(createErrorResponse('Missing required fields.'));
         }
 
-        // Sprawdzenie, czy lekcja istnieje
         const existingLesson = await prisma.lessons.findUnique({
             where: {
                 id: Buffer.from(uuidParse(lessonId))
@@ -25,7 +23,7 @@ export const createHomework = async (req: Request, res: Response) => {
             return res.status(404).json(createErrorResponse('Lesson does not exist.'));
         }
 
-        // Sprawdzenie, czy nauczyciel istnieje
+
         const existingTeacher = await prisma.teachers.findUnique({
             where: {
                 id: Buffer.from(uuidParse(teacherId))
@@ -36,7 +34,6 @@ export const createHomework = async (req: Request, res: Response) => {
             return res.status(404).json(createErrorResponse('Teacher does not exist.'));
         }
 
-        // Tworzenie homework
         const createdHomework = await prisma.homeworks.create({
             data: {
                 description,

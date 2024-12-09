@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import Button from "../Button";
-import { getToken } from '../../utils/UserRoleUtils';
-import Modal from "../Modal";
+import Button from "../../Button";
+import { getToken } from '../../../utils/UserRoleUtils';
+import Modal from "../../Modal";
 import { X } from "lucide-react";
 
 function CreateClassForm({ onSuccess, isOpen, closeModal}) {
