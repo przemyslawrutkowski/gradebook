@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { signUp } from './users';
 import { UserType } from '../enums/userTypes';
 import prisma from '../db';
-import { students, classes } from '@prisma/client';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces';
 import { stringify as uuidStringify, parse as uuidParse, } from 'uuid';
 
@@ -10,26 +9,16 @@ export const signUpStudent = (req: Request, res: Response) => {
     return signUp(req, res, UserType.Student);
 };
 
-export const getAllStudents = async (req: Request, res: Response) => {
+export const getStudents = async (req: Request, res: Response) => {
     try {
-        const studentsData = await prisma.students.findMany({
-            include: {
-                classes: {
-                    include: {
-                        class_names: true,
-                    },
-                },
-            },
-        });
+        const students = await prisma.students.findMany();
 
-        const responseData = studentsData.map(student => ({
+        const responseData = students.map(student => ({
             id: uuidStringify(student.id),
+            email: student.email,
             first_name: student.first_name,
             last_name: student.last_name,
-            phone_Number: student.phone_number,
-            email: student.email,
-            pesel: student.pesel,
-            className: student.classes?.class_names?.name || 'N/A', 
+            role: UserType.Student
         }));
 
         return res.status(200).json(createSuccessResponse(responseData, 'Students retrieved successfully.'));

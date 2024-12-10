@@ -71,17 +71,17 @@ export const deleteUserType = async (req: Request, res: Response) => {
 }
 
 export const getUserTypes = async (req: Request, res: Response) => {
-  try {
-    const userTypes = await prisma.user_types.findMany();
+    try {
+        const userTypes = await prisma.user_types.findMany();
 
-    const data = userTypes.map(type => ({
-      id: uuidStringify(type.id),
-      name: type.name,
-    }));
+        const responseData = userTypes.map(userType => ({
+            id: uuidStringify(userType.id),
+            name: userType.name,
+        }));
 
-    res.status(200).json({ data });
-  } catch (err) {
-    console.error('Error fetching user types', err);
-    res.status(500).json({ error: 'Failed to fetch user types' });
-  }
+        return res.status(200).json(createSuccessResponse(responseData, `User types retrieved successfully.`));
+    } catch (err) {
+        console.error('Error retrieving user types', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving user types. Please try again later.'));
+    }
 };

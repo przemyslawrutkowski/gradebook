@@ -3,28 +3,34 @@ import io from "socket.io-client";
 import PageTitle from '../components/PageTitle';
 import { Search, Send, User } from "lucide-react";
 import Button from "../components/Button";
-import { getToken, getUserId, getUserRole } from "../utils/UserRoleUtils";
+import { getToken, getUserId, getUserRole, decodeToken } from "../utils/UserRoleUtils";
 import UserRoles from '../data/userRoles';
 import '../customCSS/customScrollbar.css';
 
-export function Messages() {
-  const [conversations, setConversations] = useState([]);
-  const [selectedConversation, setSelectedConversation] = useState(null);
+export async function Messages() {
+  const [selectedConversation, setSelectedConversation] = useState(null); //wybrana konwersacja - wiadomosci
+  const [recentConversations, setRecentConversations] = useState([]); //top 10 najnowszych rozmow
+  const [unreadMessages, setUnreadMessages] = useState([]); //nieprzeczytane wiadomosci
+
+  const [usersToSearch, setUsersToSearch] = useState([]); //uzytkownicy do ktorych mozemy napisac
+
   const [searchTerm, setSearchTerm] = useState("");
+
   const [newMessage, setNewMessage] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [teachers, setTeachers] = useState([]);
-  const [students, setStudents] = useState([]);
-  const [usersToSearch, setUsersToSearch] = useState([]);
-  const [userRole, setUserRole] = useState(null); 
-  const [currentUserId, setCurrentUserId] = useState(null);
-  const [recentMessages, setRecentMessages] = useState([]);
 
+  const currentUser = decodeToken();
+  const userTypes = await fetchUserTypes();
   const token = getToken();
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
 
+  const administrators = [];
+  const teachers = [];
+  const parents = [];
+  const students = [];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -34,89 +40,134 @@ export function Messages() {
     scrollToBottom();
   }, [selectedConversation?.messages]);
 
-  const fetchTeachers = async () => {
-    try {
-      const response = await fetch('http://localhost:3000/teacher', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-      const result = await response.json();
-      setTeachers(result.data);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+  const administratorsUrl = 'http://localhost:3000/administrator';
+  const teachersUrl = 'http://localhost:3000/teacher';
+  const parentsUrl = 'http://localhost:3000/parent';
+  const studentsUrl = 'http://localhost:3000/student';
 
-  const fetchStudents = async () => {
+  const fetchUserTypes = async () => {
     try {
-      const response = await fetch('http://localhost:3000/student', {
+      const response = await fetch('http://localhost:3000/user-type', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-        },
+        }
       });
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-      const result = await response.json();
-      setStudents(result.data);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
 
-  const fetchMessages = async (otherUser) => {
-    if (!currentUserId) {
-      console.error('Current user ID is not set.');
-      return [];
-    }
-    try {
-      const response = await fetch(`http://localhost:3000/message/${currentUserId}/${otherUser}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
+
       const result = await response.json();
-      console.log(result.data);
       return result.data;
     } catch (err) {
       setError(err.message);
-      return [];
     }
   };
 
-  const fetchRecentMessages = async () => {
-    if (!currentUserId) {
+  const fetchUsers = async (url) => {
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result.data;
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const fetchConversationMessages = async (interlocutorId) => {
+    if (!currentUser.id) {
       console.error('Current user ID is not set.');
       return [];
     }
+
     try {
-      const response = await fetch(`http://localhost:3000/message/recent/${currentUserId}`, {
+      const response = await fetch(`http://localhost:3000/message/${interlocutorId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
       });
+
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`); 
+        throw new Error(`Error: ${response.status}`);
       }
+
       const result = await response.json();
-      console.log('Ostatnie wiadomości:', result.data);
-      const sortedMessages = result.data.sort((a, b) => new Date(b.lastMessage.dateTime) - new Date(a.lastMessage.dateTime));
-      setRecentMessages(sortedMessages);
+      const messages = result.data;
+
+      const sortedMessages = messages.sort((msg1, msg2) => new Date(msg2.date_time) - new Date(msg1.date_time));
+      return sortedMessages;
+    } catch (err) {
+      setError(err.message);
+      return [];
+    }
+  };
+
+  const fetchUnreadMessages = async () => {
+    if (!currentUser.id) {
+      console.error('Current user ID is not set.');
+      return [];
+    }
+
+    try {
+      const response = await fetch('http://localhost:3000/unread', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      setUnreadMessages(result.data);
+    } catch (err) {
+      setError(err.message);
+      return [];
+    }
+  };
+
+  const fetchRecentConversations = async () => {
+    if (!currentUser.id) {
+      console.error('Current user ID is not set.');
+      return [];
+    }
+
+    try {
+      const response = await fetch('http://localhost:3000/message/recent', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const messages = result.data;
+
+      const sortedMessages = messages.sort((msg1, msg2) => new Date(msg1.date_time) - new Date(msg2.date_time));
+      setRecentConversations(sortedMessages);
     } catch (err) {
       setError(err.message);
       return [];
@@ -124,181 +175,152 @@ export function Messages() {
   };
 
   useEffect(() => {
-    const initializeData = async () => {
+    const initialize = async () => {
       setLoading(true);
       try {
-        const role = getUserRole();
-        setUserRole(role);
+        if (currentUser.id) {
+          socketRef.current = io("http://localhost:3000", {
+            auth: {
+              token: token
+            }
+          });
 
-        const userId = getUserId();
-        setCurrentUserId(userId);
+          socketRef.current.on("connect", () => {
+            socketRef.current.emit("join", currentUser.id);
+          });
 
-        if (userId) {
-          await Promise.all([fetchTeachers(), fetchStudents()]);
-          
-          if (role === UserRoles.Student) {
-            setUsersToSearch(teachers);
-          } else {
-            setUsersToSearch(students);
-          }
+          socketRef.current.on("receive_message", async (message) => {
+            if (message.sender_id == currentUser.id && selectedConversation) {
+              setSelectedConversation(prev => ({
+                ...prev,
+                messages: [message, ...prev.message]
+              }));
+            } else {
+              setUnreadMessages((prev) => [...prev, message]);
+            }
+            fetchRecentConversations();
+          });
+
+          socketRef.current.on("error", (errorMessage) => {
+            console.error('Socket error:', errorMessage);
+            setError(errorMessage);
+          });
+
+          const administratorsUsers = await fetchUsers(administratorsUrl);
+          const teachersUsers = await fetchUsers(teachersUrl);
+          const parentsUsers = await fetchUsers(parentsUrl);
+          const studentsUsers = await fetchUsers(studentsUrl);
+
+          administrators.push(...administratorsUsers);
+          administrators.push(...teachersUsers);
+          administrators.push(...parentsUsers);
+          administrators.push(...studentsUsers);
+
+          setUsersToSearch([...administrators, ...teachers, ...parents, ...students]);
+
+          fetchUnreadMessages();
+          fetchRecentConversations();
         } else {
-          throw new Error("User ID is not available."); 
+          throw new Error("User ID is not available.");
         }
       } catch (err) {
+        console.error('Error initializing component:', err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-  
-    initializeData();
-  }, []);
 
-  useEffect(() => {
-    if (userRole === UserRoles.Student) {
-      setUsersToSearch(teachers);
-    } else {
-      setUsersToSearch(students);
-    }
-  }, [userRole, teachers, students]);
-
-  useEffect(() => {
-    if (currentUserId) {
-      fetchRecentMessages();
-    }
-  }, [currentUserId]);
-
-  useEffect(() => {
-    if (!currentUserId) return;
-
-    socketRef.current = io("http://localhost:3000"); 
-
-    socketRef.current.emit("join", currentUserId);
-
-    socketRef.current.on("receive_message", (message) => {
-      if (
-        selectedConversation &&
-        (message.senderId === selectedConversation.id ||
-          message.receiverId === currentUserId)
-      ) {
-        setSelectedConversation((prev) => ({
-          ...prev,
-          messages: [...prev.messages, message],
-        }));
-      }
-
-      fetchRecentMessages();
-    });
-
-    socketRef.current.on("error", (errorMessage) => {
-      setError(errorMessage);
-    });
+    initialize();
 
     return () => {
-      socketRef.current.disconnect();
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
     };
-  }, [currentUserId, selectedConversation]);
+  }, [token]);
 
-  const handleUserSelect = async (user) => {
-    setSearchTerm("");
-    const conversation = { id: user.id, name: `${user.first_name} ${user.last_name}`, messages: [] };
-    setSelectedConversation(conversation);
+  const handleUserSelect = async (interlocutor) => {
     try {
-      const messagesData = await fetchMessages(user.id);
-      setSelectedConversation(prev => ({ ...prev, messages: messagesData }));
+      const messages = await fetchConversationMessages(user.id);
+      setSelectedConversation({
+        interlocutor: interlocutor,
+        messages: messages
+      });
     } catch (err) {
       setError(err.message);
     }
   };
 
+  const findUserTypeId = (role) => {
+    return userTypes.find(userType => userType.role === role).id;
+  };
+
+  const findUserTypeName = (userTypeId) => {
+    return userTypes.find(userType => userType.id === userTypeId).name;
+  };
+
+  const findInteroluctor = async (interlocutorId, userTypeId) => {
+    const interlocutorUserTypeName = findUserTypeName(userTypeId);
+    let interlocutor = null;
+
+    switch (interlocutorUserTypeName) {
+      case UserRoles.Administrator:
+        interlocutor = administrators.find(administrator => administrator.id == interlocutorId);
+        break;
+      case UserRoles.Teacher:
+        interlocutor = teachers.find(teacher => teacher.id == interlocutorId);
+        break;
+      case UserRoles.Parent:
+        interlocutor = parents.find(parent => parent.id == interlocutorId);
+        break;
+      case UserRoles.Student:
+        interlocutor = students.find(student => student.id == interlocutorId);
+        break;
+    }
+
+    return interlocutor
+  };
+
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation) return;
-  
+
+    let senderTypeId = findUserTypeId(currentUser.role);
+    let receiverTypeId = findUserTypeId(selectedConversation.interlocutor.role);
+
     const messageData = {
       subject: "New Message",
       content: newMessage,
-      senderId: currentUserId,
-      senderTypeId: userRole === UserRoles.Student 
-        ? "7d8462e8-b280-11ef-920d-3a47b4b364d8" 
-        : "8bbd68fd-b280-11ef-920d-3a47b4b364d8",
+      senderId: currentUser.id,
+      senderTypeId: senderTypeId,
       receiverId: selectedConversation.id,
-      receiverTypeId: userRole === UserRoles.Student 
-        ? "8bbd68fd-b280-11ef-920d-3a47b4b364d8" 
-        : "7d8462e8-b280-11ef-920d-3a47b4b364d8",
+      receiverTypeId: receiverTypeId
     };
-  
+
     try {
-      socketRef.current.emit("send_message", messageData, (response) => {
-        if (response.status === 'ok') {
-          fetchRecentMessages();
-        } else {
-          setError(response.message);
-        }
-      });
-  
-      const optimisticMessage = {
-        ...messageData,
-        id: Date.now(),
-        dateTime: new Date().toISOString(),
-        wasRead: true,
-        senderId: currentUserId,
-      };
-  
-      setSelectedConversation((prev) => ({
-        ...prev,
-        messages: [...prev.messages, optimisticMessage],
-      }));
-
-
-      setRecentMessages((prev) => {
-        const existingIndex = prev.findIndex(
-          (msg) => msg.otherUserId === selectedConversation.id
-        );
-        if (existingIndex !== -1) {
-          const updatedConversations = [...prev];
-          updatedConversations.splice(existingIndex, 1);
-          return [
-            {
-              ...prev[existingIndex],
-              lastMessage: optimisticMessage,
-            },
-            ...updatedConversations,
-          ];
-        } else {
-          return [
-            {
-              otherUserId: selectedConversation.id,
-              firstName: selectedConversation.name.split(' ')[0],
-              lastName: selectedConversation.name.split(' ')[1],
-              lastMessage: optimisticMessage,
-            },
-            ...prev,
-          ];
-        }
-      });
-  
+      socketRef.current.emit("send_message", messageData);
       setNewMessage("");
     } catch (err) {
-      setError("Nie udało się wysłać wiadomości. Spróbuj ponownie.");
+      setError("Failed to send message. Please try again.");
     }
   };
 
-  const filteredUsers = usersToSearch.filter(user => 
+  const filteredUsers = usersToSearch.filter(user =>
     `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8 flex flex-col">
-      <PageTitle text="Messages"/>
+      <PageTitle text="Messages" />
       <div className="w-full h-max flex flex-col xl:flex-row gap-8">
-        <div className="w-full h-full xl:w-fit bg-white border border-solid border-textBg-200 rounded p-8 flex flex-col"> 
+        <div className="w-full h-full xl:w-fit bg-white border border-solid border-textBg-200 rounded p-8 flex flex-col">
           <div className="relative">
             <div className="h-9 flex items-center px-3 py-3 bg-white rounded border border-solid border-textBg-300 text-textBg-700 mb-4">
-              <Search size={16} className='mr-2 text-textBg-700'/>
+              <Search size={16} className='mr-2 text-textBg-700' />
               <input
                 type='text'
                 placeholder='Search by name'
-                className="w-full xl:w-80 focus:outline-none text-sm" 
+                className="w-full xl:w-80 focus:outline-none text-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -306,62 +328,66 @@ export function Messages() {
 
             {searchTerm && filteredUsers.length > 0 && (
               <div className="absolute left-0 right-0 bg-textBg-100 border border-textBg-200 rounded -mt-4 max-h-92 overflow-y-auto z-10">
-                {filteredUsers.map(user => (
+                *                {filteredUsers.map(user => (
                   <div
                     key={user.id}
                     className="flex items-center p-2 hover:bg-textBg-200 cursor-pointer"
                     onClick={() => handleUserSelect(user)}
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-textBg-300 mr-2">
-                      <User size={16} className="text-textBg-700"/>
+                      <User size={16} className="text-textBg-700" />
                     </div>
                     <span className="text-sm text-gray-700">
                       {`${user.first_name} ${user.last_name}`}
                     </span>
                   </div>
-                ))} 
+                ))}
               </div>
             )}
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {recentMessages.length > 0 ? (
-              recentMessages.map((msg) => {
-                const isLastMessageFromCurrentUser = msg.lastMessage.senderId === currentUserId;
+            {recentConversations.length > 0 ? (
+              recentConversations.map((msg) => {
+                const isLastMessageFromCurrentUser = msg.sender_id === currentUser.id;
 
+                const interlocutorId = selectedConversation.interlocutor.id === msg.sender_id ? msg.sender_id : msg.receiver_id;
+                const userTypeId = selectedConversation.interlocutor.id === msg.sender_id ? msg.sender_type_id : msg.receiver_type_id;
+                const interlocutor = findInteroluctor(interlocutorId, userTypeId);
                 return (
                   <div
-                    key={msg.lastMessage.id}
-                    className={`flex items-center py-2 px-3 mb-2 rounded cursor-pointer ${
-                      selectedConversation?.id === msg.otherUserId ? 'bg-textBg-100' : 'hover:bg-textBg-200'
-                    }`}
-                    onClick={() => handleUserSelect({ id: msg.otherUserId, first_name: msg.firstName, last_name: msg.lastName })}
+                    key={msg.id}                                                        //selectedConversation.interlocutor.id == msg.sender_id LUB msg.receiver_id
+                    className={`flex items-center py-2 px-3 mb-2 rounded cursor-pointer ${(selectedConversation.interlocutor.id === interlocutorId) ? 'bg-textBg-100' : 'hover:bg-textBg-200'
+                      }`}
+                    onClick={() => handleUserSelect(interlocutor)} //{id, first_name, last_name, role} => znajdujemy typ uzytkowna za pomoca funkcji pomocniczej, a nastepnie przeszukujemy odpowiednia kolekcje uzytkownikow - admin/teacher/parent/student
                   >
                     <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-500 mr-3">
                       <User size={20} className="text-textBg-100" />
                     </div>
                     <div className="flex-1">
                       <div className="flex justify-between items-center">
-                        <span className="font-medium text-textBg-900">{`${msg.firstName} ${msg.lastName}`}</span>
+                        <span className="font-medium text-textBg-900">{`${interlocutor.first_name} ${interlocutor.last_name}`
+                          // znalezienie id uzytkownika w kolekcjach - w zaleznosci od tego czy jest to sender czy receiver
+                        }</span>
                         <span className="text-xs text-textBg-600">
-                          {new Date(msg.lastMessage.dateTime).toLocaleDateString()}
+                          {new Date(msg.date_time).toLocaleDateString()}
                         </span>
                       </div>
                       <div className="text-sm text-textBg-600 truncate hidden sm:block">
-                        {isLastMessageFromCurrentUser ? `You: ${msg.lastMessage.content.length > 32
-                          ? `${msg.lastMessage.content.slice(0, 32)}...`
-                          : msg.lastMessage.content}` 
-                          : msg.lastMessage.content.length > 32
-                            ? `${msg.lastMessage.content.slice(0, 32)}...`
-                            : msg.lastMessage.content}
+                        {isLastMessageFromCurrentUser ? `You: ${msg.content.length > 32
+                          ? `${msg.content.slice(0, 32)}...`
+                          : msg.content}`
+                          : msg.content.length > 32
+                            ? `${msg.content.slice(0, 32)}...`
+                            : msg.content}
                       </div>
                       <div className="text-sm text-textBg-600 truncate block sm:hidden">
-                        {isLastMessageFromCurrentUser ? `You: ${msg.lastMessage.content.length > 20
-                          ? `${msg.lastMessage.content.slice(0, 20)}...`
-                          : msg.lastMessage.content}` 
-                          : msg.lastMessage.content.length > 20
-                            ? `${msg.lastMessage.content.slice(0, 20)}...`
-                            : msg.lastMessage.content}
+                        {isLastMessageFromCurrentUser ? `You: ${msg.content.length > 20
+                          ? `${msg.content.slice(0, 20)}...`
+                          : msg.content}`
+                          : msg.content.length > 20
+                            ? `${msg.content.slice(0, 20)}...`
+                            : msg.content}
                       </div>
                     </div>
                   </div>
@@ -380,15 +406,15 @@ export function Messages() {
             <>
               <div className="flex items-center mb-4 border-b pb-2">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-500 mr-3">
-                  <User size={20} className="text-textBg-100"/>
+                  <User size={20} className="text-textBg-100" />
                 </div>
-                <h2 className="text-lg font-medium text-textBg-700">{selectedConversation.name}</h2>
+                <h2 className="text-lg font-medium text-textBg-700">{`${selectedConversation.interlocutor.first_name} ${selectedConversation.interlocutor.last_name}`}</h2>
               </div>
 
               <div className="flex-1 overflow-y-auto mb-4 custom-scrollbar">
                 {selectedConversation.messages.map((msg, index) => {
-                  const isSentByCurrentUser = msg.senderId === currentUserId;
-                  const formattedDate = new Date(msg.dateTime).toLocaleString('pl-PL', {
+                  const isSentByCurrentUser = msg.sender_id === currentUser.id;
+                  const formattedDate = new Date(msg.date_time).toLocaleString('pl-PL', {
                     day: '2-digit',
                     month: '2-digit',
                     year: 'numeric',
@@ -447,7 +473,7 @@ export function Messages() {
             </div>
           )}
         </div>
-      </div> 
+      </div>
     </main>
   );
 }

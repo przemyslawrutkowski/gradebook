@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { UserType } from '../enums/userTypes.js';
-import { getTeachers } from '../handlers/teachers.js';
+import { getAdministrators } from '../handlers/administrators.js';
 
-const teachersRouter = Router();
+const administratorsRouter = Router();
 
-teachersRouter.get('',
+administratorsRouter.get('',
     authenticate,
     authorize([UserType.Administrator, UserType.Teacher, UserType.Student, UserType.Parent]),
-    getTeachers
+    getAdministrators
 );
 
-export default teachersRouter;
+export default administratorsRouter;
