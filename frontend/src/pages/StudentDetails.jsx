@@ -89,10 +89,10 @@ function StudentDetails() {
       {error && <p className="text-red-500">Error: {error}</p>}
       {studentInfo ? (
         <>
-          <PageTitle text={`Details: ${studentInfo.first_name} ${studentInfo.last_name}`} />
+          <PageTitle text={`Student Details`} />
           <div className="flex flex-col sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-8">
-              <h2 className="text-lg sm:text-2xl font-semibold text-textBg-700 mb-2">
+              <h2 className="text-lg sm:text-2xl font-semibold text-textBg-700">
                 {studentInfo.first_name} {studentInfo.last_name}
               </h2>
               {studentInfo.parents.length === 0 ? (

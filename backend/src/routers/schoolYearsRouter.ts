@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { createSchoolYear, getSchoolYears, updateSchoolYear, deleteSchoolYear } from '../handlers/schoolYears.js';
+import { createSchoolYear, getSchoolYears, updateSchoolYear, deleteSchoolYear, getSchoolYearById } from '../handlers/schoolYears.js';
 import { validateCreateSchoolYear, validateUpdateSchoolYear, validateDeleteSchoolYear } from '../validations/schoolYearsValidation.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { UserType } from '../enums/userTypes.js';
@@ -20,6 +20,13 @@ schoolYearsRouter.get('',
     authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
     handleInputErrors,
     getSchoolYears
+)
+
+schoolYearsRouter.get('/:schoolYearId',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
+    handleInputErrors,
+    getSchoolYearById
 )
 
 schoolYearsRouter.patch('/:schoolYearId',

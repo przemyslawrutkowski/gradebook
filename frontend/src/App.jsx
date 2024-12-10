@@ -21,6 +21,7 @@ import { Students } from './pages/Students';
 import StudentDetails from './pages/StudentDetails';
 import ClassNames from './pages/ClassNames';
 import SchoolYears from './pages/SchoolYears';
+import SchoolYearsDetails from './pages/SchoolYearDetails';
 import { SocketProvider } from './context/SocketContext';
 import { Subjects } from './pages/Subjects';
 
@@ -149,6 +150,7 @@ export default function App() {
                     <Route path="/classes/:id" element={<ClassDetails />} />
                     <Route path="/class-names" element={<ClassNames />} />
                     <Route path="/school-years" element={<SchoolYears />} />
+                    <Route path="/school-years/:id" element={<SchoolYearsDetails />} />
                     <Route path="/messages" element={<Messages />} />
                     <Route path="/subjects" element={<Subjects />} />
                   </>

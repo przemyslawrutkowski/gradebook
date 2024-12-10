@@ -1,15 +1,18 @@
 import React from 'react';
-import Button from '../components/Button'
-import {Pen, Trash} from 'lucide-react';
+import Button from './Button'
+import {Calendar, Pen, Trash} from 'lucide-react';
 
-function SchoolYearCard({ id, name, startDate, endDate, onEdit, onDelete }) {
+function SchoolYearAndSemesterCard({ id, name, startDate, endDate, onEdit, onDelete }) {
   return (
     <div className="border p-4 rounded flex justify-between items-center">
       <div>
-        <p className="text-base font-semibold text-textBg-900">{name}</p>
-        <p className="text-sm text-textBg-600">
-          {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
-        </p>
+        <p className="text-base font-semibold text-textBg-900 mb-2">{name}</p>
+        <div className='flex items-center gap-2 text-textBg-600'>
+          <Calendar size={16} />
+          <p className="text-sm">
+            {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}
+          </p>
+        </div>
       </div>
       <div className='flex items-center gap-2'>
         <Button
@@ -29,4 +32,4 @@ function SchoolYearCard({ id, name, startDate, endDate, onEdit, onDelete }) {
   );
 }
 
-export default SchoolYearCard;
+export default SchoolYearAndSemesterCard;
