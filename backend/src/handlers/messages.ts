@@ -165,37 +165,70 @@ export const getRecentConversations = async (req: Request, res: Response) => {
     try {
         const user: AuthUser = req.user as AuthUser;
 
-        const messages = await prisma.messages.findMany({
-            where: {
-                OR: [
-                    {
-                        sender_id: Buffer.from(uuidParse(user.id))
-                    },
-                    {
-                        receiver_id: Buffer.from(uuidParse(user.id))
+        const userBuffer = Buffer.from(uuidParse(user.id));
+
+        const uniquePairs = new Set<string>();
+        const filteredMessages = [];
+
+        let pageSize = 500;
+        let skip = 0;
+
+        while (uniquePairs.size < 10) {
+            const messages = await prisma.messages.findMany({
+                where: {
+                    OR: [
+                        { sender_id: userBuffer },
+                        { receiver_id: userBuffer }
+                    ]
+                },
+                orderBy: {
+                    date_time: 'desc'
+                },
+                take: pageSize,
+                skip: skip
+            });
+
+            if (messages.length === 0) {
+                break;
+            }
+
+            for (const message of messages) {
+                const sender = uuidStringify(message.sender_id);
+                const receiver = uuidStringify(message.receiver_id);
+                const pairKey = [sender, receiver].sort().join('|');
+
+                if (!uniquePairs.has(pairKey)) {
+                    uniquePairs.add(pairKey);
+                    filteredMessages.push({
+                        ...message,
+                        id: uuidStringify(message.id),
+                        date_time: message.date_time.toISOString(),
+                        sender_id: sender,
+                        sender_type_id: uuidStringify(message.sender_type_id),
+                        receiver_id: receiver,
+                        receiver_type_id: uuidStringify(message.receiver_type_id),
+                    });
+
+                    if (uniquePairs.size === 10) {
+                        break;
                     }
-                ]
-            },
-            distinct: ['sender_id', 'receiver_id'],
-            orderBy: {
-                date_time: 'desc'
-            },
-            take: 10
-        });
+                }
+            }
 
-        const responseData = messages.map((message) => ({
-            ...message,
-            id: uuidStringify(message.id),
-            date_time: message.date_time.toISOString(),
-            sender_id: uuidStringify(message.sender_id),
-            sender_type_id: uuidStringify(message.sender_type_id),
-            receiver_id: uuidStringify(message.receiver_id),
-            receiver_type_id: uuidStringify(message.receiver_type_id),
-        }));
+            if (uniquePairs.size < 10) {
+                skip += pageSize;
+            } else {
+                break;
+            }
+        }
 
-        return res.status(200).json(createSuccessResponse(responseData, 'Recent conversations retrieved successfully.'));
+        return res.status(200).json(
+            createSuccessResponse(filteredMessages, 'Recent conversations retrieved successfully.')
+        );
     } catch (err) {
         console.error('Error retrieving recent conversations:', err);
-        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving recent conversations. Please try again later.'));
+        return res.status(500).json(
+            createErrorResponse('An unexpected error occurred while retrieving recent conversations. Please try again later.')
+        );
     }
 };

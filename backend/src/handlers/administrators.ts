@@ -11,7 +11,7 @@ export const signUpAdministrator = (req: Request, res: Response) => {
 
 export const getAdministrators = async (req: Request, res: Response) => {
     try {
-        const administrators = await prisma.students.findMany();
+        const administrators = await prisma.administrators.findMany();
 
         const responseData = administrators.map(administrator => ({
             id: uuidStringify(administrator.id),

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import io from "socket.io-client";
 import PageTitle from '../components/PageTitle';
 import { Search, Send, User } from "lucide-react";
@@ -7,47 +7,50 @@ import { getToken, getUserId, getUserRole, decodeToken } from "../utils/UserRole
 import UserRoles from '../data/userRoles';
 import '../customCSS/customScrollbar.css';
 
-export async function Messages() {
-  const [selectedConversation, setSelectedConversation] = useState(null); //wybrana konwersacja - wiadomosci
-  const [recentConversations, setRecentConversations] = useState([]); //top 10 najnowszych rozmow
-  const [unreadMessages, setUnreadMessages] = useState([]); //nieprzeczytane wiadomosci
+const API_URL = 'http://localhost:3000';
 
-  const [usersToSearch, setUsersToSearch] = useState([]); //uzytkownicy do ktorych mozemy napisac
+export function Messages() {
+  const [token, setToken] = useState(getToken());
+  const [currentUser, setCurrentUser] = useState(decodeToken(getToken()));
 
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [recentConversations, setRecentConversations] = useState([]);
+  const [unreadMessages, setUnreadMessages] = useState([]);
+  const [usersToSearch, setUsersToSearch] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-
   const [newMessage, setNewMessage] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const currentUser = decodeToken();
-  const userTypes = await fetchUserTypes();
-  const token = getToken();
+  const [userTypes, setUserTypes] = useState([]);
+  const [administrators, setAdministrators] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [parents, setParents] = useState([]);
+  const [students, setStudents] = useState([]);
+
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
 
-  const administrators = [];
-  const teachers = [];
-  const parents = [];
-  const students = [];
-
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [selectedConversation?.messages]);
+  }, [selectedConversation?.messages, scrollToBottom]);
 
-  const administratorsUrl = 'http://localhost:3000/administrator';
-  const teachersUrl = 'http://localhost:3000/teacher';
-  const parentsUrl = 'http://localhost:3000/parent';
-  const studentsUrl = 'http://localhost:3000/student';
+  useEffect(() => {
+    if (token) {
+      setCurrentUser(decodeToken(token));
+    } else {
+      setCurrentUser(null);
+    }
+  }, [token]);
 
-  const fetchUserTypes = async () => {
+  const fetchUserTypes = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:3000/user-type', {
+      const response = await fetch(`${API_URL}/user-type`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -60,13 +63,14 @@ export async function Messages() {
       }
 
       const result = await response.json();
-      return result.data;
+      setUserTypes(result.data);
     } catch (err) {
+      console.error("Error fetching user types:", err);
       setError(err.message);
     }
-  };
+  }, [token]);
 
-  const fetchUsers = async (url) => {
+  const fetchUsers = useCallback(async (url) => {
     try {
       const response = await fetch(url, {
         method: 'GET',
@@ -83,75 +87,15 @@ export async function Messages() {
       const result = await response.json();
       return result.data;
     } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const fetchConversationMessages = async (interlocutorId) => {
-    if (!currentUser.id) {
-      console.error('Current user ID is not set.');
-      return [];
-    }
-
-    try {
-      const response = await fetch(`http://localhost:3000/message/${interlocutorId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      const result = await response.json();
-      const messages = result.data;
-
-      const sortedMessages = messages.sort((msg1, msg2) => new Date(msg2.date_time) - new Date(msg1.date_time));
-      return sortedMessages;
-    } catch (err) {
+      console.error(`Error fetching users from ${url}:`, err);
       setError(err.message);
       return [];
     }
-  };
+  }, [token]);
 
-  const fetchUnreadMessages = async () => {
-    if (!currentUser.id) {
-      console.error('Current user ID is not set.');
-      return [];
-    }
-
+  const fetchConversationMessages = useCallback(async (interlocutorId) => {
     try {
-      const response = await fetch('http://localhost:3000/unread', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      const result = await response.json();
-      setUnreadMessages(result.data);
-    } catch (err) {
-      setError(err.message);
-      return [];
-    }
-  };
-
-  const fetchRecentConversations = async () => {
-    if (!currentUser.id) {
-      console.error('Current user ID is not set.');
-      return [];
-    }
-
-    try {
-      const response = await fetch('http://localhost:3000/message/recent', {
+      const response = await fetch(`${API_URL}/message/${interlocutorId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -167,22 +111,68 @@ export async function Messages() {
       const messages = result.data;
 
       const sortedMessages = messages.sort((msg1, msg2) => new Date(msg1.date_time) - new Date(msg2.date_time));
-      setRecentConversations(sortedMessages);
+      return sortedMessages;
     } catch (err) {
+      console.error("Error fetching conversation messages:", err);
       setError(err.message);
       return [];
     }
-  };
+  }, [token]);
+
+  const fetchUnreadMessages = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/message/unread`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      setUnreadMessages(result.data);
+    } catch (err) {
+      console.error("Error fetching unread messages:", err);
+      setError(err.message);
+    }
+  }, [token]);
+
+  const fetchRecentConversations = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/message/recent`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const messages = result.data;
+
+      const sortedMessages = messages.sort((msg1, msg2) => new Date(msg2.date_time) - new Date(msg1.date_time));
+      setRecentConversations(sortedMessages);
+    } catch (err) {
+      console.error("Error fetching recent conversations:", err);
+      setError(err.message);
+    }
+  }, [token]);
 
   useEffect(() => {
     const initialize = async () => {
       setLoading(true);
       try {
         if (currentUser.id) {
-          socketRef.current = io("http://localhost:3000", {
-            auth: {
-              token: token
-            }
+          socketRef.current = io(API_URL, {
+            auth: { token }
           });
 
           socketRef.current.on("connect", () => {
@@ -190,15 +180,16 @@ export async function Messages() {
           });
 
           socketRef.current.on("receive_message", async (message) => {
-            if (message.sender_id == currentUser.id && selectedConversation) {
+            if (selectedConversation && (selectedConversation.interlocutor.id === message.receiver_id || selectedConversation.interlocutor.id === message.sender_id)) {
               setSelectedConversation(prev => ({
                 ...prev,
-                messages: [message, ...prev.message]
+                messages: [...prev.messages, message]
               }));
             } else {
-              setUnreadMessages((prev) => [...prev, message]);
+              setUnreadMessages(prev => [message, ...prev]);
             }
-            fetchRecentConversations();
+
+            await fetchRecentConversations();
           });
 
           socketRef.current.on("error", (errorMessage) => {
@@ -206,20 +197,30 @@ export async function Messages() {
             setError(errorMessage);
           });
 
-          const administratorsUsers = await fetchUsers(administratorsUrl);
-          const teachersUsers = await fetchUsers(teachersUrl);
-          const parentsUsers = await fetchUsers(parentsUrl);
-          const studentsUsers = await fetchUsers(studentsUrl);
+          await fetchUserTypes();
 
-          administrators.push(...administratorsUsers);
-          administrators.push(...teachersUsers);
-          administrators.push(...parentsUsers);
-          administrators.push(...studentsUsers);
+          const [fetchedAdministrators, fetchedTeachers, fetchedParents, fetchedStudents] = await Promise.all([
+            fetchUsers(`${API_URL}/administrator`),
+            fetchUsers(`${API_URL}/teacher`),
+            fetchUsers(`${API_URL}/parent`),
+            fetchUsers(`${API_URL}/student`),
+          ]);
 
-          setUsersToSearch([...administrators, ...teachers, ...parents, ...students]);
+          setAdministrators(fetchedAdministrators);
+          setTeachers(fetchedTeachers);
+          setParents(fetchedParents);
+          setStudents(fetchedStudents);
 
-          fetchUnreadMessages();
-          fetchRecentConversations();
+          const combinedUsers = [
+            ...fetchedAdministrators,
+            ...fetchedTeachers,
+            ...fetchedParents,
+            ...fetchedStudents,
+          ];
+          setUsersToSearch(combinedUsers);
+
+          await fetchUnreadMessages();
+          await fetchRecentConversations();
         } else {
           throw new Error("User ID is not available.");
         }
@@ -238,62 +239,81 @@ export async function Messages() {
         socketRef.current.disconnect();
       }
     };
-  }, [token]);
+  }, [
+    token,
+    currentUser,
+    fetchUserTypes,
+    fetchUsers,
+    fetchUnreadMessages,
+    fetchRecentConversations,
+    selectedConversation
+  ]);
 
-  const handleUserSelect = async (interlocutor) => {
+
+  const handleUserSelect = useCallback(async (interlocutor) => {
     try {
-      const messages = await fetchConversationMessages(user.id);
+      const messages = await fetchConversationMessages(interlocutor.id);
       setSelectedConversation({
         interlocutor: interlocutor,
         messages: messages
       });
     } catch (err) {
+      console.error("Error selecting user:", err);
       setError(err.message);
     }
-  };
+  }, [fetchConversationMessages]);
 
-  const findUserTypeId = (role) => {
-    return userTypes.find(userType => userType.role === role).id;
-  };
+  const findUserTypeId = useCallback((role) => {
+    const userType = userTypes.find(userType => userType.name === role);
+    return userType ? userType.id : null;
+  }, [userTypes]);
 
-  const findUserTypeName = (userTypeId) => {
-    return userTypes.find(userType => userType.id === userTypeId).name;
-  };
+  const findUserTypeName = useCallback((userTypeId) => {
+    const userType = userTypes.find(userType => userType.id === userTypeId);
+    return userType ? userType.name : null;
+  }, [userTypes]);
 
-  const findInteroluctor = async (interlocutorId, userTypeId) => {
+  const findInterlocutor = useCallback((interlocutorId, userTypeId) => {
     const interlocutorUserTypeName = findUserTypeName(userTypeId);
     let interlocutor = null;
 
     switch (interlocutorUserTypeName) {
       case UserRoles.Administrator:
-        interlocutor = administrators.find(administrator => administrator.id == interlocutorId);
+        interlocutor = administrators.find(administrator => administrator.id === interlocutorId);
         break;
       case UserRoles.Teacher:
-        interlocutor = teachers.find(teacher => teacher.id == interlocutorId);
+        interlocutor = teachers.find(teacher => teacher.id === interlocutorId);
         break;
       case UserRoles.Parent:
-        interlocutor = parents.find(parent => parent.id == interlocutorId);
+        interlocutor = parents.find(parent => parent.id === interlocutorId);
         break;
       case UserRoles.Student:
-        interlocutor = students.find(student => student.id == interlocutorId);
+        interlocutor = students.find(student => student.id === interlocutorId);
+        break;
+      default:
         break;
     }
 
-    return interlocutor
-  };
+    return interlocutor;
+  }, [findUserTypeName, administrators, teachers, parents, students]);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(() => {
     if (!newMessage.trim() || !selectedConversation) return;
 
-    let senderTypeId = findUserTypeId(currentUser.role);
-    let receiverTypeId = findUserTypeId(selectedConversation.interlocutor.role);
+    const senderTypeId = findUserTypeId(currentUser.role);
+    const receiverTypeId = findUserTypeId(selectedConversation.interlocutor.role);
+
+    if (!senderTypeId || !receiverTypeId) {
+      setError("Invalid sender or receiver type.");
+      return;
+    }
 
     const messageData = {
       subject: "New Message",
       content: newMessage,
       senderId: currentUser.id,
       senderTypeId: senderTypeId,
-      receiverId: selectedConversation.id,
+      receiverId: selectedConversation.interlocutor.id,
       receiverTypeId: receiverTypeId
     };
 
@@ -301,13 +321,16 @@ export async function Messages() {
       socketRef.current.emit("send_message", messageData);
       setNewMessage("");
     } catch (err) {
+      console.error("Error sending message:", err);
       setError("Failed to send message. Please try again.");
     }
-  };
+  }, [newMessage, selectedConversation, findUserTypeId, currentUser.role, currentUser.id]);
 
-  const filteredUsers = usersToSearch.filter(user =>
-    `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = useMemo(() => {
+    return usersToSearch.filter(user =>
+      `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [usersToSearch, searchTerm]);
 
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8 flex flex-col">
@@ -328,7 +351,7 @@ export async function Messages() {
 
             {searchTerm && filteredUsers.length > 0 && (
               <div className="absolute left-0 right-0 bg-textBg-100 border border-textBg-200 rounded -mt-4 max-h-92 overflow-y-auto z-10">
-                *                {filteredUsers.map(user => (
+                {filteredUsers.map(user => (
                   <div
                     key={user.id}
                     className="flex items-center p-2 hover:bg-textBg-200 cursor-pointer"
@@ -351,15 +374,19 @@ export async function Messages() {
               recentConversations.map((msg) => {
                 const isLastMessageFromCurrentUser = msg.sender_id === currentUser.id;
 
-                const interlocutorId = selectedConversation.interlocutor.id === msg.sender_id ? msg.sender_id : msg.receiver_id;
-                const userTypeId = selectedConversation.interlocutor.id === msg.sender_id ? msg.sender_type_id : msg.receiver_type_id;
-                const interlocutor = findInteroluctor(interlocutorId, userTypeId);
+                const interlocutorId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
+                const userTypeId = msg.sender_id === currentUser.id ? msg.receiver_type_id : msg.sender_type_id;
+                const interlocutor = findInterlocutor(interlocutorId, userTypeId);
+
+                if (!interlocutor) {
+                  return null;
+                }
+
                 return (
                   <div
-                    key={msg.id}                                                        //selectedConversation.interlocutor.id == msg.sender_id LUB msg.receiver_id
-                    className={`flex items-center py-2 px-3 mb-2 rounded cursor-pointer ${(selectedConversation.interlocutor.id === interlocutorId) ? 'bg-textBg-100' : 'hover:bg-textBg-200'
-                      }`}
-                    onClick={() => handleUserSelect(interlocutor)} //{id, first_name, last_name, role} => znajdujemy typ uzytkowna za pomoca funkcji pomocniczej, a nastepnie przeszukujemy odpowiednia kolekcje uzytkownikow - admin/teacher/parent/student
+                    key={msg.id}
+                    className={`flex items-center py-2 px-3 mb-2 rounded cursor-pointer ${(selectedConversation?.interlocutor.id === interlocutorId) ? 'bg-textBg-100' : 'hover:bg-textBg-200'}`}
+                    onClick={() => handleUserSelect(interlocutor)}
                   >
                     <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary-500 mr-3">
                       <User size={20} className="text-textBg-100" />
@@ -367,7 +394,6 @@ export async function Messages() {
                     <div className="flex-1">
                       <div className="flex justify-between items-center">
                         <span className="font-medium text-textBg-900">{`${interlocutor.first_name} ${interlocutor.last_name}`
-                          // znalezienie id uzytkownika w kolekcjach - w zaleznosci od tego czy jest to sender czy receiver
                         }</span>
                         <span className="text-xs text-textBg-600">
                           {new Date(msg.date_time).toLocaleDateString()}

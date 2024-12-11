@@ -6,9 +6,9 @@ import { getParents } from '../handlers/parents.js';
 
 const parentsRouter = Router();
 
-parentsRouter.get('/available-parents',
+parentsRouter.get('',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher]),
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
     getParents
 );
 
