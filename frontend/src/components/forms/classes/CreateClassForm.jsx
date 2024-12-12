@@ -87,7 +87,6 @@ function CreateClassForm({ onSuccess, isOpen, closeModal}) {
       if (response.status === 200 || response.status === 201) { 
         const data = await response.json();
         onSuccess(data); 
-        onClose();   
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Failed to create class.');

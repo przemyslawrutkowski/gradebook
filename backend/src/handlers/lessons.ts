@@ -265,3 +265,91 @@ export const deleteLessons = async (req: Request, res: Response) => {
         res.status(500).json(createErrorResponse('An unexpected error occurred while deleting lessons. Please try again later.'));
     }
 };
+
+export const getAllLessons = async (req: Request, res: Response) => {
+    try {
+        const lessons = await prisma.lessons.findMany();
+
+        const responseData = lessons.map(lesson => ({
+            ...lesson,
+            id: uuidStringify(lesson.id),
+            date: lesson.date.toISOString(),
+            start_time: lesson.start_time.toISOString(),
+            end_time: lesson.end_time.toISOString(),
+            teacher_id: uuidStringify(lesson.teacher_id),
+            class_id: uuidStringify(lesson.class_id),
+            subject_id: uuidStringify(lesson.subject_id),
+            semester_id: uuidStringify(lesson.semester_id)
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, `All lessons retrieved successfully.`));
+    } catch (err) {
+        console.error('Error retrieving all lessons', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving lessons. Please try again later.'));
+    }
+};
+
+export const getLessonsByClass = async (req: Request, res: Response) => {
+    try {
+        const classId: string = req.params.classId;
+
+        if (!classId) {
+            return res.status(400).json(createErrorResponse('Invalid classId format.'));
+        }
+
+        const existingClass: classes | null = await prisma.classes.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(classId))
+            }
+        });
+
+        if (!existingClass) {
+            return res.status(404).json(createErrorResponse(`Class with ID ${classId} does not exist.`));
+        }
+
+        const lessons = await prisma.lessons.findMany({
+            where: {
+                class_id: Buffer.from(uuidParse(classId)),
+            },
+            include: {
+                teachers: true,  
+                subjects: true,  
+                semesters: true, 
+            },
+            orderBy: [
+                { date: 'asc' },
+                { start_time: 'asc' }
+            ]
+        });
+
+        const responseData = lessons.map(lesson => ({
+            ...lesson,
+            id: uuidStringify(lesson.id),
+            date: lesson.date.toISOString(),
+            start_time: lesson.start_time.toISOString(),
+            end_time: lesson.end_time.toISOString(),
+            teacher_id: uuidStringify(lesson.teacher_id),
+            class_id: uuidStringify(lesson.class_id),
+            subject_id: uuidStringify(lesson.subject_id),
+            semester_id: uuidStringify(lesson.semester_id),
+            teachers: {
+                ...lesson.teachers,
+                id: uuidStringify(lesson.teachers.id),
+            },
+            subjects: {
+                ...lesson.subjects,
+                id: uuidStringify(lesson.subjects.id),
+            },
+            semesters: {
+                ...lesson.semesters,
+                id: uuidStringify(lesson.semesters.id),
+                school_year_id: uuidStringify(lesson.semesters.school_year_id), 
+            }
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, `Lessons for class ${classId} retrieved successfully.`));
+    } catch (err) {
+        console.error('Error retrieving lessons by class', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving lessons. Please try again later.'));
+    }
+};

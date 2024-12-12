@@ -3,13 +3,16 @@ import Button from "../../Button";
 import { X } from 'lucide-react';
 import Modal from '../../Modal';
 import { getToken } from '../../../utils/UserRoleUtils';
+import '../../../customCSS/customScrollbar.css'
 
 function CreateLessonForm({ onSuccess, onClose, isOpen }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Updated date states
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
   const [teacherId, setTeacherId] = useState('');
   const [classId, setClassId] = useState('');
   const [subjectId, setSubjectId] = useState('');
@@ -67,7 +70,7 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
       }
       const result = await response.json();
       console.log(result.data);
-      setClasses(result.data);
+      setTeachers(result.data);
     } catch(err){
       setError(err.message);
     } finally{
@@ -75,20 +78,65 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
     }
   };
 
+  const fetchSubjects = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('http://localhost:3000/subject', 
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, 
+        }
+      });
+      if(!response.ok){
+        throw new Error(`Error: ${response.status}`);
+      }
+      const result = await response.json();
+      console.log(result.data);
+      setSubjects(result.data);
+    } catch(err){
+      setError(err.message);
+    } finally{
+      setLoading(false);
+    }
+  };
+
+  const fetchSemesters = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('http://localhost:3000/semester/a998be62-b5b3-11ef-bb8f-704a22cb937e', 
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, 
+        }
+      });
+      if(!response.ok){
+        throw new Error(`Error: ${response.status}`);
+      }
+      const result = await response.json();
+      console.log(result.data);
+      setSemesters(result.data);
+    } catch(err){
+      setError(err.message);
+    } finally{
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const loadDropdownData = async () => {
       try {
-        const [teachersData, classesData, subjectsData, semestersData] = await Promise.all([
+        await Promise.all([
           fetchTeachers(),
           fetchClasses(),
           fetchSubjects(),
           fetchSemesters(),
         ]);
-        setTeachers(teachersData);
-        setClasses(classesData);
-        setSubjects(subjectsData);
-        setSemesters(semestersData);
       } catch (err) {
         console.error('Error fetching dropdown data', err);
         setError('Failed to load dropdown data.');
@@ -124,6 +172,11 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
     setLoading(true);
     setError(null);
 
+    if (new Date(startDate) > new Date(endDate)) {
+      setError('Start Date cannot be after End Date.');
+      setLoading(false);
+      return;
+    }
 
     if (
       !startDate ||
@@ -140,7 +193,7 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/lessons', { 
+      const response = await fetch('http://localhost:3000/lesson', { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -172,7 +225,7 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} widthHeightClassname="max-w-lg">
+    <Modal isOpen={isOpen} onClose={onClose} widthHeightClassname="max-w-lg max-h-[48rem]">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-textBg-700">Create Lesson</h2>
         <X size={24} className="hover:cursor-pointer" onClick={onClose}/>
@@ -180,32 +233,31 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
       <form className="flex flex-col gap-6" onSubmit={handleCreate}>
         {error && <p className="text-red-500">{error}</p>}
         
-        <div className='flex gap-8'>
-          <div className="flex flex-col gap-2 w-1/2">
-            <label htmlFor="startDate" className="font-medium">Start Date</label>
-            <input
-              type="date"
-              id="startDate"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
-              className="border p-2 rounded"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2 w-1/2">
-            <label htmlFor="endDate" className="font-medium">End Date</label>
-            <input
-              type="date"
-              id="endDate"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              required
-              className="border p-2 rounded"
-            />
-          </div>
+        {/* Start Date Input */}
+        <div className="flex flex-col gap-2">
+          <label htmlFor="startDate" className="font-medium">Start Date</label>
+          <input
+            type="date"
+            id="startDate"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            required
+            className="border p-2 rounded"
+          />
         </div>
-        
+
+        {/* End Date Input */}
+        <div className="flex flex-col gap-2">
+          <label htmlFor="endDate" className="font-medium">End Date</label>
+          <input
+            type="date"
+            id="endDate"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            required
+            className="border p-2 rounded"
+          />
+        </div>
 
         {/* Teacher Selection */}
         <div className="flex flex-col gap-2">
@@ -217,10 +269,10 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
             required
             className="border p-2 rounded"
           >
-            <option value="">Select Teacher</option>
+            <option value="" hidden disabled>Select Teacher</option>
             {teachers.map((teacher) => (
               <option key={teacher.id} value={teacher.id}>
-                {teacher.name}
+                {teacher.first_name} {teacher.last_name}
               </option>
             ))}
           </select>
@@ -236,10 +288,10 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
             required
             className="border p-2 rounded"
           >
-            <option value="">Select Class</option>
+            <option value="" hidden disabled>Select Class</option>
             {classes.map((cls) => (
               <option key={cls.id} value={cls.id}>
-                {cls.name}
+                {cls.class_names.name}
               </option>
             ))}
           </select>
@@ -255,7 +307,7 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
             required
             className="border p-2 rounded"
           >
-            <option value="">Select Subject</option>
+            <option value="" hidden disabled>Select Subject</option>
             {subjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
                 {subject.name}
@@ -274,10 +326,10 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
             required
             className="border p-2 rounded"
           >
-            <option value="">Select Semester</option>
+            <option value="" hidden disabled>Select Semester</option>
             {semesters.map((semester) => (
               <option key={semester.id} value={semester.id}>
-                {semester.name}
+                {semester.semester}
               </option>
             ))}
           </select>

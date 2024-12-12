@@ -22,8 +22,6 @@ import Calendar from '../components/Calendar';
 import Select from 'react-select'
 import CreateLessonForm from "../components/forms/lessons/CreateLessonForm";
 
-let datesToRender = [];
-
 const today = new Date();
 let baseYear = today.getFullYear();
 if (today.getMonth() < 8) {
@@ -143,6 +141,22 @@ export function Schedule() {
   });
   const [selectedClass, setSelectedClass] = useState(classes[0].id);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false); 
+  const [selectedEvent, setSelectedEvent] = useState(null); 
+  const calendarStartHour = 7;
+  const calendarEndHour = 18;
+  const calendarHeight = (calendarEndHour - calendarStartHour) * 66;
+  const currentTimePosition = getCurrentTimePosition();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [classes2, setClasses2] = useState([]);
+  const token = getToken();
+
+  
+const options2 = classes2.map(cls => ({
+  value: cls.id,
+  label: cls.class_names.name
+}));
 
   useEffect(() => {
     const token = getToken();
@@ -158,8 +172,34 @@ export function Schedule() {
     }
   }, []);
 
-  const [isModalOpen, setIsModalOpen] = useState(false); 
-  const [selectedEvent, setSelectedEvent] = useState(null); 
+  const fetchClasses = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('http://localhost:3000/class', 
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, 
+        }
+      });
+      if(!response.ok){
+        throw new Error(`Error: ${response.status}`);
+      }
+      const result = await response.json();
+      console.log(result.data);
+      setClasses2(result.data);
+    } catch(err){
+      setError(err.message);
+    } finally{
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchClasses();
+  },[])
 
   const handleButtonChangeScheduleType = (value) => {
     setScheduleType(value);
@@ -173,10 +213,6 @@ export function Schedule() {
     setCurrentMonthIndex((prevIndex) => Math.min(prevIndex + 1, displayMonthNames.length - 1));
   };
 
-  const calendarStartHour = 7;
-  const calendarEndHour = 18;
-  const calendarHeight = (calendarEndHour - calendarStartHour) * 66;
-
   const getCurrentWeekDates = () => {
     const startOfWeek = getStartOfWeek(selectedDate || today);
     return Array.from({ length: 7 }, (_, idx) => {
@@ -186,17 +222,16 @@ export function Schedule() {
     });
   };
 
-  const currentTimePosition = getCurrentTimePosition();
 
   const openModal = (event) => {
     if (userRole === UserRoles.Teacher) {
       setSelectedEvent(event);
-      setIsModalOpen(true);
+      setIsAttendanceModalOpen(true);
     }
   };
 
   const closeModal = () => {
-    setIsModalOpen(false);
+    setIsAttendanceModalOpen(false);
     setSelectedEvent(null);
   };
 
@@ -215,7 +250,7 @@ export function Schedule() {
     setSelectedClass(selectedOption ? selectedOption.value : null);
   };
 
-  const selectedOption = options.find(option => option.value === selectedClass) || null;
+  const selectedOption = options2.find(option => option.value === selectedClass) || null;
   
   const openCreateModal = () => setIsCreateModalOpen(true);
   const closeCreateModal = () => setIsCreateModalOpen(false);
@@ -228,7 +263,7 @@ export function Schedule() {
           <Select
             value={selectedOption}
             onChange={handleChange}
-            options={options}
+            options={options2}
             placeholder="Select Class"
             className='w-48 focus:outline-none focus:border-none'
             isClearable
@@ -241,7 +276,7 @@ export function Schedule() {
       <div className="flex flex-col 2xl:flex-row justify-between sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8 gap-8 2xl:gap-16">
         <div className="flex flex-col w-full">
 
-          <Modal isOpen={isModalOpen} onClose={closeModal} widthHeightClassname="max-w-xl max-h-xl">
+          <Modal isOpen={isAttendanceModalOpen} onClose={closeModal} widthHeightClassname="max-w-xl max-h-xl">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-textBg-700">Dodaj Obecność</h2>
               <X size={24} className="hover:cursor-pointer" onClick={closeModal}/>
