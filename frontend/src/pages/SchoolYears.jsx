@@ -8,7 +8,6 @@ import { getToken } from "../utils/UserRoleUtils";
 import { validate as validateUUID } from 'uuid'; 
 import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm";
 import EditSchoolYearForm from "../components/forms/schoolyears/EditSchoolYearForm";
-import { Link } from "react-router-dom";
 
 export function SchoolYears() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -147,11 +146,6 @@ export function SchoolYears() {
         <div className="grid grid-cols-1 gap-4">
           {filteredSchoolYears.length > 0 ? (
             filteredSchoolYears.map(sy => (
-            <Link 
-            to={`/school-years/${sy.id}`} 
-            key={sy.id} 
-            className="block"
-            >
               <SchoolYearAndSemesterCard
                 key={sy.id}
                 id={sy.id}
@@ -160,8 +154,8 @@ export function SchoolYears() {
                 endDate={sy.end_date}
                 onEdit={openEditModal}
                 onDelete={openDeleteModal}
+                link={`/school-years/${sy.id}`} // Przekazanie linku do karty
               />
-            </Link>
             ))
           ) : (
             <p className="text-textBg-900 text-lg">No school years found.</p>

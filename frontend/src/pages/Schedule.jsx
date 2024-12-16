@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import PageTitle from '../components/PageTitle';
 import Button from '../components/Button';
-import { Pen, Plus, Trash, X } from 'lucide-react';
-import Modal from '../components/Modal'; 
+import { Plus, Trash, Pen } from 'lucide-react';
+import Modal from '../components/Modal';
 import {
   dayNames,
   monthNames,
@@ -205,7 +205,7 @@ export function Schedule() {
   };
 
   const openModal = (event) => {
-    if (userRole === UserRoles.Teacher) {
+    if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
       setSelectedEvent(event);
       setIsAttendanceModalOpen(true);
     }
@@ -217,7 +217,7 @@ export function Schedule() {
   };
 
   const handleAttendanceChange = (studentId, status) => {
-    if (userRole === UserRoles.Teacher) {
+    if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
       setSelectedEvent((prevEvent) => {
         const updatedStudents = prevEvent.students.map((student) =>
           student.id === studentId ? { ...student, attendance: status } : student
@@ -259,6 +259,8 @@ export function Schedule() {
       date: new Date(lesson.date),
       textColor: 'text-[#ffffff]',
       students: lesson.students,
+      lessonTopic: lesson.description || '', // Assuming 'description' is the lesson topic
+      isCompleted: lesson.is_completed,
     }));
   };
 
@@ -278,8 +280,78 @@ export function Schedule() {
   };
 
   const events = mapLessonsToEvents();
-  console.log(lessons)
-  console.log(events);
+
+  const [updateError, setUpdateError] = useState(null);
+  const [updating, setUpdating] = useState(false);
+
+  const handleLessonUpdate = async ({ lessonId, lessonTopic }) => {
+    setUpdating(true);
+    setUpdateError(null);
+    try {
+      const response = await fetch(`http://localhost:3000/lesson/${lessonId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          description: lessonTopic,
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error: ${response.status}`);
+      }
+  
+      const updatedLesson = await response.json();
+
+      setLessons((prevLessons) =>
+        prevLessons.map((lesson) =>
+          lesson.id === lessonId ? { ...lesson, ...updatedLesson.data } : lesson
+        )
+      );
+    } catch (err) {
+      setUpdateError(err.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleSaveAttendance = async ({ lessonId, attendances }) => {
+    setUpdating(true);
+    setUpdateError(null);
+    try {
+      const response = await fetch('http://localhost:3000/attendance', { // Poprawny URL
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          lessonId,
+          attendances,
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log('Attendances saved successfully:', data);
+  
+      // Aktualizacja stanu lessons
+      fetchLessons(selectedClass);
+  
+      closeModal(); // Zamknięcie modal po zapisaniu
+    } catch (err) {
+      setUpdateError(err.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   if (loading) {
     return <div className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">Loading classes...</div>;
@@ -298,7 +370,7 @@ export function Schedule() {
             value={selectedOption}
             onChange={handleChange}
             options={options}
-            placeholder="Select Class"
+            placeholder="Select class"
             className='w-48 focus:outline-none focus:border-none'
             isClearable
             isSearchable
@@ -315,7 +387,15 @@ export function Schedule() {
             onClose={closeModal}
             selectedEvent={selectedEvent}
             userRole={userRole}
-            handleAttendanceChange={handleAttendanceChange}
+            handleSaveAttendance={handleSaveAttendance}
+          />
+
+          <ConfirmDeletionForm
+            isOpen={isDeleteModalOpen}
+            onClose={closeDeleteModal}
+            onConfirm={handleConfirmDelete}
+            title="Confirm Deletion"
+            description="Are you sure you want to delete this lesson? You can choose to delete only this lesson or all lessons for this class and subject."
           />
 
           <div className="flex items-center justify-between mb-8 gap-1">
@@ -400,7 +480,7 @@ export function Schedule() {
                         return (
                           <div
                             key={eventIdx}
-                            className={`absolute right-[2px] p-2 rounded-sm ${event.bgColor} ${event.textColor} ${userRole === UserRoles.Teacher ? 'cursor-pointer' : ''}`}
+                            className={`absolute right-[2px] p-2 rounded-sm ${event.bgColor} ${event.textColor} ${userRole === UserRoles.Teacher || userRole === UserRoles.Administrator ? 'cursor-pointer' : ''}`}
                             style={{ top: `${top + 2}px`, height: `${height - 5}px`, width: 'calc(100% - 76px)' }}
                             onClick={() => openModal(event)} 
                           >
@@ -410,6 +490,16 @@ export function Schedule() {
                                 <div className="text-sm">
                                   {event.startTime} - {event.endTime}
                                 </div>
+                                {event.lessonTopic && (
+                                  <div className="text-xs mt-1">
+                                    <strong>Topic:</strong> {event.lessonTopic}
+                                  </div>
+                                )}
+                                {event.isCompleted && (
+                                  <div className="text-xs mt-1 text-green-500">
+                                    Lesson completed
+                                  </div>
+                                )}
                               </div>
                               <div className='flex items-center'>
                                 <Button 
@@ -418,6 +508,7 @@ export function Schedule() {
                                   size="xs"
                                   onClick={(e) => {
                                     e.stopPropagation(); 
+                                    // Możesz dodać logikę edycji tematu lekcji tutaj
                                   }}
                                 />
                                 <Button 
@@ -520,6 +611,16 @@ export function Schedule() {
                                 <div className="text-sm">
                                   {event.startTime} - {event.endTime}
                                 </div>
+                                {event.lessonTopic && (
+                                  <div className="text-xs mt-1">
+                                    <strong>Topic:</strong> {event.lessonTopic}
+                                  </div>
+                                )}
+                                {event.isCompleted && (
+                                  <div className="text-xs mt-1 text-green-500">
+                                    Lesson completed
+                                  </div>
+                                )}
                               </div>
                             );
                           })}
@@ -552,14 +653,8 @@ export function Schedule() {
         onClose={closeCreateModal}
       />
 
-      <ConfirmDeletionForm
-        isOpen={isDeleteModalOpen}
-        onClose={closeDeleteModal}
-        onConfirm={handleConfirmDelete}
-        title="Confirm Deletion"
-        description="Are you sure you want to delete this lesson? You can choose to delete only this lesson or all lessons for this class and subject."
-      />
-
+      {updating && <div className="mt-4 text-blue-500">Updating lesson...</div>}
+      {updateError && <div className="mt-4 text-red-500">Error: {updateError}</div>}
     </main>
   );
 } 

@@ -113,6 +113,7 @@ export default function App() {
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="School Years" path="/school-years" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Messages" path="/messages" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Subjects" path="/subjects" />
+                  <SidebarItem icon={<LayoutDashboard size={20} />} text="Homework" path="/homework" />
                 </>
               )}
               
@@ -153,6 +154,8 @@ export default function App() {
                     <Route path="/school-years/:id" element={<SchoolYearsDetails />} />
                     <Route path="/messages" element={<Messages />} />
                     <Route path="/subjects" element={<Subjects />} />
+                    <Route path="/homework" element={<Homework />} />
+                    <Route path="/homework/:id" element={<HomeworkDetail />} />
                   </>
                 )}
               </>
