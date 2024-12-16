@@ -118,6 +118,46 @@ export const getGrades = async (req: Request, res: Response) => {
     }
 };
 
+export const getThreeLatestGrades = async (req: Request, res: Response) => {
+    try {
+        const studentId: string = req.params.studentId;
+
+        const existingStudent: students | null = await prisma.students.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(studentId))
+            }
+        });
+
+        if (!existingStudent) {
+            return res.status(404).json(createErrorResponse(`Student does not exist.`));
+        }
+
+        const grades = await prisma.grades_gradebook.findMany({
+            where: {
+                student_id: Buffer.from(uuidParse(studentId))
+            },
+            orderBy: {
+                date_given: 'desc'
+            },
+            take: 3
+        });
+
+        const responseData = grades.map(grade => ({
+            ...grade,
+            id: uuidStringify(grade.id),
+            date_given: grade.date_given.toISOString(),
+            student_id: uuidStringify(grade.student_id),
+            subject_id: uuidStringify(grade.subject_id),
+            teacher_id: uuidStringify(grade.teacher_id)
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, 'Three latest grades retrieved successfully.'));
+    } catch (err) {
+        console.error('Error retrieving three latest grades', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving three latest grades. Please try again later.'));
+    }
+};
+
 export const updateGrade = async (req: Request, res: Response) => {
     try {
         const gradeId: string = req.params.gradeId;

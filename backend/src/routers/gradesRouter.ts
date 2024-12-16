@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { validateCreateGrade, validateGetGrades, validateUpdateGrade, validateDeleteGrade } from '../validations/gradesValidation.js';
-import { createGrade, getGrades, updateGrade, deleteGrade } from '../handlers/grades.js';
+import { validateCreateGrade, validateGetGrades, validateGetThreeLatestGrades, validateUpdateGrade, validateDeleteGrade } from '../validations/gradesValidation.js';
+import { createGrade, getGrades, getThreeLatestGrades, updateGrade, deleteGrade } from '../handlers/grades.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { UserType } from '../enums/userTypes.js';
 
@@ -21,6 +21,14 @@ gradesRouter.get('/:studentId/:subjectId',
     validateGetGrades(),
     handleInputErrors,
     getGrades
+)
+
+gradesRouter.get('/:studentId',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
+    validateGetThreeLatestGrades(),
+    handleInputErrors,
+    getThreeLatestGrades
 )
 
 gradesRouter.patch('/:gradeId',

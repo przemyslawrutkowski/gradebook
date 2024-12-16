@@ -32,9 +32,13 @@ export const validateGetGrades = () => [
     createNotEmptyValidation('subjectId', 'param')
 ];
 
+export const validateGetThreeLatestGrades = () => [
+    createNotEmptyValidation('studentId', 'param')
+];
+
 export const validateUpdateGrade = () => [
     createNotEmptyValidation('gradeId', 'param'),
-    atLeastOneFieldValidation(),
+    atLeastOneFieldValidation()
 ];
 
 export const validateDeleteGrade = () => [
