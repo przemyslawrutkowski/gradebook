@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { UserType } from '../enums/userTypes.js';
-import { getAllStudents, getStudentById } from '../handlers/students.js';
+import { getStudents, getStudentById } from '../handlers/students.js';
 
 const studentsRouter = Router();
 
 studentsRouter.get('',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
-    getAllStudents
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
+    getStudents
 );
 
 studentsRouter.get('/:studentId',

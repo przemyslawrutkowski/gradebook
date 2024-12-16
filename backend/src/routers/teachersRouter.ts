@@ -1,21 +1,14 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { UserType } from '../enums/userTypes.js';
-import { getAllStudents, getStudentById } from '../handlers/students.js';
-import { getAllTeachers } from '../handlers/teachers.js';
+import { getTeachers } from '../handlers/teachers.js';
 
 const teachersRouter = Router();
 
 teachersRouter.get('',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher, UserType.Student, UserType.Parent]),
-    getAllTeachers
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
+    getTeachers
 );
-
-// teachersRouter.get('/:studentId',
-//     authenticate,
-//     authorize([UserType.Administrator, UserType.Teacher]),
-
-// );
 
 export default teachersRouter;

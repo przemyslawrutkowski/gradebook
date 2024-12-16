@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import http from 'http';
 import { Request, Response, NextFunction } from 'express';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import authRouter from './routers/authRouter';
 import studentsParentsRouter from './routers/studentsParentsRouter';
 import classesRouter from './routers/classesRouter';
@@ -18,12 +18,15 @@ import classNamesRouter from './routers/classNamesRouter';
 import { messagesHandler } from './handlers/messages';
 import parentsRouter from './routers/parentsRouter';
 import teachersRouter from './routers/teachersRouter';
+import administratorsRouter from './routers/administratorsRouter';
 import messagesRouter from './routers/messagesRouter';
-import homeworksRouter from './routers/homeworksRouter';
+import jwt from 'jsonwebtoken';
+import { SECRET_KEY } from './modules/validateEnv';
+import AuthUser from './interfaces/authUser';
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { 
+const io = new Server(server, {
     cors: {
         origin: 'http://localhost:5173',
         methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -34,8 +37,9 @@ const io = new Server(server, {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 app.use(cors({
-    origin: 'http://localhost:5173', 
+    origin: 'http://localhost:5173',
     credentials: true,
     methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -44,8 +48,10 @@ app.use(cors({
 app.use('/auth', authRouter);
 app.use('/student-parent', studentsParentsRouter);
 app.use('/class', classesRouter);
-app.use('/student', studentsRouter);
+app.use('/administrator', administratorsRouter);
+app.use('/teacher', teachersRouter);
 app.use('/parent', parentsRouter);
+app.use('/student', studentsRouter);
 app.use('/lesson', lessonsRouter);
 app.use('/subject', subjectsRouter);
 app.use('/attendance', attendancesRouter);
@@ -53,13 +59,36 @@ app.use('/user-type', userTypesRouter);
 app.use('/school-year', schoolYearsRouter);
 app.use('/semester', semestersRouter);
 app.use('/grade', gradesRouter);
-app.use('/teacher', teachersRouter);
 app.use('/class-name', classNamesRouter)
 app.use('/message', messagesRouter);
-app.use('/homework', homeworksRouter);
 
-io.on('connection', (socket) => {
+io.use((socket: Socket, next) => {
+    const token = socket.handshake.auth.token;
+
+    if (!token) {
+        console.error('Authentication error: No token provided');
+        return next(new Error('Authentication error: No token provided'));
+    }
+
+    try {
+        const payload = jwt.verify(token, SECRET_KEY) as AuthUser;
+        socket.user = payload;
+        next();
+    } catch (err) {
+        console.error('Authentication error:', err);
+        next(new Error('Authentication error'));
+    }
+});
+
+io.on('connection', (socket: Socket) => {
+    const user = socket.user;
+    console.log(`User connected: ${user.id}, Socket ID: ${socket.id}`);
+
     messagesHandler(io, socket);
+
+    socket.on('disconnect', () => {
+        console.log(`User disconnected: ${user.id}, Socket ID: ${socket.id}`);
+    });
 });
 
 app.use(function (err: Error, req: Request, res: Response, next: NextFunction) {

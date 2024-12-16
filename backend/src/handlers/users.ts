@@ -65,6 +65,7 @@ export const signIn = async (req: Request, res: Response) => {
         }
 
         const authUser: AuthUser = {
+            id: uuidStringify(existingUser.id),
             email: existingUser.email,
             firstName: existingUser.first_name,
             lastName: existingUser.last_name,
@@ -214,6 +215,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
         }
 
         const authUser: AuthUser = {
+            id: uuidStringify(existingUser.id),
             email: existingUser.email,
             firstName: existingUser.first_name,
             lastName: existingUser.last_name,
