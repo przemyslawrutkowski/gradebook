@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { validateCreateLessons, validateUpdateLesson, validateGetAndDeleteLessons } from '../validations/lessonsValidation.js';
-import { createLessons, getLessons, updateLesson, deleteLessons, getAllLessons, getLessonsByClass } from '../handlers/lessons.js';
+import { createLessons, getLessons, updateLesson, deleteLessons, getAllLessons, getLessonsByClass, deleteSingleLesson } from '../handlers/lessons.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { UserType } from '../enums/userTypes.js';
 
@@ -45,10 +45,16 @@ lessonsRouter.patch('/:lessonId',
 
 lessonsRouter.delete('/:classId/:subjectId',
     authenticate,
-    authorize([UserType.Administrator]),
+    authorize([UserType.Administrator, UserType.Teacher]),
     validateGetAndDeleteLessons(),
     handleInputErrors,
     deleteLessons
+)
+
+lessonsRouter.delete('/:lessonId',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher]),
+    deleteSingleLesson
 )
 
 export default lessonsRouter;

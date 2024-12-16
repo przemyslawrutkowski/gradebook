@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PageTitle from '../components/PageTitle';
 import Button from '../components/Button';
-import { Plus, X } from 'lucide-react';
+import { Pen, Plus, Trash, X } from 'lucide-react';
 import Modal from '../components/Modal'; 
 import {
   dayNames,
@@ -19,116 +19,16 @@ import { getToken, getUserRole, decodeToken } from '../utils/UserRoleUtils';
 import UserRoles from '../data/userRoles';
 import '../customCSS/customScrollbar.css';
 import Calendar from '../components/Calendar';
-import Select from 'react-select'
+import Select from 'react-select';
 import CreateLessonForm from "../components/forms/lessons/CreateLessonForm";
+import AddAttendanceForm from '../components/forms/attendance/AddAttendanceForm';
+import ConfirmDeletionForm from '../components/forms/lessons/ConfirmDeleteLessonForm';
 
 const today = new Date();
 let baseYear = today.getFullYear();
 if (today.getMonth() < 8) {
   baseYear -= 1;
 }
-
-const classes = [
-  { id: 1, name: 'Klasa 1A' },
-  { id: 2, name: 'Klasa 2B' },
-  { id: 3, name: 'Klasa 3C' },
-];
-
-const options = classes.map(cls => ({
-  value: cls.id,
-  label: cls.name
-}));
-
-const eventsData = [
-  {
-    id: 1,
-    title: 'Biology',
-    classId: 1,
-    startTime: '10:00 AM',
-    endTime: '01:00 PM',
-    bgColor: 'bg-[#1A99EE]',
-    date: new Date(baseYear, 8, 1),
-    textColor: 'text-[#ffffff]',
-    students: [
-      { id: 1, name: 'Alice Johnson', attendance: 'Late' },
-      { id: 2, name: 'Bob Brown', attendance: 'Present' },
-      { id: 3, name: 'Charlie Smith', attendance: 'Absent' },
-      { id: 4, name: 'Diana Miller', attendance: 'Late' },
-      { id: 5, name: 'Eve Davis', attendance: 'Present' },
-      { id: 6, name: 'Frank Wilson', attendance: 'Absent' },
-      { id: 7, name: 'Grace Lee', attendance: 'Present' },
-      { id: 8, name: 'Henry Clark', attendance: 'Late' },
-      { id: 9, name: 'Ivy Harris', attendance: 'Absent' },
-      { id: 10, name: 'Jack Martinez', attendance: 'Present' },
-      { id: 11, name: 'Kara White', attendance: 'Late' },
-      { id: 12, name: 'Leo Walker', attendance: 'Present' },
-      { id: 13, name: 'Mia Young', attendance: 'Absent' },
-      { id: 14, name: 'Noah King', attendance: 'Present' },
-      { id: 15, name: 'Olivia Scott', attendance: 'Late' },
-      { id: 16, name: 'Paul Green', attendance: 'Present' },
-      { id: 17, name: 'Quincy Adams', attendance: 'Absent' },
-      { id: 18, name: 'Rachel Turner', attendance: 'Present' },
-      { id: 19, name: 'Steve Allen', attendance: 'Late' },
-      { id: 20, name: 'Tina Campbell', attendance: 'Absent' }
-    ],
-  },
-  {
-    id: 2,
-    title: 'Music',
-    classId: 1,
-    startTime: '02:00 PM',
-    endTime: '04:00 PM',
-    bgColor: 'bg-[#EE1A99]',
-    date: new Date(baseYear, 8, 2),
-    textColor: 'text-[#ffffff]',
-    students: [
-      { id: 5, name: 'Charlie Davis', attendance: 'Absent' },
-      { id: 6, name: 'Diana Evans', attendance: 'Present' },
-    ],
-  },
-  {
-    id: 3,
-    title: 'Biology',
-    classId: 1,
-    startTime: '09:00 AM',
-    endTime: '10:00 AM',
-    bgColor: 'bg-[#1A99EE]',
-    date: new Date(baseYear, 8, 3),
-    textColor: 'text-[#ffffff]',
-    students: [
-      { id: 5, name: 'Charlie Davis', attendance: 'Absent' },
-      { id: 6, name: 'Diana Evans', attendance: 'Present' },
-    ],
-  },
-  {
-    id: 4,
-    title: 'Physics',
-    classId: 1,
-    startTime: '10:00 AM',
-    endTime: '12:30 PM',
-    bgColor: 'bg-[#F5C747]',
-    date: new Date(baseYear, 8, 4),
-    textColor: 'text-[#ffffff]',
-    students: [
-      { id: 5, name: 'Charlie Davis', attendance: 'Absent' },
-      { id: 6, name: 'Diana Evans', attendance: 'Present' },
-    ],
-  },
-  {
-    id: 5,
-    title: 'Chemistry',
-    classId: 1,
-    startTime: '01:00 PM',
-    endTime: '04:00 PM',
-    bgColor: 'bg-[#f1f9fe]',
-    date: new Date(baseYear, 8, 5),
-    textColor: 'text-[#0f7bc4]',
-    students: [
-      { id: 5, name: 'Charlie Davis', attendance: 'Absent' },
-      { id: 6, name: 'Diana Evans', attendance: 'Present' },
-    ],
-  },
-];
 
 export function Schedule() {
   const [userRole, setUserRole] = useState(null); 
@@ -139,7 +39,7 @@ export function Schedule() {
     const initialMonthIndex = displayMonthNames.indexOf(currentMonthName);
     return initialMonthIndex !== -1 ? initialMonthIndex : 0;
   });
-  const [selectedClass, setSelectedClass] = useState(classes[0].id);
+  const [selectedClass, setSelectedClass] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false); 
   const [selectedEvent, setSelectedEvent] = useState(null); 
@@ -149,14 +49,17 @@ export function Schedule() {
   const currentTimePosition = getCurrentTimePosition();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [classes2, setClasses2] = useState([]);
+  const [fetchedClasses, setFetchedClasses] = useState([]);
+  const [lessons, setLessons] = useState([]);
+  const [lessonToDelete, setLessonToDelete] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletionType, setDeletionType] = useState('single');
   const token = getToken();
-
   
-const options2 = classes2.map(cls => ({
-  value: cls.id,
-  label: cls.class_names.name
-}));
+  const options = fetchedClasses.map(cls => ({
+    value: cls.id,
+    label: cls.class_names.name
+  }));
 
   useEffect(() => {
     const token = getToken();
@@ -189,7 +92,10 @@ const options2 = classes2.map(cls => ({
       }
       const result = await response.json();
       console.log(result.data);
-      setClasses2(result.data);
+      setFetchedClasses(result.data);
+      if (result.data.length > 0) {
+        setSelectedClass(result.data[0].id);
+      }
     } catch(err){
       setError(err.message);
     } finally{
@@ -197,9 +103,85 @@ const options2 = classes2.map(cls => ({
     }
   };
 
+  const fetchLessons = async (classId) => {
+    if (!classId) {
+      setLessons([]);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`http://localhost:3000/lesson/${classId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      setLessons(result.data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmDelete = async (type) => {
+    if (!lessonToDelete) return;
+  
+    try {
+      let response;
+      if (type === 'single') {
+        response = await fetch(`http://localhost:3000/lesson/${lessonToDelete.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+      } else if (type === 'all') {
+        response = await fetch(`http://localhost:3000/lesson/${lessonToDelete.classId}/${lessonToDelete.subjectId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      // Update the lessons state
+      if (type === 'single') {
+        setLessons(prevLessons => prevLessons.filter(lesson => lesson.id !== lessonToDelete.id));
+      } else if (type === 'all') {
+        setLessons(prevLessons => prevLessons.filter(lesson => !(lesson.class_id === lessonToDelete.classId && lesson.subject_id === lessonToDelete.subjectId)));
+      }
+
+      closeDeleteModal();
+    } catch (err) {
+      setError(err.message);
+      closeDeleteModal();
+    }
+  };
+
   useEffect(() => {
     fetchClasses();
-  },[])
+  },[]);
+
+  useEffect(() => {
+    fetchLessons(selectedClass);
+  }, [selectedClass]);
 
   const handleButtonChangeScheduleType = (value) => {
     setScheduleType(value);
@@ -221,7 +203,6 @@ const options2 = classes2.map(cls => ({
       return date;
     });
   };
-
 
   const openModal = (event) => {
     if (userRole === UserRoles.Teacher) {
@@ -248,22 +229,75 @@ const options2 = classes2.map(cls => ({
 
   const handleChange = (selectedOption) => {
     setSelectedClass(selectedOption ? selectedOption.value : null);
+    setSelectedDate(today);
   };
 
-  const selectedOption = options2.find(option => option.value === selectedClass) || null;
+  const selectedOption = options.find(option => option.value === selectedClass) || null;
   
   const openCreateModal = () => setIsCreateModalOpen(true);
   const closeCreateModal = () => setIsCreateModalOpen(false);
 
+  const openDeleteModal = (lesson) => {
+    setLessonToDelete(lesson);
+    setIsDeleteModalOpen(true);
+  };
+  
+  const closeDeleteModal = () => {
+    setLessonToDelete(null);
+    setIsDeleteModalOpen(false);
+  };
+
+  const mapLessonsToEvents = () => {
+    return lessons.map((lesson) => ({
+      id: lesson.id,
+      title: lesson.subjects.name, 
+      classId: lesson.class_id,
+      subjectId: lesson.subject_id, // Ensure subjectId is included for deletion
+      startTime: new Date(lesson.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      endTime: new Date(lesson.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      bgColor: getBackgroundColor(lesson.subjects.name),
+      date: new Date(lesson.date),
+      textColor: 'text-[#ffffff]',
+      students: lesson.students,
+    }));
+  };
+
+  const getBackgroundColor = (subjectName) => {
+    switch (subjectName) {
+      case 'Biology':
+        return 'bg-[#1A99EE]';
+      case 'Music':
+        return 'bg-[#EE1A99]';
+      case 'Physics':
+        return 'bg-[#F5C747]';
+      case 'Chemistry':
+        return 'bg-[#f1f9fe]';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  const events = mapLessonsToEvents();
+  console.log(lessons)
+  console.log(events);
+
+  if (loading) {
+    return <div className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">Loading classes...</div>;
+  }
+
+  if (error) {
+    return <div className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">Error: {error}</div>;
+  }
+
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
       <PageTitle text="Schedule"/>
-      {userRole === UserRoles.Teacher || userRole === UserRoles.Administrator && (
+      {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
         <div className='flex items-center justify-between mb-6'>
           <Select
             value={selectedOption}
             onChange={handleChange}
-            options={options2}
+            options={options}
             placeholder="Select Class"
             className='w-48 focus:outline-none focus:border-none'
             isClearable
@@ -276,68 +310,13 @@ const options2 = classes2.map(cls => ({
       <div className="flex flex-col 2xl:flex-row justify-between sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8 gap-8 2xl:gap-16">
         <div className="flex flex-col w-full">
 
-          <Modal isOpen={isAttendanceModalOpen} onClose={closeModal} widthHeightClassname="max-w-xl max-h-xl">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-textBg-700">Dodaj Obecność</h2>
-              <X size={24} className="hover:cursor-pointer" onClick={closeModal}/>
-            </div>
-            {selectedEvent && (
-              <div>
-
-                <div className='w-full flex mb-2'>
-                  <div className='w-2/5'>
-                    <p className='text-textBg-700 font-medium'>Imię i Nazwisko</p>
-                  </div>
-                  <div className='flex justify-evenly w-[calc(60%-18px)]'>
-                    <p className='text-textBg-700 font-medium'>Obecny</p>
-                    <p className='text-textBg-700 font-medium'>Spóźniony</p>
-                    <p className='text-textBg-700 font-medium'>Nieobecny</p>
-                  </div>
-                </div>
-
-                <div className="max-h-96 overflow-y-auto custom-scrollbar">
-                  {selectedEvent.students.map((student) => (
-                    <div className='w-full flex mb-2' key={student.id}>
-                      <div className='w-2/5'>
-                        <p className='text-base text-textBg-500'>{student.name}</p>
-                      </div>
-                      <div className='flex items-center justify-evenly w-3/5'> 
-                        <input
-                          type="radio"
-                          name={`attendance-${student.id}`}
-                          value="Present"
-                          checked={student.attendance === 'Present'}
-                          onChange={(e) => handleAttendanceChange(student.id, e.target.value)}
-                          className=" h-4 w-4 accent-blueAccent-500 hover:cursor-pointer"
-                        />
-                        <input
-                          type="radio"
-                          name={`attendance-${student.id}`}
-                          value="Late"
-                          checked={student.attendance === 'Late'}
-                          onChange={(e) => handleAttendanceChange(student.id, e.target.value)}
-                          className="form-radio h-4 w-4 accent-blueAccent-500 hover:cursor-pointer"
-                        />
-                        <input
-                          type="radio"
-                          name={`attendance-${student.id}`}
-                          value="Absent"
-                          checked={student.attendance === 'Absent'}
-                          onChange={(e) => handleAttendanceChange(student.id, e.target.value)}
-                          className="form-radio h-4 w-4 accent-blueAccent-500 hover:cursor-pointer"
-                        />                
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="mt-6 flex justify-end gap-4">
-                  <Button text="Zamknij" type="secondary" onClick={closeModal} />
-                  <Button text="Dodaj" type="primary"  />
-                </div>
-              </div>
-            )}
-          </Modal>
+          <AddAttendanceForm
+            isOpen={isAttendanceModalOpen}
+            onClose={closeModal}
+            selectedEvent={selectedEvent}
+            userRole={userRole}
+            handleAttendanceChange={handleAttendanceChange}
+          />
 
           <div className="flex items-center justify-between mb-8 gap-1">
               <p className="text-textBg-700 w-96 font-bold text-base flex flex-col sm:flex-row">
@@ -410,31 +389,53 @@ const options2 = classes2.map(cls => ({
                         )}
                       </div>
 
-                      {eventsData
-                        .filter((event) => 
-                          event.classId === Number(selectedClass) &&
-                          areDatesEqual(event.date, selectedDate)
-                        )
-                        .map((event, eventIdx) => {
-                          const eventStart = convertTimeToHours(event.startTime);
-                          const eventEnd = convertTimeToHours(event.endTime);
-                          const top = (eventStart - calendarStartHour) * 66;
-                          const height = (eventEnd - eventStart) * 66;
+                      {events
+                      .filter((event) => areDatesEqual(event.date, selectedDate))
+                      .map((event, eventIdx) => {
+                        const eventStart = convertTimeToHours(event.startTime);
+                        const eventEnd = convertTimeToHours(event.endTime);
+                        const top = (eventStart - calendarStartHour) * 66;
+                        const height = (eventEnd - eventStart) * 66;
 
-                          return (
-                            <div
-                              key={eventIdx}
-                              className={`absolute right-[2px] p-2 rounded-sm ${event.bgColor} ${event.textColor} ${userRole === UserRoles.Teacher ? 'cursor-pointer' : ''}`}
-                              style={{ top: `${top + 2}px`, height: `${height - 5}px`, width: 'calc(100% - 76px)' }}
-                              onClick={() => openModal(event)} 
-                            >
-                              <div className="text-sm font-bold mb-1">{event.title}</div>
-                              <div className="text-sm">
-                                {event.startTime} - {event.endTime}
+                        return (
+                          <div
+                            key={eventIdx}
+                            className={`absolute right-[2px] p-2 rounded-sm ${event.bgColor} ${event.textColor} ${userRole === UserRoles.Teacher ? 'cursor-pointer' : ''}`}
+                            style={{ top: `${top + 2}px`, height: `${height - 5}px`, width: 'calc(100% - 76px)' }}
+                            onClick={() => openModal(event)} 
+                          >
+                            <div className='flex justify-between'>
+                              <div>
+                                <div className="text-sm font-bold mb-1">{event.title}</div>
+                                <div className="text-sm">
+                                  {event.startTime} - {event.endTime}
+                                </div>
+                              </div>
+                              <div className='flex items-center'>
+                                <Button 
+                                  type="link" 
+                                  icon={<Pen size={14} color='#fff' strokeWidth={4}/>} 
+                                  size="xs"
+                                  onClick={(e) => {
+                                    e.stopPropagation(); 
+                                  }}
+                                />
+                                <Button 
+                                  type="link" 
+                                  icon={<Trash size={14} color='#fff' strokeWidth={4}/>} 
+                                  size="xs"
+                                  className="z-10" 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openDeleteModal(event);
+                                  }}
+                                />
                               </div>
                             </div>
-                          );
-                        })}
+                            
+                          </div>
+                        );
+                      })}
 
                       {currentTimePosition < calendarHeight && (
                         <div
@@ -488,9 +489,8 @@ const options2 = classes2.map(cls => ({
                           )}
                         </div>
 
-                        {eventsData
+                        {events
                           .filter((event) => 
-                            event.classId === Number(selectedClass) &&
                             getCurrentWeekDates().some((date) => areDatesEqual(date, event.date))
                           )
                           .map((event, eventIdx) => {
@@ -517,7 +517,7 @@ const options2 = classes2.map(cls => ({
                                 onClick={() => openModal(event)}
                               >
                                 <div className="text-sm font-bold mb-1">{event.title}</div>
-                                <div className="text-xs">
+                                <div className="text-sm">
                                   {event.startTime} - {event.endTime}
                                 </div>
                               </div>
@@ -547,10 +547,21 @@ const options2 = classes2.map(cls => ({
         isOpen={isCreateModalOpen} 
         onSuccess={() => {
           closeCreateModal();
+          fetchLessons(selectedClass)
         }}
         onClose={closeCreateModal}
       />
 
+      <ConfirmDeletionForm
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title="Confirm Deletion"
+        description="Are you sure you want to delete this lesson? You can choose to delete only this lesson or all lessons for this class and subject."
+      />
+
     </main>
   );
-}
+} 
+
+export default Schedule;

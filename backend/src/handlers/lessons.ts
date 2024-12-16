@@ -300,6 +300,9 @@ export const getLessonsByClass = async (req: Request, res: Response) => {
         const existingClass: classes | null = await prisma.classes.findUnique({
             where: {
                 id: Buffer.from(uuidParse(classId))
+            },
+            include: {
+                students: true
             }
         });
 
@@ -315,6 +318,11 @@ export const getLessonsByClass = async (req: Request, res: Response) => {
                 teachers: true,  
                 subjects: true,  
                 semesters: true, 
+                classes: {
+                    include: {
+                        students: true
+                    }
+                }
             },
             orderBy: [
                 { date: 'asc' },
@@ -344,7 +352,12 @@ export const getLessonsByClass = async (req: Request, res: Response) => {
                 ...lesson.semesters,
                 id: uuidStringify(lesson.semesters.id),
                 school_year_id: uuidStringify(lesson.semesters.school_year_id), 
-            }
+            },
+            students: lesson.classes.students.map(student => ({
+                ...student,
+                id: uuidStringify(student.id),
+                class_id: student.class_id ? uuidStringify(student.class_id) : null,
+            })), 
         }));
 
         return res.status(200).json(createSuccessResponse(responseData, `Lessons for class ${classId} retrieved successfully.`));
@@ -352,4 +365,31 @@ export const getLessonsByClass = async (req: Request, res: Response) => {
         console.error('Error retrieving lessons by class', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving lessons. Please try again later.'));
     }
+};
+
+export const deleteSingleLesson = async (req: Request, res: Response) => {
+  try {
+    const lessonId: string = req.params.lessonId;
+
+    const existingLesson = await prisma.lessons.findUnique({
+      where: {
+        id: Buffer.from(uuidParse(lessonId))
+      }
+    });
+
+    if (!existingLesson) {
+      return res.status(404).json(createErrorResponse(`Lesson does not exist.`));
+    }
+
+    await prisma.lessons.delete({
+      where: {
+        id: Buffer.from(uuidParse(lessonId))
+      }
+    });
+
+    return res.status(200).json(createSuccessResponse(null, `Lesson deleted successfully.`));
+  } catch (err) {
+    console.error('Error deleting lesson', err);
+    return res.status(500).json(createErrorResponse('An unexpected error occurred while deleting the lesson. Please try again later.'));
+  }
 };
