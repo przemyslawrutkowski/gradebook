@@ -31,6 +31,10 @@ export const createAttendances = async (req: Request, res: Response) => {
             if (!existingStudent) {
                 return res.status(404).json(createErrorResponse(`Student with ID ${attendance.studentId} does not exist.`));
             }
+
+            if (!attendance.wasPresent && attendance.wasLate) {
+                return res.status(422).json(createErrorResponse(`Invalid attendance status: cannot be marked as late if student with ID '${attendance.studentId}' is absent'.`));
+            }
         }
 
         const existingAttendance: attendances | null = await prisma.attendances.findFirst({
@@ -48,6 +52,7 @@ export const createAttendances = async (req: Request, res: Response) => {
                 return {
                     date_time: new Date(),
                     was_present: attendance.wasPresent,
+                    was_late: attendance.wasLate,
                     student_id: Buffer.from(uuidParse(attendance.studentId)),
                     lesson_id: Buffer.from(uuidParse(lessonId))
                 };
@@ -100,6 +105,11 @@ export const updateAttendance = async (req: Request, res: Response) => {
     try {
         const attendanceId: string = req.params.attendanceId;
         const wasPresent: boolean = req.body.wasPresent;
+        const wasLate: boolean = req.body.wasLate;
+
+        if (!wasPresent && wasLate) {
+            return res.status(422).json(createErrorResponse('Invalid attendance status: cannot be marked as late if student is absent'));
+        }
 
         const attendance = await prisma.attendances.findUnique({
             where: {
@@ -117,7 +127,8 @@ export const updateAttendance = async (req: Request, res: Response) => {
 
             },
             data: {
-                was_present: wasPresent
+                was_present: wasPresent,
+                was_late: wasLate
             }
         });
 

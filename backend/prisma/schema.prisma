@@ -11,6 +11,7 @@ model attendances {
   id          Bytes    @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   date_time   DateTime @db.Timestamp(0)
   was_present Boolean  @default(dbgenerated("b'0'")) @db.Bit(1)
+  was_late    Boolean  @default(dbgenerated("b'0'")) @db.Bit(1)
   student_id  Bytes    @db.Binary(16)
   lesson_id   Bytes    @db.Binary(16)
   students    students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attendances_ibfk_1")

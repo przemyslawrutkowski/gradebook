@@ -4,6 +4,7 @@ export const validateCreateAttendances = () => [
     createArrayValidation('attendances'),
     createNotEmptyValidation('lessonId'),
     createBooleanValidation('attendances.*.wasPresent'),
+    createBooleanValidation('attendances.*.wasLate'),
     createNotEmptyValidation('attendances.*.studentId'),
 ];
 
@@ -13,5 +14,6 @@ export const validateGetAttendances = () => [
 
 export const validateUpdateAttendance = () => [
     createNotEmptyValidation('attendanceId', 'param'),
-    createBooleanValidation('wasPresent')
+    createBooleanValidation('wasPresent'),
+    createBooleanValidation('wasLate')
 ];
