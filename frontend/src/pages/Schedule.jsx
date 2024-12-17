@@ -374,14 +374,16 @@ export function Schedule() {
       <div className="flex flex-col 2xl:flex-row justify-between sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8 gap-8 2xl:gap-16">
         <div className="flex flex-col w-full">
 
-          <AddAttendanceForm
-            isOpen={isAttendanceModalOpen}
-            onClose={closeModal}
-            selectedEvent={selectedEvent}
-            userRole={userRole}
-            handleSaveAttendance={handleSaveAttendance}
-            handleLessonUpdate={handleLessonUpdate}
-          />
+        <AddAttendanceForm
+          isOpen={isAttendanceModalOpen}
+          onClose={closeModal}
+          selectedEvent={selectedEvent}
+          userRole={userRole}
+          handleSaveAttendance={handleSaveAttendance}
+          handleLessonUpdate={handleLessonUpdate}
+          fetchLessons={fetchLessons}
+          selectedClass={selectedClass}
+        />
 
           <ConfirmDeletionForm
             isOpen={isDeleteModalOpen}
@@ -495,15 +497,6 @@ export function Schedule() {
                                 )}
                               </div>
                               <div className='flex items-center'>
-                                <Button 
-                                  type="link" 
-                                  icon={<Pen size={14} color='#fff' strokeWidth={4}/>} 
-                                  size="xs"
-                                  onClick={(e) => {
-                                    e.stopPropagation(); 
-                                    // Możesz dodać logikę edycji tematu lekcji tutaj
-                                  }}
-                                />
                                 <Button 
                                   type="link" 
                                   icon={<Trash size={14} color='#fff' strokeWidth={4}/>} 
