@@ -11,58 +11,38 @@ export const createAttendances = async (req: Request, res: Response) => {
         const lessonId: string = req.body.lessonId;
         const attendances: Attendance[] = req.body.attendances;
 
-        const existingLesson: lessons | null = await prisma.lessons.findUnique({
-            where: {
-                id: Buffer.from(uuidParse(lessonId))
-            }
+        const existingLesson = await prisma.lessons.findUnique({
+            where: { id: Buffer.from(uuidParse(lessonId)) }
         });
 
         if (!existingLesson) {
-            return res.status(404).json(createErrorResponse(`Lesson does not exist.`));
+            return res.status(404).json(createErrorResponse('Lesson does not exist.'));
         }
 
-        for (const attendance of attendances) {
-            const existingStudent = await prisma.students.findUnique({
-                where: {
-                    id: Buffer.from(uuidParse(attendance.studentId))
-                }
+        const studentCheck = await Promise.all(attendances.map(async (attendance) => {
+            const student = await prisma.students.findUnique({
+                where: { id: Buffer.from(uuidParse(attendance.studentId)) }
             });
-
-            if (!existingStudent) {
-                return res.status(404).json(createErrorResponse(`Student with ID ${attendance.studentId} does not exist.`));
+            if (!student) {
+                throw new Error(`Student with ID ${attendance.studentId} does not exist.`);
             }
-
-            if (!attendance.wasPresent && attendance.wasLate) {
-                return res.status(422).json(createErrorResponse(`Invalid attendance status: cannot be marked as late if student with ID '${attendance.studentId}' is absent'.`));
-            }
-        }
-
-        const existingAttendance: attendances | null = await prisma.attendances.findFirst({
-            where: {
-                lesson_id: Buffer.from(uuidParse(lessonId))
-            }
-        });
-
-        if (existingAttendance) {
-            return res.status(409).json(createErrorResponse(`Attendances already exists.`));
-        }
+        }));
 
         const payload = await prisma.attendances.createMany({
-            data: attendances.map((attendance) => {
-                return {
-                    date_time: new Date(),
-                    was_present: attendance.wasPresent,
-                    was_late: attendance.wasLate,
-                    student_id: Buffer.from(uuidParse(attendance.studentId)),
-                    lesson_id: Buffer.from(uuidParse(lessonId))
-                };
-            })
+            data: attendances.map((attendance) => ({
+                date_time: new Date(),
+                was_present: attendance.wasPresent,
+                was_late: attendance.wasLate,
+                student_id: Buffer.from(uuidParse(attendance.studentId)),
+                lesson_id: Buffer.from(uuidParse(lessonId))
+            })),
+            skipDuplicates: true
         });
 
-        return res.status(200).json(createSuccessResponse(payload.count, `Attendances list created successfully.`));
+        return res.status(200).json(createSuccessResponse(payload.count, 'Attendances list created successfully.'));
     } catch (err) {
-        console.error('Error creating attendances list', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while creating attendances list. Please try again later.'));
+        console.error('Error creating attendances:', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving attendances. Please try again later.'));
     }
 };
 

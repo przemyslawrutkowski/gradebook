@@ -81,7 +81,7 @@ export const getStudentById = async (req: Request, res: Response) => {
             phone_number: studentData.phone_number,
             email: studentData.email,
             pesel: studentData.pesel,
-            className: studentData.classes?.class_names?.name || 'N/A',
+            class_name: studentData.classes?.class_names?.name || 'N/A',
             parents: parents,
         };
 

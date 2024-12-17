@@ -204,29 +204,6 @@ export function Schedule() {
     });
   };
 
-  const openModal = (event) => {
-    if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
-      setSelectedEvent(event);
-      setIsAttendanceModalOpen(true);
-    }
-  };
-
-  const closeModal = () => {
-    setIsAttendanceModalOpen(false);
-    setSelectedEvent(null);
-  };
-
-  const handleAttendanceChange = (studentId, status) => {
-    if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
-      setSelectedEvent((prevEvent) => {
-        const updatedStudents = prevEvent.students.map((student) =>
-          student.id === studentId ? { ...student, attendance: status } : student
-        );
-        return { ...prevEvent, students: updatedStudents };
-      });
-    }
-  };
-
   const handleChange = (selectedOption) => {
     setSelectedClass(selectedOption ? selectedOption.value : null);
     setSelectedDate(today);
@@ -252,14 +229,14 @@ export function Schedule() {
       id: lesson.id,
       title: lesson.subjects.name, 
       classId: lesson.class_id,
-      subjectId: lesson.subject_id, // Ensure subjectId is included for deletion
+      subjectId: lesson.subject_id,
       startTime: new Date(lesson.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       endTime: new Date(lesson.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       bgColor: getBackgroundColor(lesson.subjects.name),
       date: new Date(lesson.date),
       textColor: 'text-[#ffffff]',
       students: lesson.students,
-      lessonTopic: lesson.description || '', // Assuming 'description' is the lesson topic
+      lessonTopic: lesson.description || '',
       isCompleted: lesson.is_completed,
     }));
   };
@@ -322,7 +299,7 @@ export function Schedule() {
     setUpdating(true);
     setUpdateError(null);
     try {
-      const response = await fetch('http://localhost:3000/attendance', { // Poprawny URL
+      const response = await fetch('http://localhost:3000/attendance', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -342,15 +319,30 @@ export function Schedule() {
       const data = await response.json();
       console.log('Attendances saved successfully:', data);
   
-      // Aktualizacja stanu lessons
       fetchLessons(selectedClass);
   
-      closeModal(); // Zamknięcie modal po zapisaniu
+      closeModal();
     } catch (err) {
       setUpdateError(err.message);
     } finally {
       setUpdating(false);
     }
+  };
+
+  const openModal = (event) => {
+    if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
+        if (event && event.id) {
+            setSelectedEvent({ ...event, description: event.lessonTopic });
+            setIsAttendanceModalOpen(true);
+        } else {
+            console.error('Invalid event data', event);
+        }
+    }
+};
+
+  const closeModal = () => {
+    setIsAttendanceModalOpen(false);
+    setSelectedEvent(null);
   };
 
   if (loading) {
@@ -388,6 +380,7 @@ export function Schedule() {
             selectedEvent={selectedEvent}
             userRole={userRole}
             handleSaveAttendance={handleSaveAttendance}
+            handleLessonUpdate={handleLessonUpdate}
           />
 
           <ConfirmDeletionForm

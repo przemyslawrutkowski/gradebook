@@ -5,7 +5,7 @@ import Modal from '../../Modal';
 import UserRoles from '../../../data/userRoles';
 import { getToken } from '../../../utils/UserRoleUtils'; // Zakładam, że masz funkcję do pobierania tokenu
 
-const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSaveAttendance }) => {
+const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSaveAttendance, handleLessonUpdate }) => {
   const [lessonTopic, setLessonTopic] = useState(selectedEvent?.description || '');
   const [attendances, setAttendances] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -39,24 +39,31 @@ const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSav
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (!selectedEvent || !selectedEvent.id) {
+      setError('Invalid lesson ID. Please try again.');
+      setLoading(false);
+      return;
+  }
   
     const attendanceData = attendances.map(attendance => ({
       studentId: attendance.studentId,
-      status: attendance.status,
+      wasPresent: attendance.status === 'Present',
+      wasLate: attendance.status === 'Late',
     }));
   
-    console.log('Sending attendance data:', {
-      lessonId: selectedEvent.id,
-      attendances: attendanceData,
-    });
-  
     try {
+      await handleLessonUpdate({
+        lessonId: selectedEvent.id,
+        lessonTopic: lessonTopic, 
+      });
+  
       await handleSaveAttendance({
         lessonId: selectedEvent.id,
         attendances: attendanceData,
       });
     } catch (err) {
-      setError(err.message || 'An error occurred while saving attendance.');
+      setError(err.message || 'An error occurred while saving.');
     } finally {
       setLoading(false);
     }
@@ -76,6 +83,7 @@ const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSav
             value={lessonTopic}
             onChange={(e) => setLessonTopic(e.target.value)}
             className="w-full p-2 border border-gray-300 rounded"
+            placeholder="Set lesson topic"
             required
             disabled={userRole !== UserRoles.Teacher && userRole !== UserRoles.Administrator}
           />
@@ -140,7 +148,9 @@ const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSav
 
         <div className="mt-6 flex justify-end gap-4">
           <Button text="Close" type="secondary" onClick={onClose} />
-          <Button type="primary" text={loading ? "Saving..." : "Save"} disabled={loading} />
+          <Button type="primary" text={loading ? "Saving..." : "Save"} disabled={loading} 
+            onClick={handleLessonUpdate}
+          />
         </div>
       </form>
     </Modal>
