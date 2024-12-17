@@ -20,6 +20,7 @@ import parentsRouter from './routers/parentsRouter';
 import teachersRouter from './routers/teachersRouter';
 import administratorsRouter from './routers/administratorsRouter';
 import messagesRouter from './routers/messagesRouter';
+import homeworksRouter from './routers/homeworksRouter';
 import jwt from 'jsonwebtoken';
 import { SECRET_KEY } from './modules/validateEnv';
 import AuthUser from './interfaces/authUser';
@@ -61,6 +62,7 @@ app.use('/semester', semestersRouter);
 app.use('/grade', gradesRouter);
 app.use('/class-name', classNamesRouter)
 app.use('/message', messagesRouter);
+app.use('/homework', homeworksRouter);
 
 io.use((socket: Socket, next) => {
     const token = socket.handshake.auth.token;

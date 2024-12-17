@@ -8,7 +8,6 @@ import {
     sendDeleteRequest,
 } from '../../src/utils/requestHelpers';
 import { student1, teacher1, subject1, nonExistentId, invalidIdUrl, grade1, grade2, emptyString } from '../../src/utils/testData';
-import { stringify as uuidStringify } from 'uuid';
 
 suite('gradesRouter', () => {
     afterEach(async () => {

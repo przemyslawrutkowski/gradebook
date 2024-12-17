@@ -169,6 +169,16 @@ export const grade2 = {
     description: 'Graphing geometry shadows in axonometry'
 };
 
+export const homework1 = {
+    description: 'Homework short description',
+    deadline: '2025-01-10'
+}
+
+export const homework2 = {
+    description: 'Homework long description',
+    deadline: '2025-01-10'
+}
+
 export const nonExistentId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
 export const invalidIdUrl = '%20';
 export const emptyString = '';
