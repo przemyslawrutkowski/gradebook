@@ -11,13 +11,24 @@ export const signUpStudent = (req: Request, res: Response) => {
 
 export const getStudents = async (req: Request, res: Response) => {
     try {
-        const students = await prisma.students.findMany();
+        const students = await prisma.students.findMany({
+            include: {
+                classes: {
+                    include: {
+                        class_names: true,
+                    }
+                }
+            }
+        });
 
         const responseData = students.map(student => ({
             id: uuidStringify(student.id),
             email: student.email,
             first_name: student.first_name,
             last_name: student.last_name,
+            pesel: student.pesel,
+            phone_number: student.phone_number,
+            class_name: student.classes?.class_names.name || 'N/A',
             role: UserType.Student
         }));
 

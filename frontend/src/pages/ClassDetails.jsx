@@ -63,7 +63,7 @@ function ClassDetails() {
         }
         const result = await response.json();
         console.log(result.data);
-        const available = result.data.filter(student => student.className === "N/A");
+        const available = result.data.filter(student => student.class_name === "N/A");
         setAvailableStudents(available);
     } catch (err) {
         console.error('Error fetching available students', err);
@@ -166,6 +166,8 @@ function ClassDetails() {
       closeDeleteModal();
     }
   };
+
+  console.log('Available students:', availableStudents);
 
 
   if (loading) {

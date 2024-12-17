@@ -124,10 +124,10 @@ export function Students() {
                 key={student.id}
                 id={student.id} 
                 name={student.first_name + " " + student.last_name} 
-                phone={student.phone_Number} 
+                phone={student.phone_number} 
                 email={student.email} 
                 pesel={student.pesel} 
-                stClass={student.className}
+                stClass={student.class_name}
               />
             </Link>
           );

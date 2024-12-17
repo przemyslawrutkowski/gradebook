@@ -144,7 +144,7 @@ function StudentDetails() {
                     <GraduationCap size={20} color="#F37986"/>
                     <p className="text-textBg-550">Class</p>
                   </div>
-                  <p>{studentInfo.className}</p>
+                  <p>{studentInfo.class_name}</p>
                 </div>
               </div>
             </div>  
