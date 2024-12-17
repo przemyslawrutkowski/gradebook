@@ -139,6 +139,12 @@ export const schoolYear2 = {
     endDate: '2025-06-29'
 };
 
+export const schoolYear3 = {
+    name: '2024/2025',
+    startDate: '2024-10-01',
+    endDate: '2025-06-29'
+};
+
 export const semester1 = {
     semester: 1,
     startDate: '2024-10-01',

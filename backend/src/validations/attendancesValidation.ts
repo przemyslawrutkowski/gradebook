@@ -12,6 +12,11 @@ export const validateGetAttendances = () => [
     createNotEmptyValidation('lessonId', 'param')
 ];
 
+
+export const validateGetAttendancesInformations = () => [
+    createNotEmptyValidation('studentId', 'param')
+];
+
 export const validateUpdateAttendance = () => [
     createNotEmptyValidation('attendanceId', 'param'),
     createBooleanValidation('wasPresent'),
