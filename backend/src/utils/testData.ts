@@ -88,7 +88,7 @@ export const subject2 = {
     name: 'Geography'
 };
 
-export const lessonsData = {
+export const lessonsData1 = {
     startDate: '2024-10-01',
     endDate: '2024-11-01',
     lessonSchedules: [
@@ -99,6 +99,24 @@ export const lessonsData = {
             frequency: 1
         }, {
             dayOfWeek: 5,
+            startTime: '15:00',
+            endTime: '16:00',
+            frequency: 2
+        }
+    ],
+};
+
+export const lessonsData2 = {
+    startDate: '2024-12-15',
+    endDate: '2024-12-23',
+    lessonSchedules: [
+        {
+            dayOfWeek: 2,
+            startTime: '12:00',
+            endTime: '13:00',
+            frequency: 1
+        }, {
+            dayOfWeek: 3,
             startTime: '15:00',
             endTime: '16:00',
             frequency: 2

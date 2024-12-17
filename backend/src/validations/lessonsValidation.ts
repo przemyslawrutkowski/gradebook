@@ -23,3 +23,15 @@ export const validateGetAndDeleteLessons = () => [
     createNotEmptyValidation('classId', 'param'),
     createNotEmptyValidation('subjectId', 'param')
 ];
+
+export const validateDeleteLesson = () => [
+    createNotEmptyValidation('lessonId', 'param'),
+];
+
+export const validateUserId = () => [
+    createNotEmptyValidation('userId', 'param'),
+];
+
+export const validateClassId = () => [
+    createNotEmptyValidation('classId', 'param'),
+];

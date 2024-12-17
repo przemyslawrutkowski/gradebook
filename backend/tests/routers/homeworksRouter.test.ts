@@ -7,7 +7,7 @@ import {
     sendPatchRequest,
     sendDeleteRequest,
 } from '../../src/utils/requestHelpers';
-import { className1, schoolYear1, student1, teacher1, subject1, nonExistentId, invalidIdUrl, emptyString, semester1, lessonsData, homework1, homework2 } from '../../src/utils/testData';
+import { className1, schoolYear1, student1, teacher1, subject1, nonExistentId, invalidIdUrl, emptyString, semester1, lessonsData1, homework1, homework2 } from '../../src/utils/testData';
 import { lessons } from '@prisma/client';
 
 suite('homeworksRouter', () => {
@@ -57,7 +57,7 @@ suite('homeworksRouter', () => {
         assert.strictEqual(updateClassResponse.statusCode, 200, 'Expected the status code to be 200 for a successful class update.');
 
         const createLessonsResponse = await sendPostRequest('/lesson', {
-            ...lessonsData,
+            ...lessonsData1,
             teacherId: updateClassResponse.body.data.teacher_id,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id,
@@ -136,7 +136,7 @@ suite('homeworksRouter', () => {
         assert.strictEqual(updateClassResponse.statusCode, 200, 'Expected the status code to be 200 for a successful class update.');
 
         const createLessonsResponse = await sendPostRequest('/lesson', {
-            ...lessonsData,
+            ...lessonsData1,
             teacherId: updateClassResponse.body.data.teacher_id,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id,
@@ -200,7 +200,7 @@ suite('homeworksRouter', () => {
         assert.strictEqual(updateClassResponse.statusCode, 200, 'Expected the status code to be 200 for a successful class update.');
 
         const createLessonsResponse = await sendPostRequest('/lesson', {
-            ...lessonsData,
+            ...lessonsData1,
             teacherId: updateClassResponse.body.data.teacher_id,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id,
@@ -282,7 +282,7 @@ suite('homeworksRouter', () => {
         assert.strictEqual(assignStudentResponse.statusCode, 200, 'Expected the status code to be 200 for a successful student assignment.');
 
         const createLessonsResponse = await sendPostRequest('/lesson', {
-            ...lessonsData,
+            ...lessonsData1,
             teacherId: updateClassResponse.body.data.teacher_id,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id,
@@ -363,7 +363,7 @@ suite('homeworksRouter', () => {
         assert.strictEqual(updateClassResponse.statusCode, 200, 'Expected the status code to be 200 for a successful class update.');
 
         const createLessonsResponse = await sendPostRequest('/lesson', {
-            ...lessonsData,
+            ...lessonsData1,
             teacherId: updateClassResponse.body.data.teacher_id,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id,
@@ -450,7 +450,7 @@ suite('homeworksRouter', () => {
         assert.strictEqual(updateClassResponse.statusCode, 200, 'Expected the status code to be 200 for a successful class update.');
 
         const createLessonsResponse = await sendPostRequest('/lesson', {
-            ...lessonsData,
+            ...lessonsData1,
             teacherId: updateClassResponse.body.data.teacher_id,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id,

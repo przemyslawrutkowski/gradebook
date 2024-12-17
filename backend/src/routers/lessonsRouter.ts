@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { validateCreateLessons, validateUpdateLesson, validateGetAndDeleteLessons } from '../validations/lessonsValidation.js';
-import { createLessons, getLessons, updateLesson, deleteLessons, getAllLessons, getLessonsByClass, deleteSingleLesson } from '../handlers/lessons.js';
+import { validateCreateLessons, validateUpdateLesson, validateGetAndDeleteLessons, validateDeleteLesson, validateUserId, validateClassId } from '../validations/lessonsValidation.js';
+import { createLessons, getLessons, updateLesson, deleteLessons, getAllLessons, getLessonsByClassId, deleteLesson, getLessonsThreeDaysBack, getLessonsThreeDaysAhead, getLessonsToday } from '../handlers/lessons.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { UserType } from '../enums/userTypes.js';
 
@@ -21,10 +21,28 @@ lessonsRouter.get('',
     getAllLessons
 )
 
-lessonsRouter.get('/:classId',
+lessonsRouter.get('/back/:userId',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
-    getLessonsByClass
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
+    validateUserId(),
+    handleInputErrors,
+    getLessonsThreeDaysBack
+)
+
+lessonsRouter.get('/ahead/:userId',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
+    validateUserId(),
+    handleInputErrors,
+    getLessonsThreeDaysAhead
+)
+
+lessonsRouter.get('/today/:userId',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
+    validateUserId(),
+    handleInputErrors,
+    getLessonsToday
 )
 
 lessonsRouter.get('/:classId/:subjectId',
@@ -33,6 +51,14 @@ lessonsRouter.get('/:classId/:subjectId',
     validateGetAndDeleteLessons(),
     handleInputErrors,
     getLessons
+)
+
+lessonsRouter.get('/:classId',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
+    validateClassId(),
+    handleInputErrors,
+    getLessonsByClassId
 )
 
 lessonsRouter.patch('/:lessonId',
@@ -54,7 +80,9 @@ lessonsRouter.delete('/:classId/:subjectId',
 lessonsRouter.delete('/:lessonId',
     authenticate,
     authorize([UserType.Administrator, UserType.Teacher]),
-    deleteSingleLesson
+    validateDeleteLesson(),
+    handleInputErrors,
+    deleteLesson
 )
 
 export default lessonsRouter;

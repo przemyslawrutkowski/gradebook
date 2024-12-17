@@ -6,7 +6,7 @@ import {
     sendGetRequest,
     sendPatchRequest
 } from '../../src/utils/requestHelpers';
-import { className1, schoolYear1, semester1, teacher1, subject1, student1, student2, lessonsData, invalidIdUrl, nonExistentId, emptyString, schoolYear3 } from '../../src/utils/testData';
+import { className1, schoolYear1, semester1, teacher1, subject1, student1, student2, lessonsData1, invalidIdUrl, nonExistentId, emptyString, schoolYear3 } from '../../src/utils/testData';
 import { attendances, lessons } from '@prisma/client';
 
 suite('attendancesRouter', () => {
@@ -59,7 +59,7 @@ suite('attendancesRouter', () => {
         assert.strictEqual(createSemesterResponse.statusCode, 200, 'Expected the status code to be 200 for a successful semester creation.');
 
         const createLessonsResponse = await sendPostRequest('/lesson', {
-            ...lessonsData,
+            ...lessonsData1,
             teacherId: signUpResponse3.body.data,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id,
@@ -160,7 +160,7 @@ suite('attendancesRouter', () => {
         assert.strictEqual(createSemesterResponse.statusCode, 200, 'Expected the status code to be 200 for a successful semester creation.');
 
         const createLessonsResponse = await sendPostRequest('/lesson', {
-            ...lessonsData,
+            ...lessonsData1,
             teacherId: signUpResponse3.body.data,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id,
@@ -247,7 +247,7 @@ suite('attendancesRouter', () => {
         assert.strictEqual(createSemesterResponse.statusCode, 200, 'Expected the status code to be 200 for a successful semester creation.');
 
         const createLessonsResponse = await sendPostRequest('/lesson', {
-            ...lessonsData,
+            ...lessonsData1,
             teacherId: signUpResponse3.body.data,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id,
@@ -319,7 +319,7 @@ suite('attendancesRouter', () => {
         assert.strictEqual(createSemesterResponse.statusCode, 200, 'Expected the status code to be 200 for a successful semester creation.');
 
         const createLessonsResponse = await sendPostRequest('/lesson', {
-            ...lessonsData,
+            ...lessonsData1,
             teacherId: signUpResponse3.body.data,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id,
@@ -402,7 +402,7 @@ suite('attendancesRouter', () => {
         assert.strictEqual(createSemesterResponse.statusCode, 200, 'Expected the status code to be 200 for a successful semester creation.');
 
         const createLessonsResponse = await sendPostRequest('/lesson', {
-            ...lessonsData,
+            ...lessonsData1,
             teacherId: signUpResponse3.body.data,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id,
@@ -490,7 +490,7 @@ suite('attendancesRouter', () => {
         assert.strictEqual(createSemesterResponse.statusCode, 200, 'Expected the status code to be 200 for a successful semester creation.');
 
         const createLessonsResponse = await sendPostRequest('/lesson', {
-            ...lessonsData,
+            ...lessonsData1,
             teacherId: signUpResponse3.body.data,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id,
@@ -597,7 +597,7 @@ suite('attendancesRouter', () => {
         assert.strictEqual(createSemesterResponse.statusCode, 200, 'Expected the status code to be 200 for a successful semester creation.');
 
         const createLessonsResponse = await sendPostRequest('/lesson', {
-            ...lessonsData,
+            ...lessonsData1,
             teacherId: signUpResponse3.body.data,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id,

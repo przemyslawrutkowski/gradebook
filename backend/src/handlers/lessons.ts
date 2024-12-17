@@ -1,10 +1,14 @@
 import { Request, Response } from 'express';
 import prisma from '../db';
-import { teachers, classes, subjects, lessons, semesters } from '@prisma/client';
+import { teachers, classes, subjects, lessons, semesters, parents, students } from '@prisma/client';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces';
 import LessonSchedule from '../interfaces/lessonSchedule';
 import { parse as uuidParse, stringify as uuidStringify } from 'uuid';
 import { Buffer } from 'node:buffer';
+
+function isStudent(user: parents | students): user is students {
+    return (user as students).class_id !== undefined;
+}
 
 export const createLessons = async (req: Request, res: Response) => {
     try {
@@ -184,6 +188,358 @@ export const getLessons = async (req: Request, res: Response) => {
     }
 };
 
+export const getAllLessons = async (req: Request, res: Response) => {
+    try {
+        const lessons = await prisma.lessons.findMany();
+
+        const responseData = lessons.map(lesson => ({
+            ...lesson,
+            id: uuidStringify(lesson.id),
+            date: lesson.date.toISOString(),
+            start_time: lesson.start_time.toISOString(),
+            end_time: lesson.end_time.toISOString(),
+            teacher_id: uuidStringify(lesson.teacher_id),
+            class_id: uuidStringify(lesson.class_id),
+            subject_id: uuidStringify(lesson.subject_id),
+            semester_id: uuidStringify(lesson.semester_id)
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, `All lessons retrieved successfully.`));
+    } catch (err) {
+        console.error('Error retrieving all lessons', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving lessons. Please try again later.'));
+    }
+};
+
+export const getLessonsByClassId = async (req: Request, res: Response) => {
+    try {
+        const classId: string = req.params.classId;
+
+        const existingClass: classes | null = await prisma.classes.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(classId))
+            }
+        });
+
+        if (!existingClass) {
+            return res.status(404).json(createErrorResponse(`Class does not exist.`));
+        }
+
+        const lessons = await prisma.lessons.findMany({
+            where: {
+                class_id: Buffer.from(uuidParse(classId)),
+            },
+            include: {
+                teachers: true,
+                subjects: true,
+            }
+        });
+
+        const responseData = lessons.map(lesson => ({
+            ...lesson,
+            id: uuidStringify(lesson.id),
+            date: lesson.date.toISOString(),
+            start_time: lesson.start_time.toISOString(),
+            end_time: lesson.end_time.toISOString(),
+            teacher_id: uuidStringify(lesson.teacher_id),
+            class_id: uuidStringify(lesson.class_id),
+            subject_id: uuidStringify(lesson.subject_id),
+            semester_id: uuidStringify(lesson.semester_id),
+            teachers: {
+                ...lesson.teachers,
+                id: uuidStringify(lesson.teachers.id),
+                reset_password_token: undefined,
+                reset_password_expires: undefined
+            },
+            subjects: {
+                ...lesson.subjects,
+                id: uuidStringify(lesson.subjects.id),
+            }
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, `Lessons retrieved successfully.`));
+    } catch (err) {
+        console.error('Error retrieving lessons by class ID', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving lessons. Please try again later.'));
+    }
+};
+
+//For teacher/student
+export const getLessonsThreeDaysBack = async (req: Request, res: Response) => {
+    try {
+        const userId: string = req.params.userId;
+
+        let existingUser: teachers | students | null = await prisma.teachers.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(userId))
+            }
+        });
+
+        if (!existingUser) {
+            existingUser = await prisma.students.findUnique({
+                where: {
+                    id: Buffer.from(uuidParse(userId))
+                }
+            });
+        };
+
+        if (!existingUser) {
+            return res.status(404).json(createErrorResponse(`User does not exist.`));
+        }
+
+        const now = new Date();
+
+        const year = now.getUTCFullYear();
+        const month = now.getUTCMonth();
+        const day = now.getUTCDate();
+
+        const todayMidnight = new Date(Date.UTC(year, month, day, 0, 0, 0));
+
+        const threeDaysAgoMidnight = new Date(todayMidnight.getTime());
+        threeDaysAgoMidnight.setUTCDate(threeDaysAgoMidnight.getUTCDate() - 3);
+
+        let lessons;
+
+        if (isStudent(existingUser) && existingUser.class_id) {
+            lessons = await prisma.lessons.findMany({
+                where: {
+                    class_id: existingUser.class_id,
+                    date: {
+                        gte: threeDaysAgoMidnight,
+                        lte: todayMidnight
+                    }
+                },
+                include: {
+                    teachers: true,
+                    subjects: true,
+                }
+            });
+        } else {
+            lessons = await prisma.lessons.findMany({
+                where: {
+                    teacher_id: existingUser.id,
+                    date: {
+                        gte: threeDaysAgoMidnight,
+                        lte: todayMidnight
+                    }
+                },
+                include: {
+                    teachers: true,
+                    subjects: true,
+                },
+            });
+        }
+
+        const responseData = lessons.map((lesson: any) => ({
+            ...lesson,
+            id: uuidStringify(lesson.id),
+            date: lesson.date.toISOString(),
+            start_time: lesson.start_time.toISOString(),
+            end_time: lesson.end_time.toISOString(),
+            teacher_id: uuidStringify(lesson.teacher_id),
+            class_id: uuidStringify(lesson.class_id),
+            subject_id: uuidStringify(lesson.subject_id),
+            semester_id: uuidStringify(lesson.semester_id),
+            teachers: {
+                ...lesson.teachers,
+                id: uuidStringify(lesson.teachers.id),
+                reset_password_token: undefined,
+                reset_password_expires: undefined
+            },
+            subjects: {
+                ...lesson.subjects,
+                id: uuidStringify(lesson.subjects.id),
+            }
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, `Lessons three days back retrieved successfully.`));
+    } catch (err) {
+        console.error('Error retrieving lessons three days back', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving lessons three days back. Please try again later.'));
+    }
+};
+
+export const getLessonsThreeDaysAhead = async (req: Request, res: Response) => {
+    try {
+        const userId: string = req.params.userId;
+
+        let existingUser: teachers | students | null = await prisma.teachers.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(userId))
+            }
+        });
+
+        if (!existingUser) {
+            existingUser = await prisma.students.findUnique({
+                where: {
+                    id: Buffer.from(uuidParse(userId))
+                }
+            });
+        };
+
+        if (!existingUser) {
+            return res.status(404).json(createErrorResponse(`User does not exist.`));
+        }
+
+        const now = new Date();
+
+        const year = now.getUTCFullYear();
+        const month = now.getUTCMonth();
+        const day = now.getUTCDate();
+
+        const todayMidnight = new Date(Date.UTC(year, month, day, 0, 0, 0));
+
+        const threeDaysAheadMidnight = new Date(todayMidnight.getTime());
+        threeDaysAheadMidnight.setUTCDate(threeDaysAheadMidnight.getUTCDate() + 3);
+
+        let lessons;
+
+        if (isStudent(existingUser) && existingUser.class_id) {
+            lessons = await prisma.lessons.findMany({
+                where: {
+                    class_id: existingUser.class_id,
+                    date: {
+                        gte: todayMidnight,
+                        lte: threeDaysAheadMidnight
+                    }
+                },
+                include: {
+                    teachers: true,
+                    subjects: true,
+                }
+            });
+        } else {
+            lessons = await prisma.lessons.findMany({
+                where: {
+                    teacher_id: existingUser.id,
+                    date: {
+                        gte: todayMidnight,
+                        lte: threeDaysAheadMidnight
+                    }
+                },
+                include: {
+                    teachers: true,
+                    subjects: true,
+                },
+            });
+        }
+
+        const responseData = lessons.map((lesson: any) => ({
+            ...lesson,
+            id: uuidStringify(lesson.id),
+            date: lesson.date.toISOString(),
+            start_time: lesson.start_time.toISOString(),
+            end_time: lesson.end_time.toISOString(),
+            teacher_id: uuidStringify(lesson.teacher_id),
+            class_id: uuidStringify(lesson.class_id),
+            subject_id: uuidStringify(lesson.subject_id),
+            semester_id: uuidStringify(lesson.semester_id),
+            teachers: {
+                ...lesson.teachers,
+                id: uuidStringify(lesson.teachers.id),
+                reset_password_token: undefined,
+                reset_password_expires: undefined
+            },
+            subjects: {
+                ...lesson.subjects,
+                id: uuidStringify(lesson.subjects.id),
+            }
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, `Lessons three days ahead retrieved successfully.`));
+    } catch (err) {
+        console.error('Error retrieving lessons three days ahead', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving lessons three days ahead. Please try again later.'));
+    }
+};
+
+export const getLessonsToday = async (req: Request, res: Response) => {
+    try {
+        const userId: string = req.params.userId;
+
+        let existingUser: teachers | students | null = await prisma.teachers.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(userId))
+            }
+        });
+
+        if (!existingUser) {
+            existingUser = await prisma.students.findUnique({
+                where: {
+                    id: Buffer.from(uuidParse(userId))
+                }
+            });
+        };
+
+        if (!existingUser) {
+            return res.status(404).json(createErrorResponse(`User does not exist.`));
+        }
+
+        const now = new Date();
+        const year = now.getUTCFullYear();
+        const month = now.getUTCMonth();
+        const day = now.getUTCDate();
+        const todayMidnight = new Date(Date.UTC(year, month, day, 0, 0, 0));
+
+        let lessons;
+
+        if (isStudent(existingUser) && existingUser.class_id) {
+            lessons = await prisma.lessons.findMany({
+                where: {
+                    class_id: existingUser.class_id,
+                    date: {
+                        equals: todayMidnight
+                    }
+                },
+                include: {
+                    teachers: true,
+                    subjects: true,
+                }
+            });
+        } else {
+            lessons = await prisma.lessons.findMany({
+                where: {
+                    teacher_id: existingUser.id,
+                    date: {
+                        equals: todayMidnight
+                    }
+                },
+                include: {
+                    teachers: true,
+                    subjects: true,
+                },
+            });
+        }
+
+        const responseData = lessons.map((lesson: any) => ({
+            ...lesson,
+            id: uuidStringify(lesson.id),
+            date: lesson.date.toISOString(),
+            start_time: lesson.start_time.toISOString(),
+            end_time: lesson.end_time.toISOString(),
+            teacher_id: uuidStringify(lesson.teacher_id),
+            class_id: uuidStringify(lesson.class_id),
+            subject_id: uuidStringify(lesson.subject_id),
+            semester_id: uuidStringify(lesson.semester_id),
+            teachers: {
+                ...lesson.teachers,
+                id: uuidStringify(lesson.teachers.id),
+                reset_password_token: undefined,
+                reset_password_expires: undefined
+            },
+            subjects: {
+                ...lesson.subjects,
+                id: uuidStringify(lesson.subjects.id),
+            }
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, `Lessons today retrieved successfully.`));
+    } catch (err) {
+        console.error('Error retrieving lessons today', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving lessons today. Please try again later.'));
+    }
+};
+
 export const updateLesson = async (req: Request, res: Response) => {
     try {
         const lessonId: string = req.params.lessonId;
@@ -266,130 +622,41 @@ export const deleteLessons = async (req: Request, res: Response) => {
     }
 };
 
-export const getAllLessons = async (req: Request, res: Response) => {
+export const deleteLesson = async (req: Request, res: Response) => {
     try {
-        const lessons = await prisma.lessons.findMany();
+        const lessonId: string = req.params.lessonId;
 
-        const responseData = lessons.map(lesson => ({
-            ...lesson,
-            id: uuidStringify(lesson.id),
-            date: lesson.date.toISOString(),
-            start_time: lesson.start_time.toISOString(),
-            end_time: lesson.end_time.toISOString(),
-            teacher_id: uuidStringify(lesson.teacher_id),
-            class_id: uuidStringify(lesson.class_id),
-            subject_id: uuidStringify(lesson.subject_id),
-            semester_id: uuidStringify(lesson.semester_id)
-        }));
-
-        return res.status(200).json(createSuccessResponse(responseData, `All lessons retrieved successfully.`));
-    } catch (err) {
-        console.error('Error retrieving all lessons', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving lessons. Please try again later.'));
-    }
-};
-
-export const getLessonsByClass = async (req: Request, res: Response) => {
-    try {
-        const classId: string = req.params.classId;
-
-        if (!classId) {
-            return res.status(400).json(createErrorResponse('Invalid classId format.'));
-        }
-
-        const existingClass: classes | null = await prisma.classes.findUnique({
+        const existingLesson = await prisma.lessons.findUnique({
             where: {
-                id: Buffer.from(uuidParse(classId))
-            },
-            include: {
-                students: true
+                id: Buffer.from(uuidParse(lessonId))
             }
         });
 
-        if (!existingClass) {
-            return res.status(404).json(createErrorResponse(`Class with ID ${classId} does not exist.`));
+        if (!existingLesson) {
+            return res.status(404).json(createErrorResponse(`Lesson does not exist.`));
         }
 
-        const lessons = await prisma.lessons.findMany({
+        const deletedLesson = await prisma.lessons.delete({
             where: {
-                class_id: Buffer.from(uuidParse(classId)),
-            },
-            include: {
-                teachers: true,  
-                subjects: true,  
-                semesters: true, 
-                classes: {
-                    include: {
-                        students: true
-                    }
-                }
-            },
-            orderBy: [
-                { date: 'asc' },
-                { start_time: 'asc' }
-            ]
+                id: Buffer.from(uuidParse(lessonId))
+            }
         });
 
-        const responseData = lessons.map(lesson => ({
-            ...lesson,
-            id: uuidStringify(lesson.id),
-            date: lesson.date.toISOString(),
-            start_time: lesson.start_time.toISOString(),
-            end_time: lesson.end_time.toISOString(),
-            teacher_id: uuidStringify(lesson.teacher_id),
-            class_id: uuidStringify(lesson.class_id),
-            subject_id: uuidStringify(lesson.subject_id),
-            semester_id: uuidStringify(lesson.semester_id),
-            teachers: {
-                ...lesson.teachers,
-                id: uuidStringify(lesson.teachers.id),
-            },
-            subjects: {
-                ...lesson.subjects,
-                id: uuidStringify(lesson.subjects.id),
-            },
-            semesters: {
-                ...lesson.semesters,
-                id: uuidStringify(lesson.semesters.id),
-                school_year_id: uuidStringify(lesson.semesters.school_year_id), 
-            },
-            students: lesson.classes.students.map(student => ({
-                ...student,
-                id: uuidStringify(student.id),
-                class_id: student.class_id ? uuidStringify(student.class_id) : null,
-            })), 
-        }));
+        const responseData = {
+            ...deletedLesson,
+            id: uuidStringify(deletedLesson.id),
+            date: deletedLesson.date.toISOString(),
+            start_time: deletedLesson.start_time.toISOString(),
+            end_time: deletedLesson.end_time.toISOString(),
+            teacher_id: uuidStringify(deletedLesson.teacher_id),
+            class_id: uuidStringify(deletedLesson.class_id),
+            subject_id: uuidStringify(deletedLesson.subject_id),
+            semester_id: uuidStringify(deletedLesson.semester_id)
+        };
 
-        return res.status(200).json(createSuccessResponse(responseData, `Lessons for class ${classId} retrieved successfully.`));
+        return res.status(200).json(createSuccessResponse(responseData, `Lesson deleted successfully.`));
     } catch (err) {
-        console.error('Error retrieving lessons by class', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving lessons. Please try again later.'));
+        console.error('Error deleting lesson', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while deleting lesson. Please try again later.'));
     }
-};
-
-export const deleteSingleLesson = async (req: Request, res: Response) => {
-  try {
-    const lessonId: string = req.params.lessonId;
-
-    const existingLesson = await prisma.lessons.findUnique({
-      where: {
-        id: Buffer.from(uuidParse(lessonId))
-      }
-    });
-
-    if (!existingLesson) {
-      return res.status(404).json(createErrorResponse(`Lesson does not exist.`));
-    }
-
-    await prisma.lessons.delete({
-      where: {
-        id: Buffer.from(uuidParse(lessonId))
-      }
-    });
-
-    return res.status(200).json(createSuccessResponse(null, `Lesson deleted successfully.`));
-  } catch (err) {
-    console.error('Error deleting lesson', err);
-    return res.status(500).json(createErrorResponse('An unexpected error occurred while deleting the lesson. Please try again later.'));
-  }
 };
