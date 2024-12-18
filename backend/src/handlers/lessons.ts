@@ -218,6 +218,9 @@ export const getLessonsByClassId = async (req: Request, res: Response) => {
         const existingClass: classes | null = await prisma.classes.findUnique({
             where: {
                 id: Buffer.from(uuidParse(classId))
+            },
+            include: {
+                students: true
             }
         });
 
@@ -232,7 +235,16 @@ export const getLessonsByClassId = async (req: Request, res: Response) => {
             include: {
                 teachers: true,
                 subjects: true,
-            }
+                classes: {
+                    include: {
+                        students: true
+                    }
+                }
+            },
+            orderBy: [
+                { date: 'asc' },
+                { start_time: 'asc' }
+            ]
         });
 
         const responseData = lessons.map(lesson => ({
@@ -254,7 +266,12 @@ export const getLessonsByClassId = async (req: Request, res: Response) => {
             subjects: {
                 ...lesson.subjects,
                 id: uuidStringify(lesson.subjects.id),
-            }
+            },
+            students: lesson.classes.students.map(student => ({
+                ...student,
+                id: uuidStringify(student.id),
+                class_id: student.class_id ? uuidStringify(student.class_id) : null,
+            })), 
         }));
 
         return res.status(200).json(createSuccessResponse(responseData, `Lessons retrieved successfully.`));

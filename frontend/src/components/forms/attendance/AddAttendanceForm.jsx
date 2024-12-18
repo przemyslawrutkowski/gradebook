@@ -164,7 +164,7 @@ const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSav
   if (!selectedEvent) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} widthHeightClassname="max-w-xl max-h-xl">
+    <Modal isOpen={isOpen} onClose={onClose} widthHeightClassname="max-w-xl w-3xl max-h-xl">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-textBg-700">Add Information</h2>
         <X size={24} className="hover:cursor-pointer" onClick={onClose} />

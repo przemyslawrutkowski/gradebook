@@ -173,6 +173,7 @@ export function Schedule() {
       }
 
       const result = await response.json();
+      console.log(result.data);
       setLessons(result.data);
     } catch (err) {
       setError(err.message);
