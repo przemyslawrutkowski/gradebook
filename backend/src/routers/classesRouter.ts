@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { validateCreateClass, validateAssignStudent, validateUpdateClass, validateClassId } from '../validations/classesValidation.js';
-import { getClasses, createClass, assignStudent, updateClass, deleteClass, getStudents, getClassById, removeStudentFromClass } from '../handlers/classes.js';
+import { getClasses, createClass, assignStudent, updateClass, deleteClass, getStudents, getClassById, removeStudentFromClass, getStudentClassId } from '../handlers/classes.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { UserType } from '../enums/userTypes.js';
 
@@ -66,5 +66,11 @@ classesRouter.delete('/:classId',
     handleInputErrors,
     deleteClass
 );
+
+classesRouter.get('/student/:studentId',
+    authenticate,
+    authorize([UserType.Student]),
+    getStudentClassId
+)
 
 export default classesRouter;

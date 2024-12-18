@@ -409,3 +409,40 @@ export const removeStudentFromClass = async (req: Request, res: Response) => {
         res.status(500).json(createErrorResponse('An unexpected error occurred while removing the student from the class. Please try again later.'));
     }
 };
+
+
+export const getStudentClassId = async (req: Request, res: Response) => {
+    try {
+        const studentId: string = req.params.studentId;
+
+        if (!studentId) {
+            return res.status(400).json(createErrorResponse('Brak identyfikatora zalogowanego studenta.'));
+        }
+
+        const existingStudent = await prisma.students.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(studentId)),
+            },
+            select: {
+                class_id: true,
+            },
+        });
+
+        if (!existingStudent) {
+            return res.status(404).json(createErrorResponse('Student nie istnieje.'));
+        }
+
+        if (!existingStudent.class_id) {
+            return res.status(404).json(createErrorResponse('Student nie jest przypisany do żadnej klasy.'));
+        }
+
+        const responseData = {
+            classId: uuidStringify(existingStudent.class_id),
+        };
+
+        return res.status(200).json(createSuccessResponse(responseData, 'Identyfikator klasy został pomyślnie pobrany.'));
+    } catch (err) {
+        console.error('Błąd podczas pobierania identyfikatora klasy studenta', err);
+        return res.status(500).json(createErrorResponse('Wystąpił nieoczekiwany błąd podczas pobierania identyfikatora klasy. Spróbuj ponownie później.'));
+    }
+};

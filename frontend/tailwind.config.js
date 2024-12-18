@@ -54,8 +54,8 @@ export default {
         inter: ['Inter', 'sans-serif']
       },
       screens: {
-        'xs': { 'max': '400px' },
-        'xxs': { 'min': '360px' }
+        'xs': { 'min': '400px' },
+        'xxs': { 'min': '360px' },
       },
     },
     fontSize: {

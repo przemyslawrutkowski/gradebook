@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PageTitle from '../components/PageTitle';
 import Button from '../components/Button';
-import { Plus, Trash, Pen } from 'lucide-react';
+import { Plus, Trash, Pen, Info } from 'lucide-react';
 import Modal from '../components/Modal';
 import {
   dayNames,
@@ -15,7 +15,7 @@ import {
   formatWeekRange,
   getYearForMonthIndex,
 } from '../utils/SchedCalUtils';
-import { getToken, getUserRole, decodeToken } from '../utils/UserRoleUtils';
+import { getToken, getUserRole, decodeToken, getUserId } from '../utils/UserRoleUtils';
 import UserRoles from '../data/userRoles';
 import '../customCSS/customScrollbar.css';
 import Calendar from '../components/Calendar';
@@ -23,6 +23,7 @@ import Select from 'react-select';
 import CreateLessonForm from "../components/forms/lessons/CreateLessonForm";
 import AddAttendanceForm from '../components/forms/attendance/AddAttendanceForm';
 import ConfirmDeletionForm from '../components/forms/lessons/ConfirmDeleteLessonForm';
+import Tooltip from '../components/Tooltip';
 
 const today = new Date();
 let baseYear = today.getFullYear();
@@ -56,24 +57,70 @@ export function Schedule() {
   const [deletionType, setDeletionType] = useState('single');
   const token = getToken();
   
+  const [studentClassId, setStudentClassId] = useState(null);
+
   const options = fetchedClasses.map(cls => ({
     value: cls.id,
     label: cls.class_names.name
   }));
 
   useEffect(() => {
-    const token = getToken();
-    if (token) {
-      const decoded = decodeToken(token);
-      if (decoded) {
-        const role = getUserRole();
-        setUserRole(role);
-        console.log('User role:', role);
-      } else {
-        setUserRole(null);
+    const initializeUser = async () => {
+      const token = getToken();
+      if (token) {
+        const decoded = decodeToken(token);
+        if (decoded) {
+          const role = getUserRole();
+          setUserRole(role);
+          console.log('User role:', role);
+
+          if (role === UserRoles.Student) {
+            try {
+              const studentId = getUserId();
+              console.log(studentId);
+              const response = await fetch(`http://localhost:3000/class/student/${studentId}`, {
+                method: 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`, 
+                }
+              });
+              
+              if (!response.ok) {
+                throw new Error(`Error: ${response.status}`);
+              }
+              
+              const result = await response.json();
+              if (result.data && result.data.classId) {
+                setStudentClassId(result.data.classId);
+                setSelectedClass(result.data.classId);
+              } else {
+                throw new Error('Class ID not found for the student.');
+              }
+            } catch (err) {
+              setError(err.message);
+            }
+          }
+        } else {
+          setUserRole(null);
+        }
       }
-    }
+    };
+
+    initializeUser();
   }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
+        fetchClasses(); 
+      } else if (userRole === UserRoles.Student && studentClassId) {
+        fetchLessons(studentClassId);
+      }
+    };
+
+    fetchData();
+  }, [userRole, studentClassId]);
 
   const fetchClasses = async () => {
     setLoading(true);
@@ -161,7 +208,6 @@ export function Schedule() {
         throw new Error(`Error: ${response.status}`);
       }
 
-      // Update the lessons state
       if (type === 'single') {
         setLessons(prevLessons => prevLessons.filter(lesson => lesson.id !== lessonToDelete.id));
       } else if (type === 'all') {
@@ -176,12 +222,10 @@ export function Schedule() {
   };
 
   useEffect(() => {
-    fetchClasses();
-  },[]);
-
-  useEffect(() => {
-    fetchLessons(selectedClass);
-  }, [selectedClass]);
+    if (selectedClass && (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator || userRole === UserRoles.Student)) {
+      fetchLessons(selectedClass);
+    }
+  }, [selectedClass, userRole]);
 
   const handleButtonChangeScheduleType = (value) => {
     setScheduleType(value);
@@ -238,6 +282,7 @@ export function Schedule() {
       students: lesson.students,
       lessonTopic: lesson.description || '',
       isCompleted: lesson.is_completed,
+      teacherName: lesson.teachers.first_name + ' ' + lesson.teachers.last_name
     }));
   };
 
@@ -338,7 +383,7 @@ export function Schedule() {
             console.error('Invalid event data', event);
         }
     }
-};
+  };
 
   const closeModal = () => {
     setIsAttendanceModalOpen(false);
@@ -346,55 +391,37 @@ export function Schedule() {
   };
 
   if (loading) {
-    return <div className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">Loading classes...</div>;
+    return <div className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">Loading...</div>;
   }
 
   if (error) {
-    return <div className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">Error: {error}</div>;
+    return <div className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8 text-red-500">Error: {error}</div>;
   }
 
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
       <PageTitle text="Schedule"/>
+      
       {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
-        <div className='flex items-center justify-between mb-6'>
+        <div className='flex flex-col xs:flex-row gap-4 items-center justify-between mb-6 mt-4 sm:mt-0'>
           <Select
             value={selectedOption}
             onChange={handleChange}
             options={options}
             placeholder="Select class"
-            className='w-48 focus:outline-none focus:border-none'
+            className='w-full xs:w-48 focus:outline-none focus:border-none'
             isClearable
             isSearchable
           />
-          <Button type="primary" text="Create Lesson" icon={<Plus size={16} />} onClick={openCreateModal}/>
+          <Button type="primary" text="Create Lesson" icon={<Plus size={16} />} onClick={openCreateModal} className="w-full xs:w-36"/>
         </div>
       )}
       
       <div className="flex flex-col 2xl:flex-row justify-between sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8 gap-8 2xl:gap-16">
         <div className="flex flex-col w-full">
 
-        <AddAttendanceForm
-          isOpen={isAttendanceModalOpen}
-          onClose={closeModal}
-          selectedEvent={selectedEvent}
-          userRole={userRole}
-          handleSaveAttendance={handleSaveAttendance}
-          handleLessonUpdate={handleLessonUpdate}
-          fetchLessons={fetchLessons}
-          selectedClass={selectedClass}
-        />
-
-          <ConfirmDeletionForm
-            isOpen={isDeleteModalOpen}
-            onClose={closeDeleteModal}
-            onConfirm={handleConfirmDelete}
-            title="Confirm Deletion"
-            description="Are you sure you want to delete this lesson? You can choose to delete only this lesson or all lessons for this class and subject."
-          />
-
           <div className="flex items-center justify-between mb-8 gap-1">
-              <p className="text-textBg-700 w-96 font-bold text-base flex flex-col sm:flex-row">
+              <p className="text-textBg-700 font-bold text-base flex flex-col sm:flex-row">
                 {scheduleType === 'Day' ? (
                   selectedDate ? (
                     <>
@@ -439,6 +466,7 @@ export function Schedule() {
           </div>
 
           <div className="flex flex-col xl:flex-row gap-16">
+            
             <Calendar
               baseYear={baseYear}
               onDateSelect={setSelectedDate}
@@ -481,38 +509,51 @@ export function Schedule() {
                           >
                             <div className='flex justify-between'>
                               <div>
-                                <div className="text-sm font-bold mb-1">{event.title}</div>
+                                <div className="text-sm font-bold mb-1">
+                                  {event.title}
+                                </div>
                                 <div className="text-sm">
                                   {event.startTime} - {event.endTime}
                                 </div>
-                                {event.lessonTopic && (
+                                {/* {event.lessonTopic && (
                                   <div className="text-xs mt-1">
                                     <strong>Topic:</strong> {event.lessonTopic}
                                   </div>
-                                )}
-                                {event.isCompleted && (
-                                  <div className="text-xs mt-1 text-green-500">
-                                    Lesson completed
-                                  </div>
-                                )}
+                                )} */}
                               </div>
-                              <div className='flex items-center'>
-                                <Button 
-                                  type="link" 
-                                  icon={<Trash size={14} color='#fff' strokeWidth={4}/>} 
-                                  size="xs"
-                                  className="z-10" 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openDeleteModal(event);
-                                  }}
-                                />
+                                <div className='flex items-center space-x-2'>
+                                  <Tooltip content={
+                                    <div className='w-fit'>
+                                      <div className='flex gap-2'>
+                                        <p>Topic:</p>
+                                        <p>{event.lessonTopic || 'N/A'}</p>
+                                      </div>
+                                      <div className='flex gap-2'>
+                                        <p>Teacher:</p>
+                                        <p>{event.teacherName || 'N/A'}</p>
+                                      </div>
+                                    </div>
+                                  } position="left">
+                                    <Info className="w-4 h-4 text-white cursor-pointer" />
+                                  </Tooltip>
+
+                                  {userRole !== UserRoles.Student && (
+                                    <Button 
+                                      type="link" 
+                                      icon={<Trash size={14} color='#fff' strokeWidth={4}/>} 
+                                      size="xs"
+                                      className="z-10" 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openDeleteModal(event);
+                                      }}
+                                    />
+                                  )}
+                                </div>
                               </div>
                             </div>
-                            
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
 
                       {currentTimePosition < calendarHeight && (
                         <div
@@ -597,16 +638,11 @@ export function Schedule() {
                                 <div className="text-sm">
                                   {event.startTime} - {event.endTime}
                                 </div>
-                                {event.lessonTopic && (
+                                {/* {event.lessonTopic && (
                                   <div className="text-xs mt-1">
                                     <strong>Topic:</strong> {event.lessonTopic}
                                   </div>
-                                )}
-                                {event.isCompleted && (
-                                  <div className="text-xs mt-1 text-green-500">
-                                    Lesson completed
-                                  </div>
-                                )}
+                                )} */}
                               </div>
                             );
                           })}
@@ -637,6 +673,25 @@ export function Schedule() {
           fetchLessons(selectedClass)
         }}
         onClose={closeCreateModal}
+      />
+
+      <AddAttendanceForm
+        isOpen={isAttendanceModalOpen}
+        onClose={closeModal}
+        selectedEvent={selectedEvent}
+        userRole={userRole}
+        handleSaveAttendance={handleSaveAttendance}
+        handleLessonUpdate={handleLessonUpdate}
+        fetchLessons={fetchLessons}
+        selectedClass={selectedClass}
+      />
+
+      <ConfirmDeletionForm
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={handleConfirmDelete}
+        title="Confirm Deletion"
+        description="Are you sure you want to delete this lesson? You can choose to delete only this lesson or all lessons for this class and subject."
       />
 
       {updating && <div className="mt-4 text-blue-500">Updating lesson...</div>}
