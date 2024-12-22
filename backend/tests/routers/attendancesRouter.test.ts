@@ -6,7 +6,7 @@ import {
     sendGetRequest,
     sendPatchRequest
 } from '../../src/utils/requestHelpers';
-import { className1, schoolYear1, semester1, teacher1, subject1, student1, student2, lessonsData1, invalidIdUrl, nonExistentId, emptyString, schoolYear3 } from '../../src/utils/testData';
+import { className1, schoolYear1, semester1, teacher1, subject1, student1, student2, lessonsData1, invalidIdUrl, nonExistentId, emptyString } from '../../src/utils/testData';
 import { attendances, lessons } from '@prisma/client';
 
 suite('attendancesRouter', () => {
@@ -457,7 +457,7 @@ suite('attendancesRouter', () => {
         const createClassNameResponse = await sendPostRequest('/class-name', className1);
         assert.strictEqual(createClassNameResponse.statusCode, 200, 'Expected the status code to be 200 for a successful class name creation.');
 
-        const createSchoolYearResponse = await sendPostRequest('/school-year', schoolYear3);
+        const createSchoolYearResponse = await sendPostRequest('/school-year', schoolYear1);
         assert.strictEqual(createSchoolYearResponse.statusCode, 200, 'Expected the status code to be 200 for a successful school year creation.');
 
         const signUpResponse1 = await sendPostRequest('/auth/signup/student', student1);

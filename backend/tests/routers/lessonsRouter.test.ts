@@ -7,7 +7,7 @@ import {
     sendPatchRequest,
     sendDeleteRequest,
 } from '../../src/utils/requestHelpers';
-import { teacher1, subject1, lessonsData1, lessonsData2, nonExistentId, newDescription, invalidIdUrl, semester1, schoolYear1, className1, emptyString, student1 } from '../../src/utils/testData';
+import { teacher1, subject1, lessonsData1, lessonsData2, nonExistentId, newDescription, invalidIdUrl, semester1, schoolYear1, className1, emptyString, student1, lessonsData3 } from '../../src/utils/testData';
 import { lessons } from '@prisma/client';
 
 suite('lessonsRouter', () => {
@@ -235,6 +235,65 @@ suite('lessonsRouter', () => {
         assert.strictEqual(createLessonsResponse2.statusCode, 409, 'Expected the status code to be 409 for lessons that already exists.');
     });
 
+    test('createLessons() - start date is before end date', async () => {
+        const signUpResponse = await sendPostRequest('/auth/signup/teacher', teacher1);
+        assert.strictEqual(signUpResponse.statusCode, 200, 'Expected the status code to be 200 for a successful signup.');
+
+        const createSubjectResponse = await sendPostRequest('/subject', subject1);
+        assert.strictEqual(createSubjectResponse.statusCode, 200, 'Expected the status code to be 200 for a successful subject creation.');
+
+        const createClassNameResponse = await sendPostRequest('/class-name', className1);
+        assert.strictEqual(createClassNameResponse.statusCode, 200, 'Expected the status code to be 200 for a successful class name creation.');
+
+        const createSchoolYearResponse = await sendPostRequest('/school-year', schoolYear1);
+        assert.strictEqual(createSchoolYearResponse.statusCode, 200, 'Expected the status code to be 200 for a successful school year creation.');
+
+        const createSemesterResponse = await sendPostRequest('/semester', {
+            ...semester1,
+            schoolYearId: createSchoolYearResponse.body.data.id
+        });
+        assert.strictEqual(createSemesterResponse.statusCode, 200, 'Expected the status code to be 200 for a successful semester creation.');
+
+        const createClassResponse = await sendPostRequest('/class', {
+            classNameId: createClassNameResponse.body.data.id,
+            schoolYearId: createSchoolYearResponse.body.data.id
+        });
+        assert.strictEqual(createClassResponse.statusCode, 200, 'Expected the status code to be 200 for a successful class creation.');
+
+        const updateClassResponse = await sendPatchRequest(
+            `/class/${createClassResponse.body.data.id}`,
+            {
+                teacherId: signUpResponse.body.data,
+            }
+        );
+        assert.strictEqual(updateClassResponse.statusCode, 200, 'Expected the status code to be 200 for a successful class update.');
+
+        const createLessonsResponse1 = await sendPostRequest('/lesson', {
+            ...{
+                startDate: '2023-12-21',
+                endDate: '2023-12-15',
+                lessonSchedules: [
+                    {
+                        dayOfWeek: 2,
+                        startTime: '12:00',
+                        endTime: '13:00',
+                        frequency: 1
+                    }, {
+                        dayOfWeek: 5,
+                        startTime: '15:00',
+                        endTime: '16:00',
+                        frequency: 2
+                    }
+                ],
+            },
+            teacherId: updateClassResponse.body.data.teacher_id,
+            classId: createClassResponse.body.data.id,
+            subjectId: createSubjectResponse.body.data.id,
+            semesterId: createSemesterResponse.body.data.id
+        });
+        assert.strictEqual(createLessonsResponse1.statusCode, 400, 'Expected the status code to be 400 for a start date that is before an end date.');
+    });
+
     test('getLessons() - success', async () => {
         const signUpResponse = await sendPostRequest('/auth/signup/teacher', teacher1);
         assert.strictEqual(signUpResponse.statusCode, 200, 'Expected the status code to be 200 for a successful signup.');
@@ -402,22 +461,98 @@ suite('lessonsRouter', () => {
         });
         assert.strictEqual(createLessonsResponse1.statusCode, 200, 'Expected the status code to be 200 for a successful lessons creation.');
 
-        const getLessonsResponse = await sendGetRequest(`/lesson/${createClassResponse.body.data.id}`);
+        const getLessonsResponse = await sendGetRequest(`/lesson/class/${createClassResponse.body.data.id}`);
         assert.strictEqual(getLessonsResponse.statusCode, 200, 'Expected the status code to be 200 for a successful lessons retrieval.');
         assert.strictEqual(getLessonsResponse.body.data.length, 6, 'Expected the number of retrieved lessons to be 6.');
     });
 
     test('GetLessonsByClassId() - validation error', async () => {
-        const getLessonsResponse = await sendGetRequest(`/lesson/${invalidIdUrl}`);
+        const getLessonsResponse = await sendGetRequest(`/lesson/class/${invalidIdUrl}`);
         assert.strictEqual(getLessonsResponse.statusCode, 400, 'Expected the status code to be 400 for a validation error.');
         assert.strictEqual(getLessonsResponse.body.errors.length, 1, 'Expected the number of validation errors to be 1.');
     });
 
     test('GetLessonsByClassId() - class does not exist', async () => {
-        const getLessonsResponse = await sendGetRequest(`/lesson/${nonExistentId}`);
+        const getLessonsResponse = await sendGetRequest(`/lesson/class/${nonExistentId}`);
         assert.strictEqual(getLessonsResponse.statusCode, 404, 'Expected the status code to be 404 for a class that does not exist.');
     });
     //
+
+    //GetLessonsForUser
+    test('GetLessonsForUser() - success', async () => {
+        const signUpResponse = await sendPostRequest('/auth/signup/teacher', teacher1);
+        assert.strictEqual(signUpResponse.statusCode, 200, 'Expected the status code to be 200 for a successful signup.');
+
+        const signUpResponse2 = await sendPostRequest('/auth/signup/student', student1);
+        assert.strictEqual(signUpResponse2.statusCode, 200, 'Expected the status code to be 200 for a successful student signup.');
+
+        const createSubjectResponse = await sendPostRequest('/subject', subject1);
+        assert.strictEqual(createSubjectResponse.statusCode, 200, 'Expected the status code to be 200 for a successful subject creation.');
+
+        const createClassNameResponse = await sendPostRequest('/class-name', className1);
+        assert.strictEqual(createClassNameResponse.statusCode, 200, 'Expected the status code to be 200 for a successful class name creation.');
+
+        const createSchoolYearResponse = await sendPostRequest('/school-year', schoolYear1);
+        assert.strictEqual(createSchoolYearResponse.statusCode, 200, 'Expected the status code to be 200 for a successful school year creation.');
+
+        const createSemesterResponse = await sendPostRequest('/semester', {
+            ...semester1,
+            schoolYearId: createSchoolYearResponse.body.data.id
+        });
+        assert.strictEqual(createSemesterResponse.statusCode, 200, 'Expected the status code to be 200 for a successful semester creation.');
+
+        const createClassResponse = await sendPostRequest('/class', {
+            classNameId: createClassNameResponse.body.data.id,
+            schoolYearId: createSchoolYearResponse.body.data.id
+        });
+        assert.strictEqual(createClassResponse.statusCode, 200, 'Expected the status code to be 200 for a successful class creation.');
+
+        const updateClassResponse = await sendPatchRequest(
+            `/class/${createClassResponse.body.data.id}`,
+            {
+                teacherId: signUpResponse.body.data,
+            }
+        );
+        assert.strictEqual(updateClassResponse.statusCode, 200, 'Expected the status code to be 200 for a successful class update.');
+
+        const assignStudentResponse = await sendPatchRequest(
+            `/class/${createClassResponse.body.data.id}/assign-student`,
+            { studentId: signUpResponse2.body.data }
+        );
+        assert.strictEqual(assignStudentResponse.statusCode, 200, 'Expected the status code to be 200 for a successful student assignment.');
+
+        const createLessonsResponse1 = await sendPostRequest('/lesson', {
+            ...lessonsData2,
+            teacherId: updateClassResponse.body.data.teacher_id,
+            classId: createClassResponse.body.data.id,
+            subjectId: createSubjectResponse.body.data.id,
+            semesterId: createSemesterResponse.body.data.id
+        });
+        assert.strictEqual(createLessonsResponse1.statusCode, 200, 'Expected the status code to be 200 for a successful lessons creation.');
+
+        const getLessonsResponse = await sendGetRequest(`/lesson/user/${signUpResponse2.body.data}`);
+        assert.strictEqual(getLessonsResponse.statusCode, 200, 'Expected the status code to be 200 for a successful lessons retrieval.');
+        assert.strictEqual(getLessonsResponse.body.data.length, 2, 'Expected the number of retrieved lessons to be 2.');
+    });
+
+    test('GetLessonsForUser() - validation error', async () => {
+        const getLessonsResponse = await sendGetRequest(`/lesson/user/${invalidIdUrl}`);
+        assert.strictEqual(getLessonsResponse.statusCode, 400, 'Expected the status code to be 400 for a validation error.');
+        assert.strictEqual(getLessonsResponse.body.errors.length, 1, 'Expected the number of validation errors to be 1.');
+    });
+
+    test('GetLessonsForUser() - user does not exist', async () => {
+        const getLessonsResponse = await sendGetRequest(`/lesson/user/${nonExistentId}`);
+        assert.strictEqual(getLessonsResponse.statusCode, 404, 'Expected the status code to be 404 for a user that does not exist.');
+    });
+
+    test('GetLessonsForUser() - semester does not exist', async () => {
+        const signUpResponse = await sendPostRequest('/auth/signup/student', student1);
+        assert.strictEqual(signUpResponse.statusCode, 200, 'Expected the status code to be 200 for a successful signup.');
+
+        const getLessonsResponse = await sendGetRequest(`/lesson/user/${nonExistentId}`);
+        assert.strictEqual(getLessonsResponse.statusCode, 404, 'Expected the status code to be 404 for a user that does not exist.');
+    });
 
     //GetLessonsThreeDaysBack
     test('GetLessonsThreeDaysBack() - success', async () => {
@@ -463,7 +598,7 @@ suite('lessonsRouter', () => {
         assert.strictEqual(assignStudentResponse.statusCode, 200, 'Expected the status code to be 200 for a successful student assignment.');
 
         const createLessonsResponse1 = await sendPostRequest('/lesson', {
-            ...lessonsData2,
+            ...lessonsData3,
             teacherId: updateClassResponse.body.data.teacher_id,
             classId: createClassResponse.body.data.id,
             subjectId: createSubjectResponse.body.data.id,

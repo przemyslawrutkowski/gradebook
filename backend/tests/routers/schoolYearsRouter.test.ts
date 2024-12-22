@@ -8,7 +8,6 @@ import {
     sendDeleteRequest,
 } from '../../src/utils/requestHelpers';
 import { schoolYear1, schoolYear2, nonExistentId, invalidIdUrl, emptyString, } from '../../src/utils/testData';
-import { start } from 'node:repl';
 
 suite('schoolYearsRouter', () => {
     afterEach(async () => {
@@ -20,7 +19,7 @@ suite('schoolYearsRouter', () => {
         assert.strictEqual(createSchoolYearResponse.statusCode, 200, 'Expected the status code to be 200 for a successful school year creation.');
         assert.strictEqual(createSchoolYearResponse.body.data.name, schoolYear1.name, `Expected the name to be "${schoolYear1.name}".`);
         assert.strictEqual(createSchoolYearResponse.body.data.start_date, new Date(schoolYear1.startDate).toISOString(), `Expected the startDate to be "${schoolYear1.startDate}".`);
-        assert.strictEqual(createSchoolYearResponse.body.data.end_date, new Date(schoolYear1.endDate).toISOString(), `Expected the endDate to be "${schoolYear2.endDate}".`);
+        assert.strictEqual(createSchoolYearResponse.body.data.end_date, new Date(schoolYear1.endDate).toISOString(), `Expected the endDate to be "${schoolYear1.endDate}".`);
     });
 
     test('createSchoolYear() - validation error', async () => {
@@ -39,6 +38,15 @@ suite('schoolYearsRouter', () => {
 
         const createSchoolYearResponse2 = await sendPostRequest('/school-year', schoolYear1);
         assert.strictEqual(createSchoolYearResponse2.statusCode, 409, 'Expected the status code to be 409 for a school year that already exists.');
+    });
+
+    test('createSchoolYear() - start date is before end date', async () => {
+        const createSchoolYearResponse1 = await sendPostRequest('/school-year', {
+            name: '2024/2025',
+            startDate: '2025-06-30',
+            endDate: '2024-10-01'
+        });
+        assert.strictEqual(createSchoolYearResponse1.statusCode, 400, 'Expected the status code to be 400 for a start date that is before an end date.');
     });
 
     test('getSchoolYear() - success', async () => {
@@ -60,16 +68,16 @@ suite('schoolYearsRouter', () => {
         const updateClassResponse = await sendPatchRequest(
             `/school-year/${createSchoolYearResponse.body.data.id}`,
             {
-                name: schoolYear2.name,
-                startDate: schoolYear2.startDate,
-                endDate: schoolYear2.endDate
+                name: schoolYear1.name,
+                startDate: schoolYear1.startDate,
+                endDate: schoolYear1.endDate
             }
         );
         assert.strictEqual(updateClassResponse.statusCode, 200, 'Expected the status code to be 200 for a successful school year update.');
         assert.strictEqual(updateClassResponse.body.data.id, createSchoolYearResponse.body.data.id, 'Expected the updated school year ID to match the created school year ID.');
-        assert.strictEqual(updateClassResponse.body.data.name, schoolYear2.name, `Expected the updated school year name to be "${schoolYear2.name}".`);
-        assert.strictEqual(updateClassResponse.body.data.start_date, new Date(schoolYear2.startDate).toISOString(), `Expected the updated start date to be "${schoolYear2.startDate}".`);
-        assert.strictEqual(updateClassResponse.body.data.end_date, new Date(schoolYear2.endDate).toISOString(), `Expected the updated end date to be "${schoolYear2.endDate}".`);
+        assert.strictEqual(updateClassResponse.body.data.name, schoolYear1.name, `Expected the updated school year name to be "${schoolYear1.name}".`);
+        assert.strictEqual(updateClassResponse.body.data.start_date, new Date(schoolYear1.startDate).toISOString(), `Expected the updated start date to be "${schoolYear1.startDate}".`);
+        assert.strictEqual(updateClassResponse.body.data.end_date, new Date(schoolYear1.endDate).toISOString(), `Expected the updated end date to be "${schoolYear1.endDate}".`);
     });
 
     test('updateSchoolYear() - validation error', async () => {
@@ -84,9 +92,9 @@ suite('schoolYearsRouter', () => {
 
     test('updateSchoolYear() - school year does not exist', async () => {
         const updateSchoolYearResponse = await sendPatchRequest(`/school-year/${nonExistentId}`, {
-            name: schoolYear2.name,
-            startDate: schoolYear2.startDate,
-            endDate: schoolYear2.endDate,
+            name: schoolYear1.name,
+            startDate: schoolYear1.startDate,
+            endDate: schoolYear1.endDate,
         });
         assert.strictEqual(updateSchoolYearResponse.statusCode, 404, 'Expected the status code to be 404 for a school year that does not exist.');
     });

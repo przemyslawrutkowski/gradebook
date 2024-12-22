@@ -7,7 +7,7 @@ import {
     sendPatchRequest,
     sendDeleteRequest,
 } from '../../src/utils/requestHelpers';
-import { schoolYear1, semester1, semester2, nonExistentId, invalidIdUrl, emptyString } from '../../src/utils/testData';
+import { schoolYear1, semester1, semester2, nonExistentId, invalidIdUrl, emptyString, semester4 } from '../../src/utils/testData';
 
 suite('semestersRouter', () => {
     afterEach(async () => {
@@ -56,6 +56,40 @@ suite('semestersRouter', () => {
             schoolYearId: createSchoolYearResponse.body.data.id
         });
         assert.strictEqual(createSemesterResponse2.statusCode, 409, 'Expected the status code to be 409 for a semester that already exists.');
+    });
+
+    test('createSemester() - school year does not exist', async () => {
+        const createSemesterResponse1 = await sendPostRequest('/semester', {
+            ...semester1,
+            schoolYearId: nonExistentId
+        });
+        assert.strictEqual(createSemesterResponse1.statusCode, 404, 'Expected the status code to be 409 for a semester that does not exist.');
+    });
+
+    test('createSemester() - start date is before end date', async () => {
+        const createSchoolYearResponse = await sendPostRequest('/school-year', schoolYear1);
+        assert.strictEqual(createSchoolYearResponse.statusCode, 200, 'Expected the status code to be 200 for a successful school year creation.');
+
+        const createSemesterResponse1 = await sendPostRequest('/semester', {
+            ...{
+                semester: 1,
+                startDate: '2025-02-10',
+                endDate: '2024-10-01'
+            },
+            schoolYearId: createSchoolYearResponse.body.data.id
+        });
+        assert.strictEqual(createSemesterResponse1.statusCode, 400, 'Expected the status code to be 400 for a start date that is before an end date.');
+    });
+
+    test('createSemester() - semester dates are not within the school year dates', async () => {
+        const createSchoolYearResponse = await sendPostRequest('/school-year', schoolYear1);
+        assert.strictEqual(createSchoolYearResponse.statusCode, 200, 'Expected the status code to be 200 for a successful school year creation.');
+
+        const createSemesterResponse1 = await sendPostRequest('/semester', {
+            ...semester4,
+            schoolYearId: createSchoolYearResponse.body.data.id
+        });
+        assert.strictEqual(createSemesterResponse1.statusCode, 400, 'Expected the status code to be 400 for a semester dates that are not within the school year dates.');
     });
 
     test('getSemesters() - success', async () => {

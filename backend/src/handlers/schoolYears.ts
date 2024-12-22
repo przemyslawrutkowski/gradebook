@@ -18,7 +18,11 @@ export const createSchoolYear = async (req: Request, res: Response) => {
         });
 
         if (existingSchoolYear) {
-            return res.status(409).json(createErrorResponse(`School year already exists.`));
+            return res.status(409).json(createErrorResponse('School year already exists.'));
+        }
+
+        if (startDate >= endDate) {
+            return res.status(400).json(createErrorResponse('Start date must be before end date.'));
         }
 
         const createdSchoolYear = await prisma.school_years.create({

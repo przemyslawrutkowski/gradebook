@@ -107,8 +107,8 @@ export const lessonsData1 = {
 };
 
 export const lessonsData2 = {
-    startDate: '2024-12-15',
-    endDate: '2024-12-23',
+    startDate: '2024-12-22',
+    endDate: '2024-12-28',
     lessonSchedules: [
         {
             dayOfWeek: 2,
@@ -117,6 +117,24 @@ export const lessonsData2 = {
             frequency: 1
         }, {
             dayOfWeek: 3,
+            startTime: '15:00',
+            endTime: '16:00',
+            frequency: 2
+        }
+    ],
+};
+
+export const lessonsData3 = {
+    startDate: '2024-12-15',
+    endDate: '2024-12-21',
+    lessonSchedules: [
+        {
+            dayOfWeek: 2,
+            startTime: '12:00',
+            endTime: '13:00',
+            frequency: 1
+        }, {
+            dayOfWeek: 5,
             startTime: '15:00',
             endTime: '16:00',
             frequency: 2
@@ -146,21 +164,15 @@ export const userType4 = {
 };
 
 export const schoolYear1 = {
-    name: '2023/2024',
-    startDate: '2023-10-01',
-    endDate: '2024-06-28'
+    name: '2024/2025',
+    startDate: '2024-10-01',
+    endDate: '2025-06-30'
 };
 
 export const schoolYear2 = {
     name: '2025/2026',
-    startDate: '2024-10-01',
-    endDate: '2025-06-29'
-};
-
-export const schoolYear3 = {
-    name: '2024/2025',
-    startDate: '2024-10-01',
-    endDate: '2025-06-29'
+    startDate: '2025-10-01',
+    endDate: '2026-06-30'
 };
 
 export const semester1 = {
@@ -172,7 +184,19 @@ export const semester1 = {
 export const semester2 = {
     semester: 2,
     startDate: '2025-02-26',
-    endDate: '2025-06-29'
+    endDate: '2025-06-30'
+};
+
+export const semester3 = {
+    semester: 1,
+    startDate: '2025-10-01',
+    endDate: '2026-02-10'
+};
+
+export const semester4 = {
+    semester: 2,
+    startDate: '2026-02-26',
+    endDate: '2026-06-30'
 };
 
 export const className1 = {

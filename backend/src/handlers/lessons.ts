@@ -13,6 +13,7 @@ function isStudent(user: parents | students): user is students {
 export const createLessons = async (req: Request, res: Response) => {
     try {
         // startDate and endDate are the same values as these that are present in specific semester
+        // start data < lessons dates < end date
         const startDate = new Date(req.body.startDate);
         const endDate = new Date(req.body.endDate);
 
@@ -74,6 +75,10 @@ export const createLessons = async (req: Request, res: Response) => {
 
         if (existingLesson) {
             return res.status(409).json(createErrorResponse(`Lessons already exists.`));
+        }
+
+        if (startDate < existingSemester.start_date || endDate > existingSemester.end_date) {
+            return res.status(400).json(createErrorResponse('start and end dates must be within the semester dates.'));
         }
 
         const dayMilliseconds = 24 * 60 * 60 * 1000;
@@ -271,12 +276,133 @@ export const getLessonsByClassId = async (req: Request, res: Response) => {
                 ...student,
                 id: uuidStringify(student.id),
                 class_id: student.class_id ? uuidStringify(student.class_id) : null,
-            })), 
+            })),
         }));
 
         return res.status(200).json(createSuccessResponse(responseData, `Lessons retrieved successfully.`));
     } catch (err) {
         console.error('Error retrieving lessons by class ID', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving lessons. Please try again later.'));
+    }
+};
+
+export const getLessonsForUser = async (req: Request, res: Response) => {
+    try {
+        const userId: string = req.params.userId;
+
+        let existingUser: teachers | students | null = await prisma.teachers.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(userId))
+            }
+        });
+
+        if (!existingUser) {
+            existingUser = await prisma.students.findUnique({
+                where: {
+                    id: Buffer.from(uuidParse(userId))
+                }
+            });
+        };
+
+        if (!existingUser) {
+            return res.status(404).json(createErrorResponse(`User does not exist.`));
+        }
+
+        const now = new Date();
+        const year = now.getUTCFullYear();
+        const month = now.getUTCMonth();
+        const day = now.getUTCDate();
+        const todayMidnight = new Date(Date.UTC(year, month, day, 0, 0, 0));
+
+        const currentSemester = await prisma.semesters.findFirst({
+            where: {
+                start_date: {
+                    lte: todayMidnight
+                },
+                end_date: {
+                    gte: todayMidnight
+                }
+            }
+        });
+
+        if (!currentSemester) {
+            return res.status(404).json(createErrorResponse(`Semester does not exist.`));
+        }
+
+        let lessons;
+
+        if (isStudent(existingUser) && existingUser.class_id) {
+            lessons = await prisma.lessons.findMany({
+                where: {
+                    class_id: existingUser.class_id,
+                    semester_id: currentSemester.id
+                },
+                include: {
+                    teachers: true,
+                    subjects: true,
+                    classes: {
+                        include: {
+                            students: true
+                        }
+                    }
+                },
+                orderBy: [
+                    { date: 'asc' },
+                    { start_time: 'asc' }
+                ]
+            });
+        } else {
+            lessons = await prisma.lessons.findMany({
+                where: {
+                    teacher_id: existingUser.id,
+                    semester_id: currentSemester.id
+                },
+                include: {
+                    teachers: true,
+                    subjects: true,
+                    classes: {
+                        include: {
+                            students: true
+                        }
+                    }
+                },
+                orderBy: [
+                    { date: 'asc' },
+                    { start_time: 'asc' }
+                ]
+            });
+        }
+
+        const responseData = lessons.map(lesson => ({
+            ...lesson,
+            id: uuidStringify(lesson.id),
+            date: lesson.date.toISOString(),
+            start_time: lesson.start_time.toISOString(),
+            end_time: lesson.end_time.toISOString(),
+            teacher_id: uuidStringify(lesson.teacher_id),
+            class_id: uuidStringify(lesson.class_id),
+            subject_id: uuidStringify(lesson.subject_id),
+            semester_id: uuidStringify(lesson.semester_id),
+            teachers: {
+                ...lesson.teachers,
+                id: uuidStringify(lesson.teachers.id),
+                reset_password_token: undefined,
+                reset_password_expires: undefined
+            },
+            subjects: {
+                ...lesson.subjects,
+                id: uuidStringify(lesson.subjects.id),
+            },
+            students: lesson.classes.students.map(student => ({
+                ...student,
+                id: uuidStringify(student.id),
+                class_id: student.class_id ? uuidStringify(student.class_id) : null,
+            })),
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, `Lessons retrieved successfully.`));
+    } catch (err) {
+        console.error('Error retrieving lessons for user', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving lessons. Please try again later.'));
     }
 };

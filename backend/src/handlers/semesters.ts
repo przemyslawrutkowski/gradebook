@@ -25,6 +25,44 @@ export const createSemester = async (req: Request, res: Response) => {
             return res.status(409).json(createErrorResponse(`Semester already exists.`));
         }
 
+        const existingSchoolYear: school_years | null = await prisma.school_years.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(schoolYearId))
+            }
+        });
+
+        if (!existingSchoolYear) {
+            return res.status(404).json(createErrorResponse(`School year does not exist.`));
+        }
+
+        if (startDate >= endDate) {
+            return res.status(400).json(createErrorResponse('Start date must be before end date.'));
+        }
+
+        if (startDate < existingSchoolYear.start_date || endDate > existingSchoolYear.end_date) {
+            return res.status(400).json(createErrorResponse('Semester dates must be within the school year dates.'));
+        }
+
+        const overlappingSemester = await prisma.semesters.findFirst({
+            where: {
+                school_year_id: Buffer.from(uuidParse(schoolYearId)),
+                OR: [
+                    {
+                        start_date: {
+                            lte: endDate
+                        },
+                        end_date: {
+                            gte: startDate
+                        }
+                    }
+                ]
+            }
+        });
+
+        if (overlappingSemester) {
+            return res.status(409).json(createErrorResponse('Semester dates overlap with an existing semester.'));
+        }
+
         const createdSemester = await prisma.semesters.create({
             data: {
                 semester: semester,
