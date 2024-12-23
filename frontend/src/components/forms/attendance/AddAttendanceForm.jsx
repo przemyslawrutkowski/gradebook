@@ -3,9 +3,9 @@ import Button from '../../Button';
 import { X } from 'lucide-react';
 import Modal from '../../Modal';
 import UserRoles from '../../../data/userRoles';
-import { getToken } from '../../../utils/UserRoleUtils';
+import { getToken, getUserId } from '../../../utils/UserRoleUtils';
 
-const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSaveAttendance, handleLessonUpdate, fetchLessons, selectedClass }) => {
+const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSaveAttendance, handleLessonUpdate, fetchLessonsForClass, fetchLessonsForTeacher, selectedClass }) => {
   const [lessonTopic, setLessonTopic] = useState(selectedEvent?.description || '');
   const [attendances, setAttendances] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -13,6 +13,7 @@ const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSav
   const [existingAttendances, setExistingAttendances] = useState(null);
 
   const token = getToken(); 
+  const userId = getUserId();
 
   useEffect(() => {
     if (isOpen && selectedEvent) {
@@ -150,8 +151,14 @@ const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSav
           attendances: processedAttendances,
         });
       }
-  
-      fetchLessons(selectedClass); 
+      
+      if(userRole === UserRoles.Administrator){
+        fetchLessonsForClass(selectedClass); 
+      }
+
+      if(userRole === UserRoles.Teacher){
+        fetchLessonsForTeacher(userId);
+      }
   
       onClose();
     } catch (err) {

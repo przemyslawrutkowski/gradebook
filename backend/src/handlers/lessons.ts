@@ -290,38 +290,28 @@ export const getLessonsForUser = async (req: Request, res: Response) => {
     try {
         const userId: string = req.params.userId;
 
+        // Correct UUID conversion without Buffer.from
         let existingUser: teachers | students | null = await prisma.teachers.findUnique({
-            where: {
-                id: Buffer.from(uuidParse(userId))
-            }
+            where: { id: uuidParse(userId) }
         });
 
         if (!existingUser) {
             existingUser = await prisma.students.findUnique({
-                where: {
-                    id: Buffer.from(uuidParse(userId))
-                }
+                where: { id: uuidParse(userId) }
             });
-        };
+        }
 
         if (!existingUser) {
             return res.status(404).json(createErrorResponse(`User does not exist.`));
         }
 
         const now = new Date();
-        const year = now.getUTCFullYear();
-        const month = now.getUTCMonth();
-        const day = now.getUTCDate();
-        const todayMidnight = new Date(Date.UTC(year, month, day, 0, 0, 0));
+        const todayMidnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
 
         const currentSemester = await prisma.semesters.findFirst({
             where: {
-                start_date: {
-                    lte: todayMidnight
-                },
-                end_date: {
-                    gte: todayMidnight
-                }
+                start_date: { lte: todayMidnight },
+                end_date: { gte: todayMidnight }
             }
         });
 
@@ -329,10 +319,10 @@ export const getLessonsForUser = async (req: Request, res: Response) => {
             return res.status(404).json(createErrorResponse(`Semester does not exist.`));
         }
 
-        let lessons;
+        let lessonsData;
 
         if (isStudent(existingUser) && existingUser.class_id) {
-            lessons = await prisma.lessons.findMany({
+            lessonsData = await prisma.lessons.findMany({
                 where: {
                     class_id: existingUser.class_id,
                     semester_id: currentSemester.id
@@ -341,9 +331,7 @@ export const getLessonsForUser = async (req: Request, res: Response) => {
                     teachers: true,
                     subjects: true,
                     classes: {
-                        include: {
-                            students: true
-                        }
+                        include: { students: true }
                     }
                 },
                 orderBy: [
@@ -352,7 +340,7 @@ export const getLessonsForUser = async (req: Request, res: Response) => {
                 ]
             });
         } else {
-            lessons = await prisma.lessons.findMany({
+            lessonsData = await prisma.lessons.findMany({
                 where: {
                     teacher_id: existingUser.id,
                     semester_id: currentSemester.id
@@ -361,9 +349,7 @@ export const getLessonsForUser = async (req: Request, res: Response) => {
                     teachers: true,
                     subjects: true,
                     classes: {
-                        include: {
-                            students: true
-                        }
+                        include: { students: true }
                     }
                 },
                 orderBy: [
@@ -373,7 +359,7 @@ export const getLessonsForUser = async (req: Request, res: Response) => {
             });
         }
 
-        const responseData = lessons.map(lesson => ({
+        const responseData = lessonsData.map(lesson => ({
             ...lesson,
             id: uuidStringify(lesson.id),
             date: lesson.date.toISOString(),

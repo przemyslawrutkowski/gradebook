@@ -56,8 +56,7 @@ export function Schedule() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletionType, setDeletionType] = useState('single');
   const token = getToken();
-  
-  const [studentClassId, setStudentClassId] = useState(null);
+  const userId = getUserId();
 
   const options = fetchedClasses.map(cls => ({
     value: cls.id,
@@ -74,32 +73,8 @@ export function Schedule() {
           setUserRole(role);
           console.log('User role:', role);
 
-          if (role === UserRoles.Student) {
-            try {
-              const studentId = getUserId();
-              console.log(studentId);
-              const response = await fetch(`http://localhost:3000/class/student/${studentId}`, {
-                method: 'GET',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`, 
-                }
-              });
-              
-              if (!response.ok) {
-                throw new Error(`Error: ${response.status}`);
-              }
-              
-              const result = await response.json();
-              if (result.data && result.data.classId) {
-                setStudentClassId(result.data.classId);
-                setSelectedClass(result.data.classId);
-              } else {
-                throw new Error('Class ID not found for the student.');
-              }
-            } catch (err) {
-              setError(err.message);
-            }
+          if (role === UserRoles.Teacher) {
+            setSelectedClass(null);
           }
         } else {
           setUserRole(null);
@@ -111,18 +86,30 @@ export function Schedule() {
   }, []);
 
   useEffect(() => {
+    if (userRole === UserRoles.Administrator && fetchedClasses.length > 0 && !selectedClass) {
+      setSelectedClass(fetchedClasses[0].id);
+    }
+  }, [userRole, fetchedClasses, selectedClass]);
+
+  useEffect(() => {
     const fetchData = async () => {
       if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
-        fetchClasses(); 
-      } else if (userRole === UserRoles.Student && studentClassId) {
-        fetchLessons(studentClassId);
+        if (selectedClass) {
+          fetchLessonsForClass(selectedClass); 
+        } else {
+          fetchLessonsForUser(userId);
+        }
+      } else if (userRole === UserRoles.Student && userId) {
+        fetchLessonsForUser(userId);
       }
     };
 
     fetchData();
-  }, [userRole, studentClassId]);
+  }, [userRole, selectedClass]);
 
   const fetchClasses = async () => {
+    if (userRole !== UserRoles.Teacher && userRole !== UserRoles.Administrator) return;
+
     setLoading(true);
     setError(null);
     try {
@@ -140,9 +127,6 @@ export function Schedule() {
       const result = await response.json();
       console.log(result.data);
       setFetchedClasses(result.data);
-      if (result.data.length > 0) {
-        setSelectedClass(result.data[0].id);
-      }
     } catch(err){
       setError(err.message);
     } finally{
@@ -150,7 +134,7 @@ export function Schedule() {
     }
   };
 
-  const fetchLessons = async (classId) => {
+  const fetchLessonsForClass = async (classId) => {
     if (!classId) {
       setLessons([]);
       return;
@@ -160,7 +144,7 @@ export function Schedule() {
     setError(null);
 
     try {
-      const response = await fetch(`http://localhost:3000/lesson/${classId}`, {
+      const response = await fetch(`http://localhost:3000/lesson/class/${classId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -179,6 +163,40 @@ export function Schedule() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLessonsForUser = async (userId) => {
+    if (!userId) {
+      setLessons([]);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    if(userRole === UserRoles.Student || userRole === UserRoles.Teacher){
+      try {
+        const response = await fetch(`http://localhost:3000/lesson/user/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+  
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+  
+        const result = await response.json();
+        console.log(result.data);
+        setLessons(result.data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -223,10 +241,10 @@ export function Schedule() {
   };
 
   useEffect(() => {
-    if (selectedClass && (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator || userRole === UserRoles.Student)) {
-      fetchLessons(selectedClass);
+    if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
+      fetchClasses();
     }
-  }, [selectedClass, userRole]);
+  }, [userRole]);
 
   const handleButtonChangeScheduleType = (value) => {
     setScheduleType(value);
@@ -250,12 +268,14 @@ export function Schedule() {
   };
 
   const handleChange = (selectedOption) => {
-    setSelectedClass(selectedOption ? selectedOption.value : null);
-    setSelectedDate(today);
+    if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
+      setSelectedClass(selectedOption ? selectedOption.value : null);
+      setSelectedDate(today);
+    }
   };
 
   const selectedOption = options.find(option => option.value === selectedClass) || null;
-  
+
   const openCreateModal = () => setIsCreateModalOpen(true);
   const closeCreateModal = () => setIsCreateModalOpen(false);
 
@@ -365,7 +385,15 @@ export function Schedule() {
       const data = await response.json();
       console.log('Attendances saved successfully:', data);
   
-      fetchLessons(selectedClass);
+      if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
+        if (selectedClass) {
+          fetchLessonsForClass(selectedClass);
+        } else {
+          fetchLessonsForUser(userId);
+        }
+      } else if (userRole === UserRoles.Student && userId) {
+        fetchLessonsForUser(userId);
+      }
   
       closeModal();
     } catch (err) {
@@ -411,7 +439,7 @@ export function Schedule() {
             options={options}
             placeholder="Select class"
             className='w-full xs:w-48 focus:outline-none focus:border-none'
-            isClearable
+            isClearable={userRole !== UserRoles.Administrator}
             isSearchable
           />
           <Button type="primary" text="Create Lesson" icon={<Plus size={16} />} onClick={openCreateModal} className="w-full xs:w-36"/>
@@ -522,7 +550,7 @@ export function Schedule() {
                                   </div>
                                 )} */}
                               </div>
-                                <div className='flex items-center space-x-2'>
+                                <div className='flex items-center space-x-2 z-10'>
                                   <Tooltip content={
                                     <div className='w-fit'>
                                       <div className='flex gap-2'>
@@ -535,10 +563,10 @@ export function Schedule() {
                                       </div>
                                     </div>
                                   } position="left">
-                                    <Info className="w-4 h-4 text-white cursor-pointer" />
+                                    <Info className="w-4 h-4 text-white cursor-pointer" onClick={(e) => e.stopPropagation()}/>
                                   </Tooltip>
 
-                                  {userRole !== UserRoles.Student && (
+                                  {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
                                     <Button 
                                       type="link" 
                                       icon={<Trash size={14} color='#fff' strokeWidth={4}/>} 
@@ -666,12 +694,20 @@ export function Schedule() {
           </div>
         </div>
       </div>
-      
+
       <CreateLessonForm
         isOpen={isCreateModalOpen} 
         onSuccess={() => {
           closeCreateModal();
-          fetchLessons(selectedClass)
+          if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
+            if (selectedClass) {
+              fetchLessonsForClass(selectedClass);
+            } else {
+              fetchLessonsForUser(userId);
+            }
+          } else if (userRole === UserRoles.Student && userId) {
+            fetchLessonsForUser(userId);
+          }
         }}
         onClose={closeCreateModal}
       />
@@ -683,7 +719,8 @@ export function Schedule() {
         userRole={userRole}
         handleSaveAttendance={handleSaveAttendance}
         handleLessonUpdate={handleLessonUpdate}
-        fetchLessons={fetchLessons}
+        fetchLessonsForClass={fetchLessonsForClass}
+        fetchLessonsForTeacher={fetchLessonsForUser}
         selectedClass={selectedClass}
       />
 
