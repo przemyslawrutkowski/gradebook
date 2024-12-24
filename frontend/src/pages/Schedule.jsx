@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PageTitle from '../components/PageTitle';
 import Button from '../components/Button';
-import { Plus, Trash, Pen, Info } from 'lucide-react';
+import { Plus, Trash, Pen, Info, MoreVertical } from 'lucide-react'; // Import MoreVertical
 import Modal from '../components/Modal';
 import {
   dayNames,
@@ -24,6 +24,7 @@ import CreateLessonForm from "../components/forms/lessons/CreateLessonForm";
 import AddAttendanceForm from '../components/forms/attendance/AddAttendanceForm';
 import ConfirmDeletionForm from '../components/forms/lessons/ConfirmDeleteLessonForm';
 import Tooltip from '../components/Tooltip';
+import CreateHomeworkForm from "../components/forms/homeworks/CreateHomeworkForm"; 
 
 const today = new Date();
 let baseYear = today.getFullYear();
@@ -44,6 +45,8 @@ export function Schedule() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false); 
   const [selectedEvent, setSelectedEvent] = useState(null); 
+  const [isCreateHomeworkModalOpen, setIsCreateHomeworkModalOpen] = useState(false); // Added state
+  const [selectedLessonForHomework, setSelectedLessonForHomework] = useState(null); // Added state
   const calendarStartHour = 7;
   const calendarEndHour = 18;
   const calendarHeight = (calendarEndHour - calendarStartHour) * 66;
@@ -289,6 +292,16 @@ export function Schedule() {
     setIsDeleteModalOpen(false);
   };
 
+  const openCreateHomeworkModal = (lesson) => {
+    setSelectedLessonForHomework(lesson);
+    setIsCreateHomeworkModalOpen(true);
+  };
+
+  const closeCreateHomeworkModal = () => {
+    setSelectedLessonForHomework(null);
+    setIsCreateHomeworkModalOpen(false);
+  };
+
   const mapLessonsToEvents = () => {
     return lessons.map((lesson) => ({
       id: lesson.id,
@@ -419,6 +432,23 @@ export function Schedule() {
     setSelectedEvent(null);
   };
 
+  // Dropdown Menu State and Handler
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpenDropdownId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   if (loading) {
     return <div className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">Loading...</div>;
   }
@@ -442,7 +472,15 @@ export function Schedule() {
             isClearable={userRole !== UserRoles.Administrator}
             isSearchable
           />
-          <Button type="primary" text="Create Lesson" icon={<Plus size={16} />} onClick={openCreateModal} className="w-full xs:w-36"/>
+          <div className="flex gap-2 w-full xs:w-auto">
+            <Button 
+              type="primary" 
+              text="Create Lesson" 
+              icon={<Plus size={16} />} 
+              onClick={openCreateModal} 
+              className="w-full xs:w-36"
+            />
+          </div>
         </div>
       )}
       
@@ -544,32 +582,38 @@ export function Schedule() {
                                 <div className="text-sm">
                                   {event.startTime} - {event.endTime}
                                 </div>
-                                {/* {event.lessonTopic && (
-                                  <div className="text-xs mt-1">
-                                    <strong>Topic:</strong> {event.lessonTopic}
-                                  </div>
-                                )} */}
                               </div>
-                                <div className='flex items-center space-x-2 z-10'>
-                                  <Tooltip content={
-                                    <div className='w-fit'>
-                                      <div className='flex gap-2'>
-                                        <p>Topic:</p>
-                                        <p>{event.lessonTopic || 'N/A'}</p>
-                                      </div>
-                                      <div className='flex gap-2'>
-                                        <p>Teacher:</p>
-                                        <p>{event.teacherName || 'N/A'}</p>
-                                      </div>
+                              <div className='flex items-center space-x-2 z-10'>
+                                <Tooltip content={
+                                  <div className='w-fit'>
+                                    <div className='flex gap-2'>
+                                      <p>Topic:</p>
+                                      <p>{event.lessonTopic || 'N/A'}</p>
                                     </div>
-                                  } position="left">
-                                    <Info className="w-4 h-4 text-white cursor-pointer" onClick={(e) => e.stopPropagation()}/>
-                                  </Tooltip>
+                                    <div className='flex gap-2'>
+                                      <p>Teacher:</p>
+                                      <p>{event.teacherName || 'N/A'}</p>
+                                    </div>
+                                  </div>
+                                } position="left">
+                                  <Info className="w-4 h-4 text-white cursor-pointer" strokeWidth={3} onClick={(e) => e.stopPropagation()}/>
+                                </Tooltip>
 
-                                  {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
+                                {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
+                                  <div className='hidden md:flex'>
                                     <Button 
                                       type="link" 
-                                      icon={<Trash size={14} color='#fff' strokeWidth={4}/>} 
+                                      icon={<Plus size={16} color='#fff' strokeWidth={3}/>} 
+                                      size="xs"
+                                      className="z-10" 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openCreateHomeworkModal(event);
+                                      }}
+                                    />
+                                    <Button 
+                                      type="link" 
+                                      icon={<Trash size={14} color='#fff' strokeWidth={3}/>} 
                                       size="xs"
                                       className="z-10" 
                                       onClick={(e) => {
@@ -577,12 +621,58 @@ export function Schedule() {
                                         openDeleteModal(event);
                                       }}
                                     />
-                                  )}
-                                </div>
+                                  </div>
+                                )}
+
+                                {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
+                                  <div className='md:hidden relative' ref={dropdownRef}>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenDropdownId(openDropdownId === event.id ? null : event.id);
+                                      }}
+                                      className="text-white focus:outline-none flex items-center justify-center"
+                                    >
+                                      <MoreVertical size={16} />
+                                    </button>
+                                    {openDropdownId === event.id && (
+                                      <div className="absolute right-0 mt-2 w-44 pl-3 py-1 bg-white border border-gray-200 rounded shadow-lg z-20">
+                                        <div className='flex items-center gap-2 text-textBg-600'>
+                                          <Plus size={16} strokeWidth={3}/>
+                                          <button
+                                            className="py-2 text-sm font-medium"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              openCreateHomeworkModal(event);
+                                              setOpenDropdownId(null);
+                                            }}
+                                          > 
+                                            Create Homework
+                                          </button>
+                                        </div>
+
+                                        <div className='flex items-center gap-2 text-textBg-600'>
+                                          <Trash size={16} strokeWidth={3}/>
+                                          <button
+                                            className="py-2 text-sm font-medium"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              openDeleteModal(event);
+                                              setOpenDropdownId(null);
+                                            }}
+                                          >
+                                            Delete
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </div>
-                          );
-                        })}
+                          </div>
+                        );
+                      })}
 
                       {currentTimePosition < calendarHeight && (
                         <div
@@ -667,11 +757,88 @@ export function Schedule() {
                                 <div className="text-sm">
                                   {event.startTime} - {event.endTime}
                                 </div>
-                                {/* {event.lessonTopic && (
-                                  <div className="text-xs mt-1">
-                                    <strong>Topic:</strong> {event.lessonTopic}
-                                  </div>
-                                )} */}
+                                <div className='flex items-center space-x-2 z-10 mt-1'>
+              
+                                  <Tooltip content={
+                                    <div className='w-fit'>
+                                      <div className='flex gap-2'>
+                                        <p>Topic:</p>
+                                        <p>{event.lessonTopic || 'N/A'}</p>
+                                      </div>
+                                      <div className='flex gap-2'>
+                                        <p>Teacher:</p>
+                                        <p>{event.teacherName || 'N/A'}</p>
+                                      </div>
+                                    </div>
+                                  } position="left">
+                                    <Info className="w-4 h-4 text-white cursor-pointer" onClick={(e) => e.stopPropagation()}/>
+                                  </Tooltip>
+
+                                 
+                                  {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
+                                    <div className='hidden md:flex space-x-2'>
+                                      <Button 
+                                        type="link" 
+                                        icon={<Trash size={14} color='#fff' strokeWidth={4}/>} 
+                                        size="xs"
+                                        className="z-10" 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          openDeleteModal(event);
+                                        }}
+                                      />
+                                      <Button 
+                                        type="link" 
+                                        icon={<Plus size={14} color='#fff' />} 
+                                        size="xs"
+                                        className="z-10" 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          openCreateHomeworkModal(event); 
+                                        }}
+                                      />
+                                    </div>
+                                  )}
+
+                                
+                                  {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
+                                    <div className='md:hidden relative' ref={dropdownRef}>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setOpenDropdownId(openDropdownId === event.id ? null : event.id);
+                                        }}
+                                        className="text-white focus:outline-none"
+                                      >
+                                        <MoreVertical size={16} />
+                                      </button>
+                                      {openDropdownId === event.id && (
+                                        <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-lg z-20">
+                                          <button
+                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              openDeleteModal(event);
+                                              setOpenDropdownId(null);
+                                            }}
+                                          >
+                                            Delete
+                                          </button>
+                                          <button
+                                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              openCreateHomeworkModal(event);
+                                              setOpenDropdownId(null);
+                                            }}
+                                          >
+                                            Add Homework
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             );
                           })}
@@ -730,6 +897,24 @@ export function Schedule() {
         onConfirm={handleConfirmDelete}
         title="Confirm Deletion"
         description="Are you sure you want to delete this lesson? You can choose to delete only this lesson or all lessons for this class and subject."
+      />
+
+      <CreateHomeworkForm
+        isOpen={isCreateHomeworkModalOpen} 
+        onClose={closeCreateHomeworkModal}
+        onSuccess={() => {
+          closeCreateHomeworkModal();
+          if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
+            if (selectedClass) {
+              fetchLessonsForClass(selectedClass);
+            } else {
+              fetchLessonsForUser(userId);
+            }
+          } else if (userRole === UserRoles.Student && userId) {
+            fetchLessonsForUser(userId);
+          }
+        }}
+        lessonId={selectedLessonForHomework ? selectedLessonForHomework.id : null}
       />
 
       {updating && <div className="mt-4 text-blue-500">Updating lesson...</div>}

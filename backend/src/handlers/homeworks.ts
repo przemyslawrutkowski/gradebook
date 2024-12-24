@@ -97,6 +97,55 @@ export const getHomework = async (req: Request, res: Response) => {
     }
 };
 
+export const getHomeworkById = async (req: Request, res: Response) => {
+    try {
+        const homeworkId: string = req.params.homeworkId;
+
+        const existingHomework = await prisma.homeworks.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(homeworkId)),
+            }
+        });
+
+        if (!existingHomework) {
+            return res.status(404).json(createErrorResponse('Homework does not exist.'));
+        }
+
+        const lesson = await prisma.lessons.findUnique({
+            where: {
+                id: existingHomework.lesson_id
+            },
+            include: {
+                subjects: {
+                    select: {
+                        name: true
+                    }
+                },
+                teachers: {
+                    select: {
+                        first_name: true,
+                        last_name: true
+                    }
+                }
+            }
+        })
+
+        const responseData = {
+            id: uuidStringify(existingHomework.id),
+            description: existingHomework.description,
+            deadline: existingHomework.deadline.toISOString(),
+            lesson_id: uuidStringify(existingHomework.lesson_id),
+            subject_name: lesson?.subjects.name,
+            teacher_full_name: `${lesson?.teachers.first_name} ${lesson?.teachers.last_name}`
+        };
+
+        return res.status(200).json(createSuccessResponse(responseData, 'Homework retrieved successfully.'));
+    } catch (err) {
+        console.error('Error retrieving homework by ID', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving homework. Please try again later.'));
+    }
+};
+
 export const getLatestHomework = async (req: Request, res: Response) => {
     try {
         const studentId: string = req.params.studentId;
@@ -226,6 +275,125 @@ export const deleteHomework = async (req: Request, res: Response) => {
         return res.status(200).json(createSuccessResponse(responseData, 'Homework deleted successfully.'));
     } catch (err) {
         console.error('Error deleting homework', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while deleting the homework. Please try again later.'));
+    }
+};
+
+export const getHomeworksForStudent = async (req: Request, res: Response) => {
+    try {
+        const studentId: string = req.params.studentId;
+
+        const existingStudent = await prisma.students.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(studentId))
+            }
+        });
+
+        if (!existingStudent) {
+            return res.status(404).json(createErrorResponse('Uczeń nie istnieje.'));
+        }
+
+        if (!existingStudent.class_id) {
+            return res.status(404).json(createErrorResponse('Uczeń nie jest przypisany do żadnej klasy.'));
+        }
+
+        const lessons = await prisma.lessons.findMany({
+            where: {
+                class_id: existingStudent.class_id
+            },
+            include: {
+                subjects: {
+                    select: {
+                        name: true
+                    }
+                },
+                teachers: {
+                    select: {
+                        first_name: true,
+                        last_name: true
+                    }
+                }
+            }
+        });
+
+        if (lessons.length === 0) {
+            return res.status(200).json(createSuccessResponse([], 'Brak lekcji dla klasy ucznia.'));
+        }
+
+        const lessonIds = lessons.map(lesson => lesson.id);
+
+        const homeworks = await prisma.homeworks.findMany({
+            where: {
+                lesson_id: { in: lessonIds }
+            },
+            include: {
+                lessons: {
+                    select: {
+                        subjects: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        teachers: {
+                            select: {
+                                first_name: true,
+                                last_name: true
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: {
+                deadline: 'asc'
+            }
+        });
+
+        if (homeworks.length === 0) {
+            return res.status(200).json(createSuccessResponse([], 'Brak prac domowych dla ucznia.'));
+        }
+
+        const responseData = homeworks.map(hw => ({
+            id: uuidStringify(hw.id),
+            description: hw.description,
+            deadline: hw.deadline.toISOString(),
+            lesson_id: uuidStringify(hw.lesson_id),
+            subject_name: hw.lessons.subjects.name,
+            teacher_full_name: `${hw.lessons.teachers.first_name} ${hw.lessons.teachers.last_name}`
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, 'Prace domowe pobrane pomyślnie.'));
+    } catch (err) {
+        console.error('Błąd podczas pobierania prac domowych dla ucznia', err);
+        return res.status(500).json(createErrorResponse('Wystąpił nieoczekiwany błąd podczas pobierania prac domowych. Proszę spróbować ponownie później.'));
+    }
+};
+
+export const getAllHomeworks = async (req: Request, res: Response) => {
+    try {
+        const homeworks = await prisma.homeworks.findMany({
+            include: {
+                lessons: {
+                    select: {
+                        subjects: { select: { name: true } },
+                        teachers: { select: { first_name: true, last_name: true } }
+                    }
+                }
+            },
+            orderBy: { deadline: 'asc' }
+        });
+
+        const responseData = homeworks.map(hw => ({
+            id: uuidStringify(hw.id),
+            description: hw.description,
+            deadline: hw.deadline.toISOString(),
+            lesson_id: uuidStringify(hw.lesson_id), 
+            subject_name: hw.lessons.subjects.name,
+            teacher_full_name: `${hw.lessons.teachers.first_name} ${hw.lessons.teachers.last_name}`
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, 'Homework deleted successfully.'));
+    } catch (err) {
+        console.error('Error retrieving homework', err);
         return res.status(500).json(createErrorResponse('An unexpected error occurred while deleting the homework. Please try again later.'));
     }
 };

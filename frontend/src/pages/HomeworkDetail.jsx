@@ -1,22 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PageTitle from '../components/PageTitle';
-import homeworkData from '../data/homeworkData';
 import { useDropzone } from 'react-dropzone';
 import Button from "../components/Button";
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify'; 
 import 'react-toastify/dist/ReactToastify.css';
-import { BookA, Calendar, CloudUpload, File, X } from 'lucide-react';
+import { BookA, Calendar, CloudUpload, File, Pen, Trash, User, X } from 'lucide-react';
 import Tag from '../components/Tag';
+import { getToken, getUserRole } from '../utils/UserRoleUtils';
+import ConfirmDeletionForm from '../components/forms/ConfirmDeletionForm';
+import EditHomeworkForm from '../components/forms/homeworks/EditHomeworkForm';
+import UserRoles from '../data/userRoles';
 
 const HomeworkDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState({});
+  const [homework, setHomework] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const homework = homeworkData.find(hw => hw.id === parseInt(id));
+  const token = getToken();
+  const userRole = getUserRole();
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); 
+  
+  const fetchHomework = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`http://localhost:3000/homework/details/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      setHomework(result.data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHomework();
+  }, [id]);
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/homework/${id}`, { 
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error: ${response.status}`);
+      }
+
+      navigate('/homework');
+      toast.success("Homework deleted successfully!");
+    } catch (err) {
+      toast.error(`Deletion failed: ${err.message}`);
+    }
+  };
+
+  const handleUpdate = () => {
+    fetchHomework();
+    toast.success("Homework updated successfully!");
+  };
 
   const onDrop = (acceptedFiles) => {
     acceptedFiles.forEach(file => {
@@ -78,18 +145,34 @@ const HomeworkDetail = () => {
     });
   };
 
+  if (loading) {
+    return (
+      <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
+        <PageTitle text="Homework Details"/>
+        <div className="flex justify-center items-center h-full">
+          <p>Loading...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
+        <PageTitle text="Homework Details"/>
+        <div className="flex flex-col justify-between sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8 gap-8 2xl:gap-16">
+          <p className="text-primary-500">Error: {error}</p>
+        </div>
+      </main>
+    );
+  }
+
   if (!homework) {
     return (
       <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
         <PageTitle text="Homework Details"/>
         <div className="flex flex-col justify-between sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8 gap-8 2xl:gap-16">
           <p className="text-primary-500">Homework not found!</p>
-          <button
-            onClick={() => navigate(-1)}
-            className="mt-4 px-4 py-2 bg-primary-500 text-white rounded hover:bg-primary-600 transition"
-          >
-            Go Back
-          </button>
         </div>
       </main>
     );
@@ -109,11 +192,29 @@ const HomeworkDetail = () => {
       <PageTitle text="Homework Details"/>
       <div className="flex flex-col justify-between sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8 gap-8">
         <div>
-          <p className="text-2xl text-textBg-700 font-semibold mb-4">{homework.title}</p>
+          <div className='flex justify-between items-center mb-2 sm:mb-4'>
+            <p className="text-2xl text-textBg-700 font-semibold">{homework.subject_name}</p>
+            {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
+              <div className='flex z-10'>
+                <Button
+                  icon={<Pen size={16} color='#1A99EE' />}
+                  type="link"
+                  className="z-10"
+                  onClick={() => setIsEditModalOpen(true)}
+                />
+                <Button
+                  icon={<Trash size={16} color='#FF4D4F' />}
+                  type="link"
+                  className="z-10"
+                  onClick={() => setIsDeleteModalOpen(true)}
+                />
+              </div>
+            )}
+          </div>
           <p className='text-base text-textBg-700 mb-6'>{homework.description}</p>
-          <div className='flex gap-4'>
-            <Tag text={homework.subject} icon={<BookA size={16}/>}/>
-            <Tag text={new Date(homework.dueDate).toLocaleDateString()} icon={<Calendar size={16} />}/>
+          <div className='flex gap-3 flex-wrap'>
+            <Tag text={homework.teacher_full_name} icon={<User size={16} />}/>
+            <Tag text={new Date(homework.deadline).toLocaleDateString()} icon={<Calendar size={16} />}/>
           </div>
         </div>
 
@@ -195,6 +296,22 @@ const HomeworkDetail = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmDeletionForm
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete Homework"
+        description="Are you sure you want to delete this homework? This action cannot be undone."
+      />
+
+      <EditHomeworkForm
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={handleUpdate}
+        homework={homework}
+      />
+
     </main>
   );
 };

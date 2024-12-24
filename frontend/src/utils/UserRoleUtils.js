@@ -20,7 +20,6 @@ export const decodeToken = (token) => {
   }
 };
 
-//Co to za warunek xddd
 export const getUserRole = () => {
   const token = getToken();
   const decoded = decodeToken(token);
