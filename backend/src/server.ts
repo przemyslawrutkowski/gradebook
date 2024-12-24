@@ -24,6 +24,8 @@ import homeworksRouter from './routers/homeworksRouter';
 import jwt from 'jsonwebtoken';
 import { SECRET_KEY } from './modules/validateEnv';
 import AuthUser from './interfaces/authUser';
+import schoolEventsRouter from './routers/schoolEventsRouter';
+import eventTypesRouter from './routers/eventTypesRouter';
 
 const app = express();
 const server = http.createServer(app);
@@ -63,6 +65,8 @@ app.use('/grade', gradesRouter);
 app.use('/class-name', classNamesRouter)
 app.use('/message', messagesRouter);
 app.use('/homework', homeworksRouter);
+app.use('/school-event', schoolEventsRouter);
+app.use('/event-type', eventTypesRouter);
 
 io.use((socket: Socket, next) => {
     const token = socket.handshake.auth.token;

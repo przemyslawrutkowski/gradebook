@@ -68,7 +68,7 @@ model classes {
 
 model event_types {
   id            Bytes           @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
-  name          String          @db.VarChar(255)
+  name          String          @unique(map: "name") @db.VarChar(255)
   school_events school_events[]
 }
 
@@ -193,8 +193,9 @@ model school_events {
   name          String      @db.VarChar(255)
   location      String      @db.VarChar(255)
   description   String      @db.VarChar(255)
-  start_time    DateTime    @db.Timestamp(0)
-  end_time      DateTime    @db.Timestamp(0)
+  date          DateTime    @db.Date
+  start_time    DateTime    @db.Time(0)
+  end_time      DateTime    @db.Time(0)
   event_type_id Bytes       @db.Binary(16)
   event_types   event_types @relation(fields: [event_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "school_events_ibfk_1")
 
