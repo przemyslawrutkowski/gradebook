@@ -205,3 +205,59 @@ export const updateAttendance = async (req: Request, res: Response) => {
         return res.status(500).json(createErrorResponse('An unexpected error occurred while updating attendance. Please try again later.'));
     }
 };
+
+export const getStudentAttendances = async (req: Request, res: Response) => {
+    try {
+        const studentId: string = req.params.studentId;
+
+        const existingStudent = await prisma.students.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(studentId))
+            }
+        });
+
+        if (!existingStudent) {
+            return res.status(404).json(createErrorResponse('Student nie istnieje.'));
+        }
+
+        const attendances = await prisma.attendances.findMany({
+            where: {
+                student_id: Buffer.from(uuidParse(studentId))
+            },
+            include: {
+                lessons: {
+                    select: {
+                        subjects: {
+                            select: {
+                                name: true
+                            }
+                        },
+                        date: true,
+                        start_time: true,
+                        end_time: true 
+                    }
+                }
+            },
+            orderBy: {
+                date_time: 'desc'        
+            }
+        });
+
+        const responseData = attendances.map(attendance => ({
+            id: uuidStringify(attendance.id),
+            was_present: attendance.was_present,
+            was_late: attendance.was_late,
+            lesson: attendance.lessons ? {
+                subject_name: attendance.lessons.subjects.name,
+                date: attendance.lessons.date,
+                start_time: attendance.lessons.start_time,
+                end_time: attendance.lessons.end_time
+            } : null
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, 'Obecności studenta zostały pomyślnie pobrane.'));
+    } catch (err) {
+        console.error('Error retrieving student attendances', err);
+        return res.status(500).json(createErrorResponse('Wystąpił nieoczekiwany błąd podczas pobierania obecności. Proszę spróbować ponownie później.'));
+    }
+};
