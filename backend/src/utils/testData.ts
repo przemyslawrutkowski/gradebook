@@ -227,6 +227,32 @@ export const homework2 = {
     deadline: '2025-01-10'
 }
 
+export const eventType1 = {
+    name: 'Theme Day'
+}
+
+export const eventType2 = {
+    name: 'Talent Show'
+}
+
+export const schoolEvent1 = {
+    name: 'Science Fair',
+    location: 'Auditorium',
+    description: 'An event showcasing various science projects by students.',
+    date: '2024-05-15',
+    startTime: '09:00',
+    endTime: '15:00'
+}
+
+export const schoolEvent2 = {
+    name: 'International Day',
+    location: 'School Grounds',
+    description: 'A day to celebrate and learn about different cultures through performances, food, and exhibitions.',
+    date: '2024-06-20',
+    startTime: '10:00',
+    endTime: '18:00'
+}
+
 export const nonExistentId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
 export const invalidIdUrl = '%20';
 export const emptyString = '';
