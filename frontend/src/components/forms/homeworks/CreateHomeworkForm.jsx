@@ -58,7 +58,7 @@ function CreateHomeworkForm({ onSuccess, onClose, isOpen, lessonId }) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
-            className="w-full text-textBg-900 px-3 py-2 border border-textBg-200 rounded text-base focus:outline-none focus:border-textBg-500"
+            className="w-full text-textBg-900 px-3 py-2 border min-h-16 border-textBg-200 rounded text-base focus:outline-none focus:border-textBg-500"
             placeholder="Homework description..."
           />
         </div>

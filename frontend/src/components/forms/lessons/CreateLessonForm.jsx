@@ -107,7 +107,7 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:3000/semester/03b15d90-c30d-11ef-8f67-9c6b00209ac2', 
+      const response = await fetch('http://localhost:3000/semester/570e054f-c3ac-11ef-aba4-9c6b00209ac2', 
       {
         method: 'GET',
         headers: {

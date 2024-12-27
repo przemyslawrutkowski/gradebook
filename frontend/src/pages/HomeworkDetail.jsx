@@ -213,88 +213,93 @@ const HomeworkDetail = () => {
           </div>
           <p className='text-base text-textBg-700 mb-6'>{homework.description}</p>
           <div className='flex gap-3 flex-wrap'>
-            <Tag text={homework.teacher_full_name} icon={<User size={16} />}/>
+            {userRole !== UserRoles.Teacher && (
+              <Tag text={homework.teacher_full_name} icon={<User size={16} />}/>
+            )}
             <Tag text={new Date(homework.deadline).toLocaleDateString()} icon={<Calendar size={16} />}/>
           </div>
         </div>
-
-        <div className="mb-6">
-          <h3 className="text-xl text-textBg-700 font-semibold mb-4">Upload Files</h3>
-          <div
-            {...getRootProps()}
-            className={`flex flex-col items-center justify-center border-2 border-dashed rounded-md p-6 cursor-pointer transition ${
-              isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
-            }`}
-          >
-            <input {...getInputProps()} />
-            <CloudUpload color='#dee1e6' size={48} strokeWidth={1}/>
-            {isDragActive ? (
-              <p className="text-textBg-900 mt-2">Drop the files here...</p>
-            ) : (
-              <p className='text-textBg-900 mt-2'>Drag and drop files here</p>
-            )}
-            <button
-              type="button"
-              onClick={open}
-              className="bg-textBg-200 rounded-md text-textBg-900 px-6 py-2 mt-4"
-            >
-              Choose File
-            </button>
-            <p className="text-sm text-textBg-600 mt-3">Maximum size: 10MB</p>
-          </div>
-
-          {uploadedFiles.length > 0 && (
-            <div className="mt-4">
-                {uploadedFiles.map((file, index) => (
-                  <div key={index} className='p-4 bg-textBg-150 rounded-lg mb-4'>
-                    <div className='flex justify-between'>
-                      <div className='flex gap-4'>
-                        <File color='#565d6d' size={48} strokeWidth={1}/>
-                        <div className='flex flex-col justify-center gap-1'>
-                          <span className="font-medium text-base text-textBg-900">{file.name}</span>
-                          <p className='text-textBg-500 text-sm'>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                        </div>
-                      </div>
-                      <div>
-                      <button
-                        onClick={() => removeFile(file.name)}
-                        className="text-textBg-600 hover:text-textBg-700 font-semibold"
-                     >
-                        <X/>
-                     </button>
-                      </div>
-                    </div>
-                    <div className='mt-4'>
-                    {uploadProgress[file.name] !== undefined && (
-                     <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
-                         <div
-                          className="bg-blue-600 h-2.5 rounded-full"
-                           style={{ width: `${uploadProgress[file.name]}%` }}
-                         ></div>
+        
+        {userRole === UserRoles.Student && (
+          <div className="mb-6">
+           <h3 className="text-xl text-textBg-700 font-semibold mb-4">Upload Files</h3>
+           <div
+             {...getRootProps()}
+             className={`flex flex-col items-center justify-center border-2 border-dashed rounded-md p-6 cursor-pointer transition ${
+               isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+             }`}
+           >
+             <input {...getInputProps()} />
+             <CloudUpload color='#dee1e6' size={48} strokeWidth={1}/>
+             {isDragActive ? (
+               <p className="text-textBg-900 mt-2">Drop the files here...</p>
+             ) : (
+               <p className='text-textBg-900 mt-2'>Drag and drop files here</p>
+             )}
+             <button
+               type="button"
+               onClick={open}
+               className="bg-textBg-200 rounded-md text-textBg-900 px-6 py-2 mt-4"
+             >
+               Choose File
+             </button>
+             <p className="text-sm text-textBg-600 mt-3">Maximum size: 10MB</p>
+           </div>
+ 
+           {uploadedFiles.length > 0 && (
+             <div className="mt-4">
+                 {uploadedFiles.map((file, index) => (
+                   <div key={index} className='p-4 bg-textBg-150 rounded-lg mb-4'>
+                     <div className='flex justify-between'>
+                       <div className='flex gap-4'>
+                         <File color='#565d6d' size={48} strokeWidth={1}/>
+                         <div className='flex flex-col justify-center gap-1'>
+                           <span className="font-medium text-base text-textBg-900">{file.name}</span>
+                           <p className='text-textBg-500 text-sm'>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                         </div>
                        </div>
-                     )}
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-
-          <div className='mt-4'>
-            <Button
-              onClick={() => {
-                toast.success("Files have been uploaded!");
-                setUploadedFiles([]);
-                setUploadProgress({});
-              }}
-              size="m"
-              text="Upload"
-              className={`w-full ${
-                uploadedFiles.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
-              } transition`}
-              disabled={uploadedFiles.length === 0}
-            />
-          </div>
-        </div>
+                       <div>
+                       <button
+                         onClick={() => removeFile(file.name)}
+                         className="text-textBg-600 hover:text-textBg-700 font-semibold"
+                      >
+                         <X/>
+                      </button>
+                       </div>
+                     </div>
+                     <div className='mt-4'>
+                     {uploadProgress[file.name] !== undefined && (
+                      <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+                          <div
+                           className="bg-blue-600 h-2.5 rounded-full"
+                            style={{ width: `${uploadProgress[file.name]}%` }}
+                          ></div>
+                        </div>
+                      )}
+                     </div>
+                   </div>
+                 ))}
+             </div>
+           )}
+ 
+           <div className='mt-4'>
+             <Button
+               onClick={() => {
+                 toast.success("Files have been uploaded!");
+                 setUploadedFiles([]);
+                 setUploadProgress({});
+               }}
+               size="m"
+               text="Upload"
+               className={`w-full ${
+                 uploadedFiles.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+               } transition`}
+               disabled={uploadedFiles.length === 0}
+             />
+           </div>
+         </div>
+        )}
+       
       </div>
 
       <ConfirmDeletionForm

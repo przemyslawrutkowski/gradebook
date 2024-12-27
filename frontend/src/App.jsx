@@ -106,6 +106,7 @@ export default function App() {
              
               {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
                 <>
+                  <SidebarItem icon={<LayoutDashboard size={20} />} text="Attendance" path="/attendance" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Students" path="/students" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Classes" path="/classes" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Schedule" path="/schedule" />
@@ -146,6 +147,7 @@ export default function App() {
                
                 {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
                   <>
+                    <Route path="/attendance" element={<Attendance />} />
                     <Route path="students" element={<Students />} />
                     <Route path="/students/:id" element={<StudentDetails />} />
                     <Route path="/classes" element={<Classes />} />

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { UserType } from '../enums/userTypes.js';
-import { createHomework, getHomework, getLatestHomework, updateHomework, deleteHomework, getHomeworksForStudent, getAllHomeworks, getHomeworkById } from '../handlers/homeworks.js';
+import { createHomework, getHomework, getLatestHomework, updateHomework, deleteHomework, getHomeworksForStudent, getAllHomeworks, getHomeworkById, getHomeworksForTeacher } from '../handlers/homeworks.js';
 import { validateCreateHomework, validateGetHomework, validateGetLatestHomework, validateUpdateHomework, validateDeleteHomework } from '../validations/homeworksValidation.js';
 
 const homeworksRouter = Router();
@@ -19,6 +19,12 @@ homeworksRouter.get('/',
     authenticate,
     authorize([UserType.Administrator, UserType.Teacher]),
     getAllHomeworks
+);
+
+homeworksRouter.get('/teacher/:teacherId',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
+    getHomeworksForTeacher
 );
 
 homeworksRouter.get('/student/:studentId',

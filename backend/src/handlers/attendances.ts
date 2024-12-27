@@ -217,7 +217,7 @@ export const getStudentAttendances = async (req: Request, res: Response) => {
         });
 
         if (!existingStudent) {
-            return res.status(404).json(createErrorResponse('Student nie istnieje.'));
+            return res.status(404).json(createErrorResponse('Student does not exist.'));
         }
 
         const attendances = await prisma.attendances.findMany({
@@ -239,7 +239,7 @@ export const getStudentAttendances = async (req: Request, res: Response) => {
                 }
             },
             orderBy: {
-                date_time: 'desc'        
+                date_time: 'asc'        
             }
         });
 
@@ -249,15 +249,96 @@ export const getStudentAttendances = async (req: Request, res: Response) => {
             was_late: attendance.was_late,
             lesson: attendance.lessons ? {
                 subject_name: attendance.lessons.subjects.name,
-                date: attendance.lessons.date,
-                start_time: attendance.lessons.start_time,
-                end_time: attendance.lessons.end_time
+                date: attendance.lessons.date.toISOString().split('T')[0],
+                start_time: attendance.lessons.start_time.toISOString().split('T')[1].substr(0, 5), 
+                end_time: attendance.lessons.end_time.toISOString().split('T')[1].substr(0, 5),
             } : null
         }));
 
-        return res.status(200).json(createSuccessResponse(responseData, 'Obecności studenta zostały pomyślnie pobrane.'));
+        return res.status(200).json(createSuccessResponse(responseData, 'Student attendances have been successfully retrieved.'));
     } catch (err) {
         console.error('Error retrieving student attendances', err);
-        return res.status(500).json(createErrorResponse('Wystąpił nieoczekiwany błąd podczas pobierania obecności. Proszę spróbować ponownie później.'));
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving attendances. Please try again later.'));
+    }
+};
+
+
+export const getClassAttendances = async (req: Request, res: Response) => {
+    try {
+        const classId: string = req.params.classId;
+
+        const existingClass = await prisma.classes.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(classId))
+            },
+            include: {
+                students: {
+                    select: {
+                        id: true,
+                        first_name: true,
+                        last_name: true
+                    },
+                },
+            },
+        });
+
+        if (!existingClass) {
+            return res.status(404).json(createErrorResponse('Class does not exist.'));
+        }
+
+        const attendances = await prisma.attendances.findMany({
+            where: {
+                student_id: {
+                    in: existingClass.students.map(student => student.id),
+                },
+            },
+            include: {
+                students: {
+                    select: {
+                        id: true,
+                        first_name: true,
+                        last_name: true
+                    },
+                },
+                lessons: {
+                    select: {
+                        id: true,
+                        date: true,
+                        start_time: true,
+                        end_time: true,
+                        subjects: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    },
+                },
+            },
+            orderBy: {
+                date_time: 'asc',
+            },
+        });
+
+        const responseData = attendances.map(attendance => ({
+            attendanceId: uuidStringify(attendance.id),
+            was_present: attendance.was_present,
+            was_late: attendance.was_late,
+            student: {
+                id: uuidStringify(attendance.student_id),
+                first_name: attendance.students.first_name,
+                last_name: attendance.students.last_name,
+            },
+            lesson: {
+                subject_name: attendance.lessons.subjects.name,
+                date: attendance.lessons.date.toISOString().split('T')[0],
+                start_time: attendance.lessons.start_time.toISOString().split('T')[1].substr(0, 5), 
+                end_time: attendance.lessons.end_time.toISOString().split('T')[1].substr(0, 5),
+            },
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, 'Attendances retrieved successfully.'));
+    } catch (err) {
+        console.error('Error retrieving class attendances', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving attendances. Please try again later.'));
     }
 };
