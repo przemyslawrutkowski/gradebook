@@ -1,18 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../../Button';
-import { X } from 'lucide-react';
+import { X, Info } from 'lucide-react';
 import Modal from '../../Modal';
 import UserRoles from '../../../data/userRoles';
 import { getToken, getUserId } from '../../../utils/UserRoleUtils';
+import Tooltip from '../../Tooltip';
 
-const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSaveAttendance, handleLessonUpdate, fetchLessonsForClass, fetchLessonsForTeacher, selectedClass }) => {
+const AddAttendanceForm = ({
+  isOpen,
+  onClose,
+  selectedEvent,
+  userRole,
+  handleSaveAttendance,
+  handleLessonUpdate,
+  fetchLessonsForClass,
+  fetchLessonsForTeacher,
+  selectedClass
+}) => {
   const [lessonTopic, setLessonTopic] = useState(selectedEvent?.description || '');
   const [attendances, setAttendances] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [existingAttendances, setExistingAttendances] = useState(null);
+  const [attendanceDetails, setAttendanceDetails] = useState({});
 
-  const token = getToken(); 
+  const token = getToken();
   const userId = getUserId();
 
   useEffect(() => {
@@ -30,7 +42,7 @@ const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSav
         if (response.ok) {
           return response.json();
         } else if (response.status === 404) {
-          return null; 
+          return null;
         } else {
           throw new Error(`Error: ${response.status}`);
         }
@@ -65,6 +77,12 @@ const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSav
       });
     }
   }, [isOpen, selectedEvent, token]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setAttendanceDetails({});
+    }
+  }, [isOpen]);
 
   if (!selectedEvent) return null;
 
@@ -145,7 +163,6 @@ const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSav
           })
         ));
       } else {
-
         await handleSaveAttendance({
           lessonId: selectedEvent.id,
           attendances: processedAttendances,
@@ -168,7 +185,39 @@ const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSav
     }
   };
 
-  if (!selectedEvent) return null;
+  const fetchStudentAttendanceInfo = async (studentId) => {
+    if (attendanceDetails[studentId]?.data || attendanceDetails[studentId]?.loading) return;
+    
+    setAttendanceDetails(prev => ({
+      ...prev,
+      [studentId]: { data: null, loading: true, error: null }
+    }));
+
+    const date = new Date(selectedEvent.date).toISOString().split('T')[0];
+    try {
+      const response = await fetch(`http://localhost:3000/attendance/student/${studentId}/by-date?date=${encodeURIComponent(date)}`, 
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, 
+        }
+      });
+      if(!response.ok){
+        throw new Error(`Error: ${response.status}`);
+      }
+      const result = await response.json();
+      setAttendanceDetails(prev => ({
+        ...prev,
+        [studentId]: { data: result.data, loading: false, error: null }
+      }));
+    } catch(err){
+      setAttendanceDetails(prev => ({
+        ...prev,
+        [studentId]: { data: null, loading: false, error: err.message }
+      }));
+    }
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} widthHeightClassname="max-w-xl w-3xl max-h-xl">
@@ -209,39 +258,71 @@ const AddAttendanceForm = ({ isOpen, onClose, selectedEvent, userRole, handleSav
             <div className="max-h-96 overflow-y-auto custom-scrollbar">
               {selectedEvent.students.map((student) => (
                 <div className="w-full flex mb-2" key={student.id}>
-                  <div className="w-2/5">
+                  <div className="w-2/5 flex items-center">
                     <p className="text-base text-textBg-500">
                       {student.first_name} {student.last_name}
                     </p>
+
+                    <Tooltip 
+                      content={
+                        attendanceDetails[student.id]?.loading ? "Loading..." :
+                        attendanceDetails[student.id]?.error ? `Error: ${attendanceDetails[student.id].error}` :
+                        (attendanceDetails[student.id]?.data?.length > 0 ? (
+                          <div>
+                            {attendanceDetails[student.id].data.map((att, index) => (
+                              <div key={index} className="grid grid-cols-2">
+                                <p className="font-semibold text-textBg-100 text-left">{att.lesson.subject_name}</p>
+                                <p className='text-textBg-300 text-right'> {(att.was_present && !att.was_late) ? 'Present' : (att.was_present && att.was_late) ? 'Late' : 'Absent'}</p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div>No other attendance records.</div>
+                        ))
+                      }
+                      position="right"
+                    >
+                      <Info 
+                        size={16} 
+                        className="ml-2 text-textBg-700 hover:cursor-pointer" 
+                        onMouseEnter={() => fetchStudentAttendanceInfo(student.id)}
+                      />
+                    </Tooltip>
                   </div>
                   <div className="flex items-center justify-evenly w-3/5">
-                    <input
-                      type="radio"
-                      id={`present-${student.id}`}
-                      name={`attendance-${student.id}`}
-                      value="Present"
-                      checked={attendances.find(a => a.studentId === student.id)?.status === 'Present'}
-                      onChange={() => handleRadioChange(student.id, 'Present')}
-                      className="mr-2"
-                    />
-                    <input
-                      type="radio"
-                      id={`late-${student.id}`}
-                      name={`attendance-${student.id}`}
-                      value="Late"
-                      checked={attendances.find(a => a.studentId === student.id)?.status === 'Late'}
-                      onChange={() => handleRadioChange(student.id, 'Late')}
-                      className="mr-2"
-                    />
-                    <input
-                      type="radio"
-                      id={`absent-${student.id}`}
-                      name={`attendance-${student.id}`}
-                      value="Absent"
-                      checked={attendances.find(a => a.studentId === student.id)?.status === 'Absent'}
-                      onChange={() => handleRadioChange(student.id, 'Absent')}
-                      className="mr-2"
-                    />
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name={`attendance-${student.id}`}
+                        value="Present"
+                        checked={attendances.find(a => a.studentId === student.id)?.status === 'Present'}
+                        onChange={() => handleRadioChange(student.id, 'Present')}
+                        className="mr-1"
+                      />
+                      Present
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name={`attendance-${student.id}`}
+                        value="Late"
+                        checked={attendances.find(a => a.studentId === student.id)?.status === 'Late'}
+                        onChange={() => handleRadioChange(student.id, 'Late')}
+                        className="mr-1"
+                      />
+                      Late
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name={`attendance-${student.id}`}
+                        value="Absent"
+                        checked={attendances.find(a => a.studentId === student.id)?.status === 'Absent'}
+                        onChange={() => handleRadioChange(student.id, 'Absent')}
+                        className="mr-1"
+                      />
+                      Absent
+                    </label>
                   </div>
                 </div>
               ))}

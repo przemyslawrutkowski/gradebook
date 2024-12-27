@@ -342,3 +342,80 @@ export const getClassAttendances = async (req: Request, res: Response) => {
         return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving attendances. Please try again later.'));
     }
 };
+
+export const getStudentAttendancesByDate = async (req: Request, res: Response) => {
+    try {
+        const studentId: string = req.params.studentId;
+        const dateString: string = req.query.date as string;
+
+        if (!dateString) {
+            return res.status(400).json(createErrorResponse('Date query parameter is required.'));
+        }
+
+        const attendanceDate = new Date(dateString);
+        if (isNaN(attendanceDate.getTime())) {
+            return res.status(400).json(createErrorResponse('Invalid date format. Expected ISO format: YYYY-MM-DDTHH:mm:ss.sssZ.'));
+        }
+
+        const startOfDay = new Date(Date.UTC(attendanceDate.getUTCFullYear(), attendanceDate.getUTCMonth(), attendanceDate.getUTCDate()));
+        const endOfDay = new Date(Date.UTC(attendanceDate.getUTCFullYear(), attendanceDate.getUTCMonth(), attendanceDate.getUTCDate() + 1));
+
+        const existingStudent = await prisma.students.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(studentId)),
+            },
+        });
+
+        if (!existingStudent) {
+            return res.status(404).json(createErrorResponse('Student does not exist.'));
+        }
+
+        const attendances = await prisma.attendances.findMany({
+            where: {
+                student_id: Buffer.from(uuidParse(studentId)),
+                lessons: {
+                    date: {
+                        gte: startOfDay,
+                        lt: endOfDay,
+                    }
+                },
+            },
+            include: {
+                lessons: {
+                    select: {
+                        subjects: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                        date: true,
+                        start_time: true,
+                        end_time: true,
+                    },
+                },
+            },
+            orderBy: {
+                lessons:{
+                    start_time: 'asc',
+                } 
+            },
+        });
+
+        const responseData = attendances.map(attendance => ({
+            id: uuidStringify(attendance.id),
+            was_present: attendance.was_present,
+            was_late: attendance.was_late,
+            lesson: attendance.lessons ? {
+                subject_name: attendance.lessons.subjects.name,
+                date: attendance.lessons.date.toISOString().split('T')[0],
+                start_time: attendance.lessons.start_time.toISOString().split('T')[1].substr(0, 5),
+                end_time: attendance.lessons.end_time.toISOString().split('T')[1].substr(0, 5),
+            } : null,
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, 'Student attendances for the specified date have been successfully retrieved.'));
+    } catch (err) {
+        console.error('Error retrieving student attendances by date', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving attendances. Please try again later.'));
+    }
+};

@@ -584,20 +584,27 @@ export function Schedule() {
                                 </div>
                               </div>
                               <div className='flex items-center space-x-2 z-10'>
-                                <Tooltip content={
+                              <Tooltip 
+                                content={
                                   <div className='w-fit'>
-                                    <div className='flex gap-2'>
-                                      <p>Topic:</p>
+                                    <div className='flex gap-2 items-start'>
+                                      <p className="font-semibold text-textBg-100 text-left w-10">Topic</p>
                                       <p>{event.lessonTopic || 'N/A'}</p>
                                     </div>
-                                    <div className='flex gap-2'>
-                                      <p>Teacher:</p>
+                                    <div className='flex gap-2 items-start'>
+                                      <p className="font-semibold text-textBg-100 text-left w-10">Teacher</p>
                                       <p>{event.teacherName || 'N/A'}</p>
                                     </div>
                                   </div>
-                                } position="left">
-                                  <Info className="w-4 h-4 text-white cursor-pointer" strokeWidth={3} onClick={(e) => e.stopPropagation()}/>
-                                </Tooltip>
+                                } 
+                                position="left"
+                              >
+                                <Info 
+                                  className="w-4 h-4 text-white cursor-pointer" 
+                                  strokeWidth={3} 
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </Tooltip>
 
                                 {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
                                   <div className='hidden md:flex'>

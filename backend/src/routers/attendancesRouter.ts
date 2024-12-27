@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { handleInputErrors } from '../modules/middleware.js';
-import { createAttendances, getAttendances, getAttendancesInformations, getClassAttendances, getStudentAttendances, updateAttendance } from '../handlers/attendances.js';
+import { createAttendances, getAttendances, getAttendancesInformations, getClassAttendances, getStudentAttendances, getStudentAttendancesByDate, updateAttendance } from '../handlers/attendances.js';
 import { authenticate, authorize } from '../modules/auth.js';
 import { validateCreateAttendances, validateGetAttendances, validateGetAttendancesInformations, validateUpdateAttendance } from '../validations/attendancesValidation.js';
 import { UserType } from '../enums/userTypes.js';
@@ -49,6 +49,12 @@ attendancesRouter.get('/class/:classId',
     authenticate,
     authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
     getClassAttendances
+);
+
+attendancesRouter.get('/student/:studentId/by-date',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
+    getStudentAttendancesByDate
 );
 
 export default attendancesRouter;

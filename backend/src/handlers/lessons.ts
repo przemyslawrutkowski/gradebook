@@ -64,18 +64,18 @@ export const createLessons = async (req: Request, res: Response) => {
             return res.status(404).json(createErrorResponse(`Semester does not exist.`));
         }
 
-        const existingLesson: lessons | null = await prisma.lessons.findFirst({
-            where: {
-                teacher_id: Buffer.from(uuidParse(teacherId)),
-                class_id: Buffer.from(uuidParse(classId)),
-                subject_id: Buffer.from(uuidParse(subjectId)),
-                semester_id: Buffer.from(uuidParse(semesterId))
-            }
-        });
+        // const existingLesson: lessons | null = await prisma.lessons.findFirst({
+        //     where: {
+        //         teacher_id: Buffer.from(uuidParse(teacherId)),
+        //         class_id: Buffer.from(uuidParse(classId)),
+        //         subject_id: Buffer.from(uuidParse(subjectId)),
+        //         semester_id: Buffer.from(uuidParse(semesterId))
+        //     }
+        // });
 
-        if (existingLesson) {
-            return res.status(409).json(createErrorResponse(`Lessons already exists.`));
-        }
+        // if (existingLesson) {
+        //     return res.status(409).json(createErrorResponse(`Lessons already exists.`));
+        // }
 
         if (startDate < existingSemester.start_date || endDate > existingSemester.end_date) {
             return res.status(400).json(createErrorResponse('start and end dates must be within the semester dates.'));
