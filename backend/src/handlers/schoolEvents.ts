@@ -29,10 +29,10 @@ export const createSchoolEvent = async (req: Request, res: Response) => {
         const [endHour, endMinute] = endTime.split(':').map(Number);
 
         const startDateTime = new Date(req.body.date);
-        startDateTime.setHours(startHour, startMinute, 0, 0);
+        startDateTime.setUTCHours(startHour, startMinute, 0, 0);
 
         const endDateTime = new Date(req.body.date);
-        endDateTime.setHours(endHour, endMinute, 0, 0);
+        endDateTime.setUTCHours(endHour, endMinute, 0, 0);
 
         const createdSchoolEvent = await prisma.school_events.create({
             data: {
@@ -151,7 +151,7 @@ export const updateSchoolEvent = async (req: Request, res: Response) => {
             const [startHour, startMinute] = startTime.split(':').map(Number);
 
             const startDateTime = new Date(existingSchoolEvent.date);
-            startDateTime.setHours(startHour, startMinute, 0, 0);
+            startDateTime.setUTCHours(startHour, startMinute, 0, 0);
 
             data.start_time = startDateTime;
         }
@@ -159,7 +159,7 @@ export const updateSchoolEvent = async (req: Request, res: Response) => {
             const [endHour, endMinute] = endTime.split(':').map(Number);
 
             const endDateTime = new Date(existingSchoolEvent.date);
-            endDateTime.setHours(endHour, endMinute, 0, 0);
+            endDateTime.setUTCHours(endHour, endMinute, 0, 0);
 
             data.end_time = endDateTime;
         }

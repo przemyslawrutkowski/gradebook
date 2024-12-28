@@ -147,7 +147,7 @@ export const getAttendancesInformations = async (req: Request, res: Response) =>
 
         for (const attendance of attendances) {
             if (uuidStringify(attendance.student_id) !== studentId) continue;
-            const monthIndex: number = attendance.date_time.getMonth();
+            const monthIndex: number = attendance.date_time.getUTCMonth();
             const monthName: Month = Object.values(Month)[monthIndex] as Month;
 
             if (attendance.was_present) {
@@ -234,12 +234,12 @@ export const getStudentAttendances = async (req: Request, res: Response) => {
                         },
                         date: true,
                         start_time: true,
-                        end_time: true 
+                        end_time: true
                     }
                 }
             },
             orderBy: {
-                date_time: 'asc'        
+                date_time: 'asc'
             }
         });
 
@@ -250,7 +250,7 @@ export const getStudentAttendances = async (req: Request, res: Response) => {
             lesson: attendance.lessons ? {
                 subject_name: attendance.lessons.subjects.name,
                 date: attendance.lessons.date.toISOString().split('T')[0],
-                start_time: attendance.lessons.start_time.toISOString().split('T')[1].substr(0, 5), 
+                start_time: attendance.lessons.start_time.toISOString().split('T')[1].substr(0, 5),
                 end_time: attendance.lessons.end_time.toISOString().split('T')[1].substr(0, 5),
             } : null
         }));
@@ -331,7 +331,7 @@ export const getClassAttendances = async (req: Request, res: Response) => {
             lesson: {
                 subject_name: attendance.lessons.subjects.name,
                 date: attendance.lessons.date.toISOString().split('T')[0],
-                start_time: attendance.lessons.start_time.toISOString().split('T')[1].substr(0, 5), 
+                start_time: attendance.lessons.start_time.toISOString().split('T')[1].substr(0, 5),
                 end_time: attendance.lessons.end_time.toISOString().split('T')[1].substr(0, 5),
             },
         }));
@@ -395,9 +395,9 @@ export const getStudentAttendancesByDate = async (req: Request, res: Response) =
                 },
             },
             orderBy: {
-                lessons:{
+                lessons: {
                     start_time: 'asc',
-                } 
+                }
             },
         });
 
