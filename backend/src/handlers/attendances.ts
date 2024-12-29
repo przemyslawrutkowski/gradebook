@@ -239,8 +239,10 @@ export const getStudentAttendances = async (req: Request, res: Response) => {
                 }
             },
             orderBy: {
-                date_time: 'asc'        
-            }
+                lessons:{
+                    start_time: 'asc',
+                } 
+            },
         });
 
         const responseData = attendances.map(attendance => ({
@@ -315,7 +317,9 @@ export const getClassAttendances = async (req: Request, res: Response) => {
                 },
             },
             orderBy: {
-                date_time: 'asc',
+                lessons:{
+                    start_time: 'asc',
+                } 
             },
         });
 

@@ -238,26 +238,39 @@ export function Attendance() {
 
   const renderDateContent = (currentDate) => {
     const attendancesForDate = getAttendancesForDate(currentDate);
-    if (!attendancesForDate.length) return null;
+    const maxDots = 3;
+    let dotElements = [];
+    let uniqueStatuses = [];
 
+    attendancesForDate.map((attendance) => {
+      let status = null;
+      if(attendance.was_present && !attendance.was_late){
+        status = 'Present';
+      } else if(attendance.was_present && attendance.was_late){
+        status = 'Late';
+      } else{
+        status = 'Absent';
+      }
+
+      if(!uniqueStatuses.includes(status)){
+        uniqueStatuses.push(status);
+      }
+    }) 
+
+    dotElements = uniqueStatuses.map((status, index) => (
+      <span
+        key={index}
+        className={`w-1 h-1 rounded-full ${attendanceTypeColors[status]}`}
+      ></span>
+    ))
+  
     return (
-      <div className="absolute -bottom-[6px] flex gap-1 items-center z-10">
-        {attendancesForDate.map((attendance, index) => {
-          let status = 'Absent';
-          if (attendance.was_present) status = 'Present';
-          if (attendance.was_late) status = 'Late';
-          
-          return (
-            <span
-              key={index}
-              className={`w-1 h-1 rounded-full ${attendanceTypeColors[status]}`}
-              title={status}
-            ></span>
-          );
-        })}
+      <div className="absolute -bottom-[6px] flex gap-1 items-center">
+        {dotElements}
       </div>
     );
   };
+  
 
   const groupedAttendances = useMemo(() => {
     const group = {};
@@ -347,7 +360,7 @@ export function Attendance() {
                         {attendances.length > 0 ? (
                           <div className='w-full flex flex-col gap-2'>
                             {attendances.map(attendance => {
-                              const status = attendance.was_present ? (attendance.was_late ? 'Late' : 'Present') : 'Absent';
+                              const status = (attendance.was_present && !attendance.was_late) ? 'Present' : (attendance.was_present && attendance.was_late) ? 'Late' : 'Absent';
 
                               return (
                                 <div key={attendance.id} className='flex items-center gap-2 xxs:gap-4 border border-textBg-200 w-full p-3 rounded-xl'>
@@ -425,7 +438,7 @@ export function Attendance() {
                                         <Tooltip content={
                                           <div className='w-fit'>
                                             <div className='flex gap-2'>
-                                              <p>Subject:</p>
+                                              <p >Subject:</p>
                                               <p>{attendance.lesson.subject_name || 'N/A'}</p>
                                             </div>
                                             <div className='flex gap-2'>
