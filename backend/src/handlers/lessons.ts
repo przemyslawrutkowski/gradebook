@@ -64,25 +64,63 @@ export const createLessons = async (req: Request, res: Response) => {
             return res.status(404).json(createErrorResponse(`Semester does not exist.`));
         }
 
-        // const existingLesson: lessons | null = await prisma.lessons.findFirst({
-        //     where: {
-        //         teacher_id: Buffer.from(uuidParse(teacherId)),
-        //         class_id: Buffer.from(uuidParse(classId)),
-        //         subject_id: Buffer.from(uuidParse(subjectId)),
-        //         semester_id: Buffer.from(uuidParse(semesterId))
-        //     }
-        // });
-
-        // if (existingLesson) {
-        //     return res.status(409).json(createErrorResponse(`Lessons already exists.`));
-        // }
-
         if (startDate < existingSemester.start_date || endDate > existingSemester.end_date) {
             return res.status(400).json(createErrorResponse('start and end dates must be within the semester dates.'));
         }
 
         const dayMilliseconds = 24 * 60 * 60 * 1000;
         const weekMilliseconds = 7 * dayMilliseconds;
+
+        for (const schedule of lessonSchedules) {
+            let currentDate = new Date(startDate.getTime() + dayMilliseconds);
+
+            while (currentDate < endDate) {
+                const dayOfWeek = currentDate.getDay();
+
+                if (dayOfWeek !== schedule.dayOfWeek) {
+                    const daysUntilNextLesson = (schedule.dayOfWeek + 7 - dayOfWeek) % 7;
+                    currentDate = new Date(currentDate.getTime() + daysUntilNextLesson * dayMilliseconds);
+                }
+
+                if (currentDate < endDate) {
+                    const [startHour, startMinute] = schedule.startTime.split(':').map(Number);
+                    const [endHour, endMinute] = schedule.endTime.split(':').map(Number);
+
+                    const epochDate = new Date(0);
+
+                    const lessonStartTime = new Date(epochDate);
+                    lessonStartTime.setUTCHours(startHour, startMinute, 0, 0);
+
+                    const lessonEndTime = new Date(epochDate);
+                    lessonEndTime.setUTCHours(endHour, endMinute, 0, 0);
+
+                    const dateStr = currentDate.toISOString().split('T')[0];
+
+                    const startHours = lessonStartTime.getUTCHours().toString().padStart(2, '0');
+                    const startMinutes = lessonStartTime.getUTCMinutes().toString().padStart(2, '0');
+                    const startTimeStr = `${startHours}:${startMinutes}:00`;
+
+                    const endHours = lessonEndTime.getUTCHours().toString().padStart(2, '0');
+                    const endMinutes = lessonEndTime.getUTCMinutes().toString().padStart(2, '0');
+                    const endTimeStr = `${endHours}:${endMinutes}:00`;
+
+                    const existingLessons = await prisma.$queryRaw<lessons[]>`
+                        SELECT *
+                        FROM lessons
+                        WHERE date = ${dateStr}
+                            AND start_time = ${startTimeStr}
+                            AND end_time   = ${endTimeStr}
+                        LIMIT 1
+                    `;
+
+                    if (existingLessons.length > 0) {
+                        return res.status(409).json({ error: 'Lesson overlaps with another lesson.' });
+                    }
+                }
+
+                currentDate = new Date(currentDate.getTime() + (schedule.frequency * weekMilliseconds));
+            }
+        }
 
         const lessonsToCreate: {
             date: Date;
@@ -112,8 +150,8 @@ export const createLessons = async (req: Request, res: Response) => {
                     const lessonStartTime = new Date(currentDate);
                     const lessonEndTime = new Date(currentDate);
 
-                    lessonStartTime.setHours(startHour, startMinute, 0, 0);
-                    lessonEndTime.setHours(endHour, endMinute, 0, 0);
+                    lessonStartTime.setUTCHours(startHour, startMinute, 0, 0);
+                    lessonEndTime.setUTCHours(endHour, endMinute, 0, 0);
 
                     lessonsToCreate.push({
                         date: currentDate,
