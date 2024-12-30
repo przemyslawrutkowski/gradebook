@@ -1,11 +1,9 @@
-// src/components/forms/events/EditEventForm.js
-
 import React, { useState, useEffect } from 'react';
 import Button from "../../Button";
 import { X } from 'lucide-react';
 import Modal from '../../Modal';
 import { getToken } from '../../../utils/UserRoleUtils';
-import { formatDateToInput, formatTimeToInput } from '../../../utils/dateTimeUtils'; // Import funkcji
+import { formatDateToInput, formatTimeToInput } from '../../../utils/dateTimeUtils';
 
 function EditEventForm({ onSuccess, onClose, isOpen, event }) {
   const [name, setName] = useState(event?.name || '');
@@ -50,9 +48,9 @@ function EditEventForm({ onSuccess, onClose, isOpen, event }) {
         setName(event.name);
         setLocation(event.location);
         setDescription(event.description);
-        setDate(formatDateToInput(event.date)); // Sformatuj datę
-        setStartTime(formatTimeToInput(event.start_time)); // Sformatuj czas rozpoczęcia
-        setEndTime(formatTimeToInput(event.end_time)); // Sformatuj czas zakończenia
+        setDate(formatDateToInput(event.date));
+        setStartTime(formatTimeToInput(event.start_time));
+        setEndTime(formatTimeToInput(event.end_time)); 
         setEventTypeId(event.event_type_id);
       }
     }
@@ -63,7 +61,6 @@ function EditEventForm({ onSuccess, onClose, isOpen, event }) {
     setLoading(true);
     setError(null);
 
-    // Sprawdzenie czy czas zakończenia jest po czasie rozpoczęcia
     const startDateTime = new Date(`${date}T${startTime}`);
     const endDateTime = new Date(`${date}T${endTime}`);
     if (endDateTime <= startDateTime) {
@@ -95,8 +92,8 @@ function EditEventForm({ onSuccess, onClose, isOpen, event }) {
         throw new Error(errorData.message || `Error: ${response.status}`);
       }
 
-      onSuccess(); // Odśwież listę wydarzeń
-      onClose(); // Zamknij modal
+      onSuccess(); 
+      onClose();
     } catch (err) {
       console.error(err);
       setError(err.message || 'An unexpected error occurred.');

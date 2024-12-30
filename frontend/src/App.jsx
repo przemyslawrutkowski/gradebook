@@ -25,6 +25,7 @@ import SchoolYearsDetails from './pages/SchoolYearDetails';
 import { SocketProvider } from './context/SocketContext';
 import { Subjects } from './pages/Subjects';
 import EventTypes from './pages/EventTypes';
+import { Problems } from './pages/Problems';
 
 export const AuthContext = createContext();
 
@@ -118,6 +119,7 @@ export default function App() {
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Subjects" path="/subjects" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Homework" path="/homework" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Calendar" path="/calendar" />
+                  <SidebarItem icon={<LayoutDashboard size={20} />} text="Problems" path="/problems" />
                 </>
               )}
               
@@ -163,6 +165,7 @@ export default function App() {
                     <Route path="/homework" element={<Homework />} />
                     <Route path="/homework/:id" element={<HomeworkDetail />} />
                     <Route path="/calendar" element={<CalendarEvents />} />
+                    <Route path="/problems" element={<Problems />} />
                   </>
                 )}
               </>
