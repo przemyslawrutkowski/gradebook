@@ -2,7 +2,7 @@ import React from 'react';
 import { Edit, Pen, Trash } from 'lucide-react';
 import Button from './Button';
 
-const SubjectCard = ({ id, name, onEdit, onDelete }) => {
+const SubjectOrEventTypeCard = ({ id, name, onEdit, onDelete }) => {
   return (
     <div className="border px-4 py-2 rounded flex justify-between items-center">
       <p className='font-medium'>{name}</p>
@@ -14,4 +14,4 @@ const SubjectCard = ({ id, name, onEdit, onDelete }) => {
   );
 };
 
-export default SubjectCard;
+export default SubjectOrEventTypeCard;

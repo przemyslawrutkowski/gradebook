@@ -260,7 +260,7 @@ export function Attendance() {
     dotElements = uniqueStatuses.map((status, index) => (
       <span
         key={index}
-        className={`w-1 h-1 rounded-full ${attendanceTypeColors[status]}`}
+        className={`w-[5px] h-[5px] rounded-full ${attendanceTypeColors[status]}`}
       ></span>
     ))
   
@@ -416,9 +416,9 @@ export function Attendance() {
                     {selectedDate ? (
                       <>
                         {filteredClassAttendances.length > 0 ? (
-                          <div className='w-full flex flex-col gap-0'>
+                          <div className='w-full flex flex-col gap-2'>
                             {groupedAttendances.map(({ student, attendances }) => (
-                              <div key={student.id} className='flex items-center justify-between w-full p-3 rounded-xl'>
+                              <div key={student.id} className='flex items-center justify-between'>
                                 <div className='flex items-center gap-4'>
                                   <div className='flex items-center'>
                                     <span className='font-medium'>{student.first_name} {student.last_name}</span>
@@ -433,7 +433,7 @@ export function Attendance() {
                                     return (
                                       <div
                                         key={index}
-                                        className={`flex items-center justify-center w-4 h-4 rounded ${attendanceTypeColors[status]}`}
+                                        className={`flex items-center justify-center w-5 h-5 rounded ${attendanceTypeColors[status]}`}
                                       >
                                         <Tooltip content={
                                           <div className='w-fit'>
@@ -451,7 +451,7 @@ export function Attendance() {
                                             </div>
                                           </div>
                                         } position="left">
-                                          <Info className="w-[10px] h-[10px] text-white cursor-pointer" strokeWidth={3} onClick={(e) => e.stopPropagation()}/>
+                                          <Info className="w-3 h-3 text-white cursor-pointer" strokeWidth={3} onClick={(e) => e.stopPropagation()}/>
                                         </Tooltip>
                                       </div>
                                     );

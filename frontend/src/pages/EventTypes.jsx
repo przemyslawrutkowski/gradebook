@@ -6,27 +6,27 @@ import SubjectOrEventTypeCard from "../components/SubjectOrEventTypeCard";
 import { validate as validateUUID } from 'uuid'; 
 import { getToken } from '../utils/UserRoleUtils';
 import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm";
-import CreateSubjectForm from "../components/forms/subjects/CreateSubjectForm"
-import EditSubjectForm from "../components/forms/subjects/EditSubjectForm"
+import CreateEventTypeForm from "../components/forms/eventtypes/CreateEventTypeForm"
+import EditEventTypeForm from "../components/forms/eventtypes/EditEventTypeForm"
 
-export function Subjects() {
+export function EventTypes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [editingSubject, setEditingSubject] = useState(null);
-  const [subjectToDelete, setSubjectToDelete] = useState(null);
+  const [editingType, setEditingType] = useState(null);
+  const [typeToDelete, setTypeToDelete] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  const [subjects, setSubjects] = useState([]);
+  const [events, setEvents] = useState([]);
   const token = getToken();
 
-  const fetchSubjects = async () => {
+  const fetchTypes = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:3000/subject', {
+      const response = await fetch('http://localhost:3000/event-type', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -37,7 +37,7 @@ export function Subjects() {
         throw new Error(`Error: ${response.status}`);
       }
       const result = await response.json();
-      setSubjects(result.data);
+      setEvents(result.data);
     } catch (err) {
       setError(err.message); 
     } finally {
@@ -46,15 +46,15 @@ export function Subjects() {
   };
 
   useEffect(() => {
-    fetchSubjects();
+    fetchTypes();
   }, []);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  const filteredData = subjects.filter(sub =>
-    sub.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredData = events.filter(type =>
+    type.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const openCreateModal = () => setIsCreateModalOpen(true);
@@ -64,33 +64,33 @@ export function Subjects() {
     if (!validateUUID(id)) {
       return;
     }
-    setEditingSubject({ id, name });
+    setEditingType({ id, name });
     setIsEditModalOpen(true);
   };
 
   const closeEditModal = () => {
-    setEditingSubject(null);
+    setEditingType(null);
     setIsEditModalOpen(false);
   };
 
   const openDeleteModal = (id) => {
     if (validateUUID(id)) {
-      setSubjectToDelete(id);
+      setTypeToDelete(id);
       setIsDeleteModalOpen(true);
     }
   };
 
   const closeDeleteModal = () => {
-    setSubjectToDelete(null);
+    setTypeToDelete(null);
     setIsDeleteModalOpen(false);
   };
 
 
   const handleConfirmDelete = async () => {
-    if (!subjectToDelete) return;
+    if (!typeToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:3000/subject/${subjectToDelete}`, {
+      const response = await fetch(`http://localhost:3000/event-type/${typeToDelete}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +100,7 @@ export function Subjects() {
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
-      setSubjects(prev => prev.filter(cls => cls.id !== subjectToDelete));
+      setEvents(prev => prev.filter(type => type.id !== typeToDelete));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -118,7 +118,7 @@ export function Subjects() {
               <Search size={20} className='mr-2 text-textBg-600' />
               <input
                 type='text'
-                placeholder='Search Subjects'
+                placeholder='Search Class Names'
                 value={searchTerm}
                 onChange={handleSearch}
                 className="w-full focus:outline-none text-sm lg:text-base"
@@ -130,7 +130,7 @@ export function Subjects() {
           <Button
             size="m"
             icon={<Plus size={16} />}
-            text="Create Subject"
+            text="Create Class Name"
             className='w-full md:w-auto'
             type="primary"
             onClick={openCreateModal}
@@ -145,38 +145,38 @@ export function Subjects() {
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {filteredData.length > 0 ? (
-            filteredData.map(sub => (
+            filteredData.map(type => (
               <SubjectOrEventTypeCard
-                key={sub.id}
-                id={sub.id}
-                name={sub.name}
+                key={type.id}
+                id={type.id}
+                name={type.name}
                 onEdit={openEditModal}
                 onDelete={openDeleteModal}
               />
             ))
           ) : (
-            <p className="text-textBg-900 text-lg">No subjects found.</p>
+            <p className="text-textBg-900 text-lg">No events found.</p>
           )}
         </div>
       )}
 
-      <CreateSubjectForm
+      <CreateEventTypeForm
         isOpen={isCreateModalOpen}
         onSuccess={() => {
-          fetchSubjects(); 
+          fetchTypes(); 
           closeCreateModal();
         }}
         onClose={closeCreateModal}
       />
 
-      {editingSubject && (
-        <EditSubjectForm
+      {editingType && (
+        <EditEventTypeForm
           isOpen={isEditModalOpen}
           onClose={closeEditModal}
-          id={editingSubject.id}
-          currentName={editingSubject.name}
+          id={editingType.id}
+          currentName={editingType.name}
           onSuccess={() => {
-            fetchSubjects();
+            fetchTypes();
             closeEditModal();
           }}
         />
@@ -187,10 +187,10 @@ export function Subjects() {
         onClose={closeDeleteModal}
         onConfirm={handleConfirmDelete}
         title="Confirm Deletion"
-        description="Are you sure you want to delete this class name? This action is irreversible."
+        description="Are you sure you want to delete this event type? This action is irreversible."
       />
     </main>
   );
 }
 
-export default Subjects;
+export default EventTypes;

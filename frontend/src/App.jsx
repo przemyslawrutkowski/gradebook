@@ -24,6 +24,7 @@ import SchoolYears from './pages/SchoolYears';
 import SchoolYearsDetails from './pages/SchoolYearDetails';
 import { SocketProvider } from './context/SocketContext';
 import { Subjects } from './pages/Subjects';
+import EventTypes from './pages/EventTypes';
 
 export const AuthContext = createContext();
 
@@ -106,6 +107,7 @@ export default function App() {
              
               {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
                 <>
+                  <SidebarItem icon={<LayoutDashboard size={20} />} text="Event Types" path="/event-types" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Attendance" path="/attendance" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Students" path="/students" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Classes" path="/classes" />
@@ -147,6 +149,7 @@ export default function App() {
                
                 {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
                   <>
+                    <Route path="/event-types" element={<EventTypes />} />
                     <Route path="/attendance" element={<Attendance />} />
                     <Route path="students" element={<Students />} />
                     <Route path="/students/:id" element={<StudentDetails />} />
