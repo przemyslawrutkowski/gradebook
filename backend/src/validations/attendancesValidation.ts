@@ -1,4 +1,4 @@
-import { createArrayValidation, createBooleanValidation, createNotEmptyValidation } from '../utils/validationHelpers';
+import { createArrayValidation, createBooleanValidation, createDateValidation, createNotEmptyValidation } from '../utils/validationHelpers';
 
 export const validateCreateAttendances = () => [
     createArrayValidation('attendances'),
@@ -12,9 +12,17 @@ export const validateGetAttendances = () => [
     createNotEmptyValidation('lessonId', 'param')
 ];
 
-
-export const validateGetAttendancesInformations = () => [
+export const validateStudentId = () => [
     createNotEmptyValidation('studentId', 'param')
+];
+
+export const validateGetClassAttendances = () => [
+    createNotEmptyValidation('classId', 'param')
+];
+
+export const validateGetAttendancesByDate = () => [
+    createNotEmptyValidation('studentId', 'param'),
+    createDateValidation('date', 'param')
 ];
 
 export const validateUpdateAttendance = () => [

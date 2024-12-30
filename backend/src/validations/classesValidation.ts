@@ -25,7 +25,7 @@ export const validateCreateClass = () => [
     createNotEmptyValidation('schoolYearId')
 ];
 
-export const validateAssignStudent = () => [
+export const validateAssignUnassignStudent = () => [
     createNotEmptyValidation('classId', 'param'),
     createNotEmptyValidation('studentId')
 ];
@@ -37,4 +37,8 @@ export const validateUpdateClass = () => [
 
 export const validateClassId = () => [
     createNotEmptyValidation('classId', 'param')
+];
+
+export const validateStudentId = () => [
+    createNotEmptyValidation('studentId', 'param')
 ];

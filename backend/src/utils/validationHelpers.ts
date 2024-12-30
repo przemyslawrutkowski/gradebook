@@ -1,9 +1,10 @@
 import { body, param } from 'express-validator';
 
-export const createDateValidation = (field: string) =>
-    body(field)
-        .isDate()
-        .withMessage(`${field} must be a valid date in YYYY-MM-DD format.`);
+export const createDateValidation = (field: string, location: 'body' | 'param' = 'body') => {
+    const validator = location === 'body' ? body(field) : param(field);
+    return validator.isDate().withMessage(`${field} must be a valid date in YYYY-MM-DD format.`);
+}
+
 
 export const createNotEmptyValidation = (field: string, location: 'body' | 'param' = 'body') => {
     const validator = location === 'body' ? body(field) : param(field);
