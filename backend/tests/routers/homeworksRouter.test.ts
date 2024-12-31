@@ -276,7 +276,7 @@ suite('homeworksRouter', () => {
         assert.strictEqual(updateClassResponse.statusCode, 200, 'Expected the status code to be 200 for a successful class update.');
 
         const assignStudentResponse = await sendPatchRequest(
-            `/class/${createClassResponse.body.data.id}/assign-student`,
+            `/class/assign-student/${createClassResponse.body.data.id}`,
             { studentId: signUpResponse2.body.data }
         );
         assert.strictEqual(assignStudentResponse.statusCode, 200, 'Expected the status code to be 200 for a successful student assignment.');

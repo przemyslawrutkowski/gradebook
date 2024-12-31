@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { handleInputErrors } from '../modules/middleware.js';
-import { createAttendances, getAttendances, getAttendancesInformations, getClassAttendances, getStudentAttendances, getStudentAttendancesByDate, updateAttendance } from '../handlers/attendances.js';
+import { createAttendances, getLessonAttendances, getAttendancesStatistics, getClassAttendances, getStudentAttendances, getStudentAttendancesByDate, updateAttendance } from '../handlers/attendances.js';
 import { authenticate, authorize } from '../modules/auth.js';
-import { validateCreateAttendances, validateGetAttendances, validateGetAttendancesInformations, validateUpdateAttendance } from '../validations/attendancesValidation.js';
+import { validateCreateAttendances, validateGetAttendances, validateGetAttendancesByDate, validateGetClassAttendances, validateStudentId, validateUpdateAttendance } from '../validations/attendancesValidation.js';
 import { UserType } from '../enums/userTypes.js';
 
 const attendancesRouter = Router();
@@ -20,15 +20,39 @@ attendancesRouter.get('/:lessonId',
     authorize([UserType.Administrator, UserType.Teacher]),
     validateGetAttendances(),
     handleInputErrors,
-    getAttendances
+    getLessonAttendances
 );
 
-attendancesRouter.get('/informations/:studentId',
+attendancesRouter.get('/statistics/:studentId',
     authenticate,
     authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
-    validateGetAttendancesInformations(),
+    validateStudentId(),
     handleInputErrors,
-    getAttendancesInformations
+    getAttendancesStatistics
+);
+
+attendancesRouter.get('/student/:studentId',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
+    validateStudentId(),
+    handleInputErrors,
+    getStudentAttendances
+);
+
+attendancesRouter.get('/class/:classId',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
+    validateGetClassAttendances(),
+    handleInputErrors,
+    getClassAttendances
+);
+
+attendancesRouter.get('/student/:studentId/by-date/:date',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
+    validateGetAttendancesByDate(),
+    handleInputErrors,
+    getStudentAttendancesByDate
 );
 
 attendancesRouter.patch('/:attendanceId',
@@ -37,24 +61,6 @@ attendancesRouter.patch('/:attendanceId',
     validateUpdateAttendance(),
     handleInputErrors,
     updateAttendance
-);
-
-attendancesRouter.get('/student/:studentId',
-    authenticate,
-    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
-    getStudentAttendances
-);
-
-attendancesRouter.get('/class/:classId',
-    authenticate,
-    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
-    getClassAttendances
-);
-
-attendancesRouter.get('/student/:studentId/by-date',
-    authenticate,
-    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
-    getStudentAttendancesByDate
 );
 
 export default attendancesRouter;

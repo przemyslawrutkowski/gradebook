@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { validateCreateClass, validateAssignStudent, validateUpdateClass, validateClassId } from '../validations/classesValidation.js';
-import { getClasses, createClass, assignStudent, updateClass, deleteClass, getStudents, getClassById, removeStudentFromClass, getStudentClassId } from '../handlers/classes.js';
+import { validateCreateClass, validateAssignUnassignStudent, validateUpdateClass, validateClassId, validateStudentId } from '../validations/classesValidation.js';
+import { getClasses, createClass, assignStudent, updateClass, deleteClass, getStudents, getClassById, unassignStudent, getStudentClassId } from '../handlers/classes.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { UserType } from '../enums/userTypes.js';
 
@@ -21,7 +21,15 @@ classesRouter.get('',
     getClasses
 );
 
-classesRouter.get('/:classId/students',
+classesRouter.get('/:classId',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher]),
+    validateClassId(),
+    handleInputErrors,
+    getClassById
+);
+
+classesRouter.get('/students/:classId',
     authenticate,
     authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
     validateClassId(),
@@ -29,10 +37,12 @@ classesRouter.get('/:classId/students',
     getStudents
 );
 
-classesRouter.get('/:classId',
+classesRouter.get('/student/:studentId',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher]),
-    getClassById
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
+    validateStudentId(),
+    handleInputErrors,
+    getStudentClassId
 );
 
 classesRouter.patch('/:classId',
@@ -43,20 +53,20 @@ classesRouter.patch('/:classId',
     updateClass
 );
 
-classesRouter.patch('/:classId/assign-student',
+classesRouter.patch('/assign-student/:classId',
     authenticate,
     authorize([UserType.Administrator]),
-    validateAssignStudent(),
+    validateAssignUnassignStudent(),
     handleInputErrors,
     assignStudent
 );
 
-classesRouter.patch('/:classId/remove-student',
+classesRouter.patch('/unassign-student/:classId',
     authenticate,
     authorize([UserType.Administrator]),
-    validateAssignStudent(),
+    validateAssignUnassignStudent(),
     handleInputErrors,
-    removeStudentFromClass
+    unassignStudent
 );
 
 classesRouter.delete('/:classId',
@@ -66,11 +76,5 @@ classesRouter.delete('/:classId',
     handleInputErrors,
     deleteClass
 );
-
-classesRouter.get('/student/:studentId',
-    authenticate,
-    authorize([UserType.Student]),
-    getStudentClassId
-)
 
 export default classesRouter;
