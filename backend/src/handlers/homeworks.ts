@@ -170,6 +170,21 @@ export const getLatestHomework = async (req: Request, res: Response) => {
                     class_id: existingStudent.class_id
                 }
             },
+            select: {
+                id: true,
+                description: true,
+                deadline: true,
+                lesson_id: true,
+                lessons: { 
+                    select: {
+                        subjects: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                }
+            },
             orderBy: {
                 deadline: 'asc'
             }
@@ -179,16 +194,18 @@ export const getLatestHomework = async (req: Request, res: Response) => {
             id: string,
             description: string,
             deadline: string,
+            subject_name: string,
             lesson_id: string,
         } | null = null;
 
         if (latestHomework) {
             responseData = {
-                ...latestHomework,
                 id: uuidStringify(latestHomework.id),
+                description: latestHomework.description,
                 deadline: latestHomework.deadline.toISOString(),
+                subject_name: latestHomework.lessons.subjects.name,
                 lesson_id: uuidStringify(latestHomework.lesson_id)
-            }
+            };
         }
 
         return res.status(200).json(createSuccessResponse(responseData, 'Homework retrieved successfully.'));

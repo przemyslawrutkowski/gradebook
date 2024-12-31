@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React from "react";
+import React, {useState, useEffect} from "react";
 import PageTitle from '../components/PageTitle';
 import ExamCard from "../components/ExamCard";
 import {Atom, ChevronRight,  Dna, SquareSigma} from 'lucide-react';
@@ -7,12 +7,94 @@ import GradeCard from "../components/GradeCard";
 import AttendanceChart from "../components/BarChart";
 import HomeworkCard from "../components/HomeworkCard";
 import DashboardSchedule from "../components/DashboardSchedule";
-import homeworkData from '../data/homeworkData';
 import { Link } from "react-router-dom";
+import { getToken, getUserId } from "../utils/UserRoleUtils";
 
 export function Home() {
+  const [loadingLatestHomework, setLoadingLatestHomework] = useState(false);
+  const [errorLatestHomework, setErrorLatestHomework] = useState(null);
+  const [latestHomework, setLatestHomework] = useState([]);
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
+  const [attendanceError, setAttendanceError] = useState(null);
 
-  const dueDate = new Date(homeworkData[0].dueDate);
+  const token = getToken();
+  const studentId = getUserId();
+
+  const fetchLatestHomework = async () => {
+    setLoadingLatestHomework(true);
+    setErrorLatestHomework(null);
+    try {
+      const response = await fetch(`http://localhost:3000/homework/latest/${studentId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, 
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      const result = await response.json();
+      console.log(result.data);
+      setLatestHomework(result.data);
+    } catch (err) {
+      setErrorLatestHomework(err.message); 
+    } finally {
+      setLoadingLatestHomework(false); 
+    }
+  };
+
+  const fetchAttendanceData = async () => {
+    setAttendanceLoading(true);
+    setAttendanceError(null);
+    try {
+      const response = await fetch(`http://localhost:3000/attendance/informations/${studentId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, 
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      const result = await response.json();
+      console.log("Attendance Data:", result.data);
+      const transformedData = transformAttendanceData(result.data);
+      setAttendanceData(transformedData);
+    } catch (err) {
+      setAttendanceError(err.message);
+    } finally {
+      setAttendanceLoading(false);
+    }
+  };
+  
+  const transformAttendanceData = (data) => {
+    const academicMonths = [
+      'September', 'October', 'November', 'December',
+      'January', 'February', 'March', 'April',
+      'May', 'June'
+    ];
+
+    return academicMonths.map((month) => {
+      const monthData = data[month] || { present: 0, late: 0, absent: 0 };
+      const presence = monthData.present + monthData.late;
+      const all = presence + monthData.absent;
+
+      return {
+        name: month.substring(0, 3), // np. 'September' -> 'Sep'
+        Presence: presence,
+        All: all,
+      };
+    });
+  };
+
+  useEffect(() => {
+    fetchLatestHomework();
+    fetchAttendanceData();
+  }, []);
+
 
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
@@ -57,7 +139,21 @@ export function Home() {
                       <p className="text-textBg-700 text-sm underline hover:cursor-pointer">See All Homework</p>
                     </Link>
                   </div>
-                  <HomeworkCard id={1} subject={homeworkData[0].subject} title={homeworkData[0].subject} dueDate={homeworkData[0].dueDate} status={homeworkData[0].status}/>
+                  {loadingLatestHomework ? (
+                    <p>Loading homework...</p>
+                  ) : errorLatestHomework ? (
+                    <p className="text-red-500">Error: {errorLatestHomework}</p>
+                  ) : latestHomework ? (                  
+                      <HomeworkCard 
+                        key={latestHomework.id} 
+                        id={latestHomework.id} 
+                        subject={latestHomework.subject_name} 
+                        title={latestHomework.description} 
+                        dueDate={latestHomework.deadline}
+                      />
+                  ) : (
+                    <p>No homework available.</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -66,7 +162,15 @@ export function Home() {
           {/* Attendance Chart */}
           <div className="">
             <p className="text-textBg-700 font-bold text-2xl">Attendance</p>
-            <AttendanceChart />
+            {attendanceLoading ? (
+              <p>Loading attendance data...</p>
+            ) : attendanceError ? (
+              <p className="text-red-500">Error: {attendanceError}</p>
+            ) : attendanceData.length > 0 ? (
+              <AttendanceChart data={attendanceData} />
+            ) : (
+              <p>No attendance data available.</p>
+            )}
           </div>
         </div>
 

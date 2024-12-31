@@ -4,26 +4,12 @@ import {
   Bar,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
 } from 'recharts';
 
-const data = [
-  { name: 'Sep', Presence: 20, All: 30 },
-  { name: 'Oct', Presence: 30, All: 50 },
-  { name: 'Nov', Presence: 15, All: 25 },
-  { name: 'Dec', Presence: 25, All: 40 },
-  { name: 'Jan', Presence: 35, All: 50 },
-  { name: 'Feb', Presence: 30, All: 45 },
-  { name: 'Mar', Presence: 10, All: 20 },
-  { name: 'Apr', Presence: 20, All: 35 },
-  { name: 'May', Presence: 15, All: 30 },
-  { name: 'Jun', Presence: 25, All: 40 }
-];
-
-const AttendanceChart = () => {
+const AttendanceChart = ({ data }) => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -38,7 +24,7 @@ const AttendanceChart = () => {
   }, []);
   
   return (
-    <div style={{ width: '100%', height: isMobile ? 300 : 500}}>
+    <div style={{ width: '100%', height: isMobile ? 300 : 500 }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
@@ -84,4 +70,4 @@ const AttendanceChart = () => {
   );
 };
 
-export default AttendanceChart;
+export default AttendanceChart; 

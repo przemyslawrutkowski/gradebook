@@ -460,7 +460,7 @@ export const getLessonsThreeDaysBack = async (req: Request, res: Response) => {
         const month = now.getUTCMonth();
         const day = now.getUTCDate();
 
-        const todayMidnight = new Date(Date.UTC(year, month, day, 0, 0, 0));
+        const todayMidnight = new Date(Date.UTC(year, month, day - 1, 0, 0, 0));
 
         const threeDaysAgoMidnight = new Date(todayMidnight.getTime());
         threeDaysAgoMidnight.setUTCDate(threeDaysAgoMidnight.getUTCDate() - 3);
@@ -554,7 +554,7 @@ export const getLessonsThreeDaysAhead = async (req: Request, res: Response) => {
         const month = now.getUTCMonth();
         const day = now.getUTCDate();
 
-        const todayMidnight = new Date(Date.UTC(year, month, day, 0, 0, 0));
+        const todayMidnight = new Date(Date.UTC(year, month, day + 1, 0, 0, 0));
 
         const threeDaysAheadMidnight = new Date(todayMidnight.getTime());
         threeDaysAheadMidnight.setUTCDate(threeDaysAheadMidnight.getUTCDate() + 3);

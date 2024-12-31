@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { CircleAlert, SquareSigma } from 'lucide-react';
 
-const HomeworkCard = ({ id, subject, title, dueDate, status, urgency }) => {
+const HomeworkCard = ({ id, subject, title, dueDate, status }) => {
   let statusStyles = '';
   let showAlert = false;
   

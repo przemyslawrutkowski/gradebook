@@ -12,10 +12,11 @@ import {
 } from '../utils/SchedCalUtils';
 import Calendar from '../components/Calendar';
 import Button from "../components/Button";
-import { getToken } from "../utils/UserRoleUtils";
+import { getToken, getUserRole } from "../utils/UserRoleUtils";
 import CreateEventForm from "../components/forms/events/CreateEventForm"; 
 import EditEventForm from "../components/forms/events/EditEventForm";
 import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm"; // Upewnij się, że ścieżka jest poprawna
+import UserRoles from "../data/userRoles";
 
 const today = new Date();
 let baseYear = today.getFullYear();
@@ -40,6 +41,7 @@ export function CalendarEvents() {
   const [eventToDelete, setEventToDelete] = useState(null);
 
   const token = getToken();
+  const userRole = getUserRole();
   const [eventTypes, setEventTypes] = useState([]);
   const [eventTypeCardColors, setEventTypeCardColors] = useState({});
   const [eventTypeLegendColors, setEventTypeLegendColors] = useState({});
@@ -180,7 +182,6 @@ export function CalendarEvents() {
     fetchEvents(); 
   };
 
-  // Handlery do edycji i usuwania wydarzeń
   const openEditModal = (event) => {
     setEventToEdit(event);
     setIsEditModalOpen(true);
@@ -310,10 +311,12 @@ export function CalendarEvents() {
                                 </div>
                               </div>
                             </div>
+                            {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
                             <div className="flex">
                               <Button icon={<Pen size={16} color='#1A99EE'/>} type="link" onClick={() => openEditModal(event)}/>
                               <Button icon={<Trash size={16}/>} type="link" onClick={() => openDeleteModal(event)}/>
                             </div>
+                            )}
                           </div>
                         );
                       })}

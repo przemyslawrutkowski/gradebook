@@ -25,7 +25,7 @@ attendancesRouter.get('/:lessonId',
 
 attendancesRouter.get('/informations/:studentId',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher]),
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
     validateGetAttendancesInformations(),
     handleInputErrors,
     getAttendancesInformations
