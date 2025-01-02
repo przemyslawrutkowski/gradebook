@@ -238,7 +238,6 @@ export function Attendance() {
 
   const renderDateContent = (currentDate) => {
     const attendancesForDate = getAttendancesForDate(currentDate);
-    const maxDots = 3;
     let dotElements = [];
     let uniqueStatuses = [];
 

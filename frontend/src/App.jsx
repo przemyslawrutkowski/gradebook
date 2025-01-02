@@ -120,6 +120,7 @@ export default function App() {
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Homework" path="/homework" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Calendar" path="/calendar" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Problems" path="/problems" />
+                  <SidebarItem icon={<LayoutDashboard size={20} />} text="Grades" path="/grades" />
                 </>
               )}
               
@@ -166,6 +167,7 @@ export default function App() {
                     <Route path="/homework/:id" element={<HomeworkDetail />} />
                     <Route path="/calendar" element={<CalendarEvents />} />
                     <Route path="/problems" element={<Problems />} />
+                    <Route path="/grades" element={<Grades />} />
                   </>
                 )}
               </>

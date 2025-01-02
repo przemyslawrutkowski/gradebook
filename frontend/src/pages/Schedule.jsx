@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PageTitle from '../components/PageTitle';
 import Button from '../components/Button';
-import { Plus, Trash, Pen, Info, MoreVertical } from 'lucide-react'; // Import MoreVertical
+import { Plus, Trash, Pen, Info, MoreVertical, NotebookPen } from 'lucide-react'; // Import MoreVertical
 import Modal from '../components/Modal';
 import {
   dayNames,
@@ -25,6 +25,7 @@ import AddAttendanceForm from '../components/forms/attendance/AddAttendanceForm'
 import ConfirmDeletionForm from '../components/forms/lessons/ConfirmDeleteLessonForm';
 import Tooltip from '../components/Tooltip';
 import CreateHomeworkForm from "../components/forms/homeworks/CreateHomeworkForm"; 
+import CreateGradeForm from '../components/forms/grades/CreateGradeForm';
 
 const today = new Date();
 let baseYear = today.getFullYear();
@@ -45,8 +46,8 @@ export function Schedule() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false); 
   const [selectedEvent, setSelectedEvent] = useState(null); 
-  const [isCreateHomeworkModalOpen, setIsCreateHomeworkModalOpen] = useState(false); // Added state
-  const [selectedLessonForHomework, setSelectedLessonForHomework] = useState(null); // Added state
+  const [isCreateHomeworkModalOpen, setIsCreateHomeworkModalOpen] = useState(false); 
+  const [selectedLessonForHomework, setSelectedLessonForHomework] = useState(null);
   const calendarStartHour = 7;
   const calendarEndHour = 18;
   const calendarHeight = (calendarEndHour - calendarStartHour) * 66;
@@ -58,6 +59,8 @@ export function Schedule() {
   const [lessonToDelete, setLessonToDelete] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletionType, setDeletionType] = useState('single');
+  const [isCreateGradeModalOpen, setIsCreateGradeModalOpen] = useState(false);
+  const [selectedLessonForGrade, setSelectedLessonForGrade] = useState(null);
   const token = getToken();
   const userId = getUserId();
 
@@ -302,12 +305,24 @@ export function Schedule() {
     setIsCreateHomeworkModalOpen(false);
   };
 
+  const openCreateGradeModal = (lesson) => {
+    console.log('Opening CreateGradeModal for lesson:', lesson);
+    setSelectedLessonForGrade(lesson);
+    setIsCreateGradeModalOpen(true);
+  };
+  
+  const closeCreateGradeModal = () => {
+    setSelectedLessonForGrade(null);
+    setIsCreateGradeModalOpen(false);
+  };
+
   const mapLessonsToEvents = () => {
     return lessons.map((lesson) => ({
       id: lesson.id,
       title: lesson.subjects.name, 
       classId: lesson.class_id,
       subjectId: lesson.subject_id,
+      teacherId: lesson.teacher_id,
       startTime: new Date(lesson.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       endTime: new Date(lesson.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       bgColor: getBackgroundColor(lesson.subjects.name),
@@ -432,11 +447,14 @@ export function Schedule() {
     setSelectedEvent(null);
   };
 
-  // Dropdown Menu State and Handler
+  useEffect(() => {
+    console.log('selectedLessonForGrade:', selectedLessonForGrade);
+    console.log('isCreateGradeModalOpen:', isCreateGradeModalOpen);
+  }, [selectedLessonForGrade, isCreateGradeModalOpen]);
+
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const dropdownRef = useRef(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -583,34 +601,34 @@ export function Schedule() {
                                   {event.startTime} - {event.endTime}
                                 </div>
                               </div>
-                              <div className='flex items-center space-x-2 z-10'>
-                              <Tooltip 
-                                content={
-                                  <div className='w-fit'>
-                                    <div className='flex gap-2 items-start'>
-                                      <p className="font-semibold text-textBg-100 text-left w-10">Topic</p>
-                                      <p>{event.lessonTopic || 'N/A'}</p>
+                              <div className='flex items-center z-10'>
+                                <Tooltip 
+                                  content={
+                                    <div className='w-fit'>
+                                      <div className='flex gap-2 items-start'>
+                                        <p className="font-semibold text-textBg-100 text-left w-10">Topic</p>
+                                        <p>{event.lessonTopic || 'N/A'}</p>
+                                      </div>
+                                      <div className='flex gap-2 items-start'>
+                                        <p className="font-semibold text-textBg-100 text-left w-10">Teacher</p>
+                                        <p>{event.teacherName || 'N/A'}</p>
+                                      </div>
                                     </div>
-                                    <div className='flex gap-2 items-start'>
-                                      <p className="font-semibold text-textBg-100 text-left w-10">Teacher</p>
-                                      <p>{event.teacherName || 'N/A'}</p>
-                                    </div>
-                                  </div>
-                                } 
-                                position="left"
-                              >
-                                <Info 
-                                  className="w-4 h-4 text-white cursor-pointer" 
-                                  strokeWidth={3} 
-                                  onClick={(e) => e.stopPropagation()}
-                                />
-                              </Tooltip>
+                                  } 
+                                  position="left"
+                                >
+                                  <Info 
+                                    className="w-4 h-4 text-white cursor-pointer" 
+                                    strokeWidth={3} 
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                </Tooltip>
 
                                 {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
-                                  <div className='hidden md:flex'>
+                                  <div className='hidden md:flex -space-x-1'>
                                     <Button 
                                       type="link" 
-                                      icon={<Plus size={16} color='#fff' strokeWidth={3}/>} 
+                                      icon={<Plus size={20} color='#fff' strokeWidth={3}/>} 
                                       size="xs"
                                       className="z-10" 
                                       onClick={(e) => {
@@ -620,7 +638,17 @@ export function Schedule() {
                                     />
                                     <Button 
                                       type="link" 
-                                      icon={<Trash size={14} color='#fff' strokeWidth={3}/>} 
+                                      icon={<NotebookPen size={16} color='#fff' strokeWidth={3}/>} 
+                                      size="xs"
+                                      className="z-10" 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openCreateGradeModal(event);
+                                      }}
+                                    />
+                                    <Button 
+                                      type="link" 
+                                      icon={<Trash size={16} color='#fff' strokeWidth={3}/>} 
                                       size="xs"
                                       className="z-10" 
                                       onClick={(e) => {
@@ -632,7 +660,7 @@ export function Schedule() {
                                 )}
 
                                 {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
-                                  <div className='md:hidden relative' ref={dropdownRef}>
+                                  <div className='md:hidden relative ml-1' ref={dropdownRef}>
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -644,6 +672,20 @@ export function Schedule() {
                                     </button>
                                     {openDropdownId === event.id && (
                                       <div className="absolute right-0 mt-2 w-44 pl-3 py-1 bg-white border border-gray-200 rounded shadow-lg z-20">
+                                        <div className='flex items-center gap-2 text-textBg-600'>
+                                          <NotebookPen size={16} strokeWidth={3}/>
+                                          <button
+                                            className="py-2 text-sm font-medium"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              console.log('Add Grades button clicked for lesson:', event); // Debugging
+                                              openCreateGradeModal(event);
+                                              setOpenDropdownId(null);
+                                            }}
+                                          >
+                                            Add Grades
+                                          </button>
+                                        </div>
                                         <div className='flex items-center gap-2 text-textBg-600'>
                                           <Plus size={16} strokeWidth={3}/>
                                           <button
@@ -842,6 +884,28 @@ export function Schedule() {
         }}
         lessonId={selectedLessonForHomework ? selectedLessonForHomework.id : null}
       />
+
+<CreateGradeForm
+  isOpen={isCreateGradeModalOpen}
+  onClose={closeCreateGradeModal}
+  onSuccess={() => {
+    console.log('Oceny zostały dodane pomyślnie');
+    closeCreateGradeModal();
+    if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
+      if (selectedClass) {
+        fetchLessonsForClass(selectedClass);
+      } else {
+        fetchLessonsForUser(userId);
+      }
+    } else if (userRole === UserRoles.Student && userId) {
+      fetchLessonsForUser(userId);
+    }
+  }}
+  students={selectedLessonForGrade ? selectedLessonForGrade.students : []}
+  lessonId={selectedLessonForGrade ? selectedLessonForGrade.id : null}
+  subjectId={selectedLessonForGrade ? selectedLessonForGrade.subjectId : null}
+  teacherId={selectedLessonForGrade ? selectedLessonForGrade.teacherId : null}
+/>
 
       {updating && <div className="mt-4 text-blue-500">Updating lesson...</div>}
       {updateError && <div className="mt-4 text-red-500">Error: {updateError}</div>}

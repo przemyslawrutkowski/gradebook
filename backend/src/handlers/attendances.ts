@@ -107,6 +107,15 @@ export const getAttendancesStatistics = async (req: Request, res: Response) => {
     try {
         const studentId: string = req.params.studentId;
         const currentYear: number = new Date().getUTCFullYear();
+        const currentMonth: number = new Date().getUTCMonth();
+
+        let year = null;
+        if(currentMonth < 7){
+            year = currentYear - 1;
+        } else {
+            year = currentYear
+        }
+        
 
         const existingStudent: students | null = await prisma.students.findUnique({
             where: {
@@ -123,7 +132,7 @@ export const getAttendancesStatistics = async (req: Request, res: Response) => {
                 lessons: {
                     semesters: {
                         school_years: {
-                            name: `${currentYear}/${currentYear + 1}`
+                            name: `${year}/${year + 1}`
                         }
                     }
                 }

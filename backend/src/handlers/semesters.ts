@@ -201,3 +201,47 @@ export const deleteSemester = async (req: Request, res: Response) => {
         res.status(500).json(createErrorResponse('An unexpected error occurred while deleting semester. Please try again later.'));
     }
 }
+
+export const getSemestersBySchoolYearName = async (req: Request, res: Response) => {
+    try {
+        const currentYear: number = new Date().getUTCFullYear();
+        const currentMonth: number = new Date().getUTCMonth();
+
+        let year = null;
+        if(currentMonth < 7){
+            year = currentYear - 1;
+        } else {
+            year = currentYear
+        }
+
+        const existingSchoolYear = await prisma.school_years.findUnique({
+            where: {
+                name: `${year}/${year + 1}`
+            }
+        });
+
+        if (!existingSchoolYear) {
+            return res.status(404).json(createErrorResponse(`School year named does not exist.`));
+        }
+
+        const semestersList = await prisma.semesters.findMany({
+            where: {
+                school_year_id: existingSchoolYear.id
+            }
+        });
+
+        const responseData = semestersList.map((semester: semesters) => ({
+            ...semester,
+            id: uuidStringify(semester.id),
+            name: semester.semester,
+            start_date: semester.start_date.toISOString(),
+            end_date: semester.end_date.toISOString(),
+            school_year_id: uuidStringify(semester.school_year_id)
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, `Semesters for the school year have been successfully retrieved.`));
+    } catch (err) {
+        console.error('Error retrieving semesters by school year name', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving semesters. Please try again later.'));
+    }
+}

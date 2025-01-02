@@ -118,6 +118,58 @@ export const getGrades = async (req: Request, res: Response) => {
     }
 };
 
+export const getAllGradesForStudent = async (req: Request, res: Response) => {
+    try {
+        const studentId: string = req.params.studentId;
+
+        const existingStudent: students | null = await prisma.students.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(studentId))
+            }
+        });
+
+        if (!existingStudent) {
+            return res.status(404).json(createErrorResponse(`Student with ID ${studentId} does not exist.`));
+        }
+
+        const grades = await prisma.grades_gradebook.findMany({
+            where: {
+                student_id: Buffer.from(uuidParse(studentId)),
+            },
+            include: {
+                subjects: {
+                    select: {
+                        name: true
+                    }
+                },
+                teachers: {
+                    select: {
+                        first_name: true,
+                        last_name: true
+                    }
+                }
+            }
+        });
+
+        const responseData = grades.map(grade => ({
+            id: uuidStringify(grade.id),
+            description: grade.description,
+            grade: grade.grade,
+            date_given: grade.date_given.toISOString(),
+            subject_id: uuidStringify(grade.subject_id),
+            teacher_id: uuidStringify(grade.teacher_id),
+            subject: grade.subjects.name,
+            teacher_first_name: grade.teachers.first_name,
+            teacher_last_name: grade.teachers.last_name
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, 'Grades retrieved successfully.'));
+    } catch (err) {
+        console.error('Error retrieving grades', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving grades. Please try again later.'));
+    }
+};
+
 export const getThreeLatestGrades = async (req: Request, res: Response) => {
     try {
         const studentId: string = req.params.studentId;
@@ -235,5 +287,44 @@ export const deleteGrade = async (req: Request, res: Response) => {
     } catch (err) {
         console.error('Error deleting grade', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while deleting grade. Please try again later.'));
+    }
+};
+
+export const getAllGrades = async (req: Request, res: Response) => {
+    try {
+
+        const grades = await prisma.grades_gradebook.findMany({
+            include: {
+                subjects: {
+                    select: {
+                        name: true
+                    }
+                },
+                teachers: {
+                    select: {
+                        first_name: true,
+                        last_name: true
+                    }
+                }
+            }
+        });
+
+        const responseData = grades.map(grade => ({
+            id: uuidStringify(grade.id),
+            description: grade.description,
+            grade: grade.grade,
+            date_given: grade.date_given.toISOString(),
+            student_id: uuidStringify(grade.student_id),
+            subject_id: uuidStringify(grade.subject_id),
+            teacher_id: uuidStringify(grade.teacher_id),
+            subject: grade.subjects.name,
+            teacher_first_name: grade.teachers.first_name,
+            teacher_last_name: grade.teachers.last_name
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, 'Grades retrieved successfully.'));
+    } catch (err) {
+        console.error('Error retrieving grades', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving grades. Please try again later.'));
     }
 };

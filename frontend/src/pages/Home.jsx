@@ -49,7 +49,7 @@ export function Home() {
     setAttendanceLoading(true);
     setAttendanceError(null);
     try {
-      const response = await fetch(`http://localhost:3000/attendance/informations/${studentId}`, {
+      const response = await fetch(`http://localhost:3000/attendance/statistics/${studentId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
