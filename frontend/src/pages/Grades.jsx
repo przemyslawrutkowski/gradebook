@@ -4,9 +4,11 @@ import PageTitle from '../components/PageTitle';
 import Button from "../components/Button";
 import { getToken, getUserId, getUserRole } from '../utils/UserRoleUtils';
 import Tooltip from '../components/Tooltip';
-import { Info, User } from 'lucide-react';
+import { Edit, Info, Pen, Trash, User } from 'lucide-react';
 import UserRoles from "../data/userRoles";
 import Select from 'react-select';
+import EditGradeForm from "../components/forms/grades/EditGradeForm";
+import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm";
 
 export function Grades() {
   const [semester, setSemester] = useState(null);
@@ -19,6 +21,10 @@ export function Grades() {
   const [semestersList, setSemesters] = useState([]);
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [editingGrade, setEditingGrade] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [gradeToDelete, setGradeToDelete] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const token = getToken();
   const studentId = getUserId();
@@ -250,6 +256,52 @@ export function Grades() {
     }
   }, [semestersList]);
 
+  const openEditModal = (grade) => {
+    setEditingGrade(grade);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setEditingGrade(null);
+    setIsEditModalOpen(false);
+  };
+
+  const openDeleteModal = (grade) => {
+    setGradeToDelete(grade);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setGradeToDelete(null);
+    setIsDeleteModalOpen(false);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!gradeToDelete) return;
+
+    try {
+      const response = await fetch(`http://localhost:3000/grade/${gradeToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error: ${response.status}`);
+      }
+
+      // Update grades state by removing the deleted grade
+      setGrades(prev => prev.filter(cls => cls.id !== gradeToDelete.id));
+    } catch (err) {
+      setError(err.message || 'Failed to delete grade.');
+    } finally {
+      closeDeleteModal();
+    }
+  };
+
   const gradesBySemester = useMemo(() => grades.filter(grade => grade.semester === semester), [grades, semester]);
 
   const filteredGrades = useMemo(() => selectedSubject
@@ -400,6 +452,24 @@ export function Grades() {
                                   <p className='font-semibold'>Teacher:</p>
                                   <p>{`${grade.teacher_first_name} ${grade.teacher_last_name}`}</p>
                                 </div>
+                                {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
+                                  <div className='flex'>
+                                    <Button
+                                      size="s"
+                                      type="link"
+                                      icon={<Pen size={16} color="#fff"/>}
+                                      onClick={() => openEditModal(grade)}
+                                      className="px-2 py-1"
+                                    />
+                                    <Button
+                                      size="s"
+                                      type="link" 
+                                      icon={<Trash size={16} color="#fff"/>}
+                                      onClick={() => openDeleteModal(grade)}
+                                      className="px-2 py-1"
+                                    />
+                                  </div>
+                                )}
                               </div>
                             </div>
                           } position="left">
@@ -421,6 +491,28 @@ export function Grades() {
           </div>
         </div>
       </div>
+
+      {editingGrade && (
+        <EditGradeForm
+          grade={editingGrade}
+          isOpen={isEditModalOpen}
+          onClose={closeEditModal}
+          onSuccess={() => {
+            fetchGrades(userRole === UserRoles.Student ? studentId : selectedStudent);
+            closeEditModal();
+          }}
+        />
+      )}
+
+      {gradeToDelete && (
+        <ConfirmDeletionForm
+          isOpen={isDeleteModalOpen}
+          onClose={closeDeleteModal}
+          onConfirm={handleConfirmDelete}
+          title="Confirm Deletion"
+          description={`Are you sure you want to delete the grade "${gradeToDelete.description}"? This action is irreversible.`}
+        />
+      )}
     </main>
   );
 }
