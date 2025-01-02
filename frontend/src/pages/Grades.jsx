@@ -2,26 +2,62 @@
 import React, { useState, useEffect, useMemo } from "react";
 import PageTitle from '../components/PageTitle';
 import Button from "../components/Button";
-import { getToken, getUserId } from '../utils/UserRoleUtils';
+import { getToken, getUserId, getUserRole } from '../utils/UserRoleUtils';
 import Tooltip from '../components/Tooltip';
-import { Info } from 'lucide-react';
+import { Info, User } from 'lucide-react';
+import UserRoles from "../data/userRoles";
+import Select from 'react-select';
 
 export function Grades() {
-  const [semester, setSemester] = useState(1);
+  const [semester, setSemester] = useState(null);
   const [selectedSubject, setSelectedSubject] = useState("");
   const [grades, setGrades] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [fetchedClasses, setFetchedClasses] = useState([]);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [semestersList, setSemesters] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   const token = getToken();
   const studentId = getUserId();
+  const userRole = getUserRole();
+
+  useEffect(() => {
+    if (userRole === UserRoles.Student) {
+      setSelectedStudent(studentId);
+    }
+  }, [userRole, studentId]);
 
   const handleSemesterChange = (sem) => {
     setSemester(sem);
     setSelectedSubject("");
   };
 
-  const [semestersList, setSemesters] = useState([]);
+  const options = fetchedClasses.map(cls => ({
+    value: cls.id,
+    label: cls.class_names.name
+  }));
+
+  const handleChange = (selectedOption) => {
+    if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
+      setSelectedClass(selectedOption ? selectedOption.value : null);
+    }
+  };
+
+  const selectedOption = options.find(option => option.value === selectedClass) || null;
+
+  const handleStudentChange = (selectedOption) => {
+    setSelectedStudent(selectedOption ? selectedOption.value : null);
+  };
+
+  const studentOptions = students.map(student => ({
+    value: student.id,
+    label: `${student.first_name} ${student.last_name}`
+  }));
+
+  const selectedStudentOption = studentOptions.find(option => option.value === selectedStudent) || null;
 
   const determineSemester = (date) => {
     const gradeDate = new Date(date);
@@ -35,11 +71,48 @@ export function Grades() {
     return null;
   };
 
-  const fetchGrades = async () => {
+  const getCurrentSemester = () => {
+    const now = new Date();
+    for (let sem of semestersList) {
+      const start = new Date(sem.start_date);
+      const end = new Date(sem.end_date);
+      if (now >= start && now <= end) {
+        return sem.id;
+      }
+    }
+    return semestersList.length > 0 ? semestersList[0].id : null;
+  };
+
+  const fetchClasses = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`http://localhost:3000/grade/${studentId}`, {
+      const response = await fetch('http://localhost:3000/class', 
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, 
+        }
+      });
+      if(!response.ok){
+        throw new Error(`Error: ${response.status}`);
+      }
+      const result = await response.json();
+      console.log(result.data);
+      setFetchedClasses(result.data);
+    } catch(err){
+      setError(err.message);
+    } finally{
+      setLoading(false);
+    }
+  };
+
+  const fetchGrades = async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`http://localhost:3000/grade/${id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -70,6 +143,7 @@ export function Grades() {
   };
 
   const fetchSemesters = async () => {
+    setLoading(true);
     setError(null);
     try {
       const response = await fetch(`http://localhost:3000/semester/by-school-year`, {
@@ -91,8 +165,59 @@ export function Grades() {
     } catch (err) {
       console.error('Error fetching semesters:', err);
       setError(err.message || 'Failed to fetch semesters. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   };
+  
+  const fetchStudentsFromClass = async () => {
+    if (!selectedClass) {
+      console.warn("Selected class is null. Skipping fetch.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`http://localhost:3000/class/students/${selectedClass}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log(result.data);
+      setStudents(result.data);
+    } catch (err) {
+      console.error('Error fetching students:', err);
+      setError(err.message || 'Failed to fetch students. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator){
+      fetchClasses();
+    }
+  }, [userRole, token]);
+
+  useEffect(() => {
+    if(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator){
+      if (selectedClass) {
+        setSelectedStudent(null);
+        fetchStudentsFromClass();
+      }
+    }
+  }, [selectedClass, userRole, token]);
 
   useEffect(() => {
     fetchSemesters();
@@ -100,13 +225,32 @@ export function Grades() {
 
   useEffect(() => {
     if (semestersList.length > 0) {
-      fetchGrades();
+      const idToFetch = userRole === UserRoles.Student ? studentId : selectedStudent;
+      if (idToFetch) {
+        fetchGrades(idToFetch);
+      }
     }
-  }, [semestersList, studentId, token]);
+  }, [semestersList, studentId, token, userRole, selectedStudent]);
+
+  useEffect(() => {
+    if (
+      (userRole === UserRoles.Administrator || userRole === UserRoles.Teacher) &&
+      fetchedClasses.length > 0 &&
+      !selectedClass
+    ) {
+      setSelectedClass(fetchedClasses[0].id);
+    }
+  }, [userRole, fetchedClasses, selectedClass]);
+
+
+  useEffect(() => {
+    if (semestersList.length > 0) {
+      const currentSem = getCurrentSemester();
+      setSemester(currentSem);
+    }
+  }, [semestersList]);
 
   const gradesBySemester = useMemo(() => grades.filter(grade => grade.semester === semester), [grades, semester]);
-
-  const subjects = useMemo(() => Array.from(new Set(gradesBySemester.map((item) => item.subject))), [gradesBySemester]);
 
   const filteredGrades = useMemo(() => selectedSubject
     ? gradesBySemester.filter((item) => item.subject === selectedSubject)
@@ -148,27 +292,62 @@ export function Grades() {
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
       <PageTitle text="Grades" />
+      {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
+        <div className='flex flex-col gap-4 sm:flex-row sm:gap-8 sm:items-center mb-6 mt-4 sm:mt-0'>
+          <Select
+            value={selectedOption}
+            onChange={handleChange}
+            options={options}
+            placeholder="Select class"
+            className='w-full sm:w-48 focus:outline-none focus:border-none'
+            isSearchable
+          />
+          <Select
+            value={selectedStudentOption}
+            onChange={handleStudentChange}
+            options={studentOptions}
+            placeholder="Select student"
+            className='w-full sm:w-48 focus:outline-none focus:border-none'
+            isSearchable
+            isDisabled={!selectedClass}
+          />
+        </div>
+      )}
       <div className="flex flex-col 2xl:flex-row justify-between sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8 gap-8 2xl:gap-16">
         <div className="w-full">
           <div className="flex justify-between mb-4">
             <div>
-              <p className="text-textBg-700 text-2xl font-semibold">Select a subject</p>
+              <p className="text-textBg-700 text-2xl font-semibold">Your Grades</p>
             </div>
-            <div className='flex items-center'>
+            <div className='hidden sm:flex items-center'>
               {semestersList.map((sem) => (
                 <Button
                   key={sem.id}
                   size="s"
                   text={`Semester ${sem.semester}`}
                   type={semester === sem.id ? "primary" : "link"}
-                  className="min-w-[6rem] no-underline mr-2"
+                  className="min-w-[6rem] no-underline"
+                  onClick={() => handleSemesterChange(sem.id)}
+                />
+              ))}
+            </div>
+
+            <div className='sm:hidden flex items-center'>
+              {semestersList.map((sem) => (
+                <Button
+                  key={sem.id}
+                  size="s"
+                  text={`Sem. ${sem.semester}`}
+                  type={semester === sem.id ? "primary" : "link"}
+                  className="min-w-[4rem] max-w-[6rem]"
                   onClick={() => handleSemesterChange(sem.id)}
                 />
               ))}
             </div>
           </div>
 
-          {/* <div className="mb-6">
+          {/*
+          <div className="mb-6">
             <div className="flex flex-wrap gap-2">
               {subjects.map((subject, index) => (
                 <Button
@@ -188,17 +367,19 @@ export function Grades() {
                 />
               )}
             </div>
-          </div> */}
+          </div>
+          */}
 
           <div className="grid gap-4 sm:grid-cols-1">
             {filteredGrades.length > 0 ? (
-              <div className='w-full flex flex-col gap-2'>
+              <div className='w-full flex flex-col'>
                 {groupedGrades.map(({subject, grades}) =>(
-                  <div key={grades[0].subject_id} className='flex items-center justify-between py-2'>
+                  <div key={grades[0].subject_id} className='flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-2'>
                     <div className='flex items-center gap-4'>
-                      <span className='font-medium text-lg'>{subject}</span>
+                      <span className='font-medium text-lg overflow-hidden text-ellipsis'>{subject}</span>
                     </div>
-                    <div className='flex gap-4'>
+
+                    <div className='flex flex-wrap gap-2'>
                       {grades.map((grade) => (
                         <div
                           key={grade.id}
