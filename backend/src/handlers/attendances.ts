@@ -35,7 +35,11 @@ export const createAttendances = async (req: Request, res: Response) => {
             }
 
             if (!attendance.wasPresent && attendance.wasLate) {
-                return res.status(422).json(createErrorResponse(`Invalid attendance status: cannot be marked as late if student with ID '${attendance.studentId}' is absent'.`));
+                return res.status(422).json(createErrorResponse(`Invalid attendance status: cannot be marked as late if student with ID '${attendance.studentId}' is absent.`));
+            }
+
+            if (attendance.wasPresent && !attendance.wasLate && attendance.wasExcused) {
+                return res.status(422).json(createErrorResponse(`Invalid attendance status: cannot be marked as excused if student with ID '${attendance.studentId}' is present and not late.`));
             }
         }
 
@@ -55,6 +59,7 @@ export const createAttendances = async (req: Request, res: Response) => {
                     date_time: new Date(),
                     was_present: attendance.wasPresent,
                     was_late: attendance.wasLate,
+                    was_excused: attendance.wasExcused,
                     student_id: Buffer.from(uuidParse(attendance.studentId)),
                     lesson_id: Buffer.from(uuidParse(lessonId))
                 };
@@ -110,12 +115,12 @@ export const getAttendancesStatistics = async (req: Request, res: Response) => {
         const currentMonth: number = new Date().getUTCMonth();
 
         let year = null;
-        if(currentMonth < 7){
+        if (currentMonth < 7) {
             year = currentYear - 1;
         } else {
             year = currentYear
         }
-        
+
 
         const existingStudent: students | null = await prisma.students.findUnique({
             where: {
@@ -140,18 +145,18 @@ export const getAttendancesStatistics = async (req: Request, res: Response) => {
         });
 
         const responseData: Record<Month, MonthlyAttendance> = {
-            [Month.January]: { present: 0, late: 0, absent: 0 },
-            [Month.February]: { present: 0, late: 0, absent: 0 },
-            [Month.March]: { present: 0, late: 0, absent: 0 },
-            [Month.April]: { present: 0, late: 0, absent: 0 },
-            [Month.May]: { present: 0, late: 0, absent: 0 },
-            [Month.June]: { present: 0, late: 0, absent: 0 },
-            [Month.July]: { present: 0, late: 0, absent: 0 },
-            [Month.August]: { present: 0, late: 0, absent: 0 },
-            [Month.September]: { present: 0, late: 0, absent: 0 },
-            [Month.October]: { present: 0, late: 0, absent: 0 },
-            [Month.November]: { present: 0, late: 0, absent: 0 },
-            [Month.December]: { present: 0, late: 0, absent: 0 }
+            [Month.January]: { present: 0, late: 0, absent: 0, excused: 0 },
+            [Month.February]: { present: 0, late: 0, absent: 0, excused: 0 },
+            [Month.March]: { present: 0, late: 0, absent: 0, excused: 0 },
+            [Month.April]: { present: 0, late: 0, absent: 0, excused: 0 },
+            [Month.May]: { present: 0, late: 0, absent: 0, excused: 0 },
+            [Month.June]: { present: 0, late: 0, absent: 0, excused: 0 },
+            [Month.July]: { present: 0, late: 0, absent: 0, excused: 0 },
+            [Month.August]: { present: 0, late: 0, absent: 0, excused: 0 },
+            [Month.September]: { present: 0, late: 0, absent: 0, excused: 0 },
+            [Month.October]: { present: 0, late: 0, absent: 0, excused: 0 },
+            [Month.November]: { present: 0, late: 0, absent: 0, excused: 0 },
+            [Month.December]: { present: 0, late: 0, absent: 0, excused: 0 }
         };
 
         for (const attendance of attendances) {
@@ -159,7 +164,9 @@ export const getAttendancesStatistics = async (req: Request, res: Response) => {
             const monthIndex: number = attendance.date_time.getUTCMonth();
             const monthName: Month = Object.values(Month)[monthIndex] as Month;
 
-            if (attendance.was_present) {
+            if (attendance.was_excused) {
+                responseData[monthName].excused += 1;
+            } else if (attendance.was_present) {
                 if (attendance.was_late) {
                     responseData[monthName].late += 1;
                 } else {
@@ -388,9 +395,14 @@ export const updateAttendance = async (req: Request, res: Response) => {
         const attendanceId: string = req.params.attendanceId;
         const wasPresent: boolean = req.body.wasPresent;
         const wasLate: boolean = req.body.wasLate;
+        const wasExcused: boolean = req.body.wasExcused;
 
         if (!wasPresent && wasLate) {
             return res.status(422).json(createErrorResponse('Invalid attendance status: cannot be marked as late if student is absent'));
+        }
+
+        if (wasPresent && !wasLate && wasExcused) {
+            return res.status(422).json(createErrorResponse('Invalid attendance status: cannot be marked as excused if student is present and not late.'));
         }
 
         const attendance = await prisma.attendances.findUnique({
@@ -410,7 +422,8 @@ export const updateAttendance = async (req: Request, res: Response) => {
             },
             data: {
                 was_present: wasPresent,
-                was_late: wasLate
+                was_late: wasLate,
+                was_excused: wasExcused
             }
         });
 

@@ -21,10 +21,12 @@ gradesRouter.get('',
     getAllGrades
 )
 
-gradesRouter.get('/:studentId',
+gradesRouter.get('/latest/:studentId',
     authenticate,
     authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
-    getAllGradesForStudent
+    validateGetThreeLatestGrades(),
+    handleInputErrors,
+    getThreeLatestGrades
 )
 
 gradesRouter.get('/:studentId/:subjectId',
@@ -35,12 +37,10 @@ gradesRouter.get('/:studentId/:subjectId',
     getGrades
 )
 
-gradesRouter.get('/latest/:studentId',
+gradesRouter.get('/:studentId',
     authenticate,
     authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
-    validateGetThreeLatestGrades(),
-    handleInputErrors,
-    getThreeLatestGrades
+    getAllGradesForStudent
 )
 
 gradesRouter.patch('/:gradeId',

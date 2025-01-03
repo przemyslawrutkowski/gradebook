@@ -462,7 +462,7 @@ suite('classesRouter', () => {
             `/class/unassign-student/${createClassResponse.body.data.id}`,
             { studentId: signUpResponse.body.data }
         );
-        console.log(unassignStudentResponse.body);
+
         assert.strictEqual(unassignStudentResponse.statusCode, 200, 'Expected the status code to be 200 for a successful student unassignment.');
         assert.strictEqual(unassignStudentResponse.body.data.class_id, null, 'Expected class ID to be a null.');
     });

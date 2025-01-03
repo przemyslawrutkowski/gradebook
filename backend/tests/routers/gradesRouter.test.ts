@@ -171,19 +171,19 @@ suite('gradesRouter', () => {
         });
         assert.strictEqual(createGradeResponse2.statusCode, 200, 'Expected the status code to be 200 for a successful grade creation.');
 
-        const getGradesResponse = await sendGetRequest(`/grade/${signUpResponse1.body.data}`);
+        const getGradesResponse = await sendGetRequest(`/grade/latest/${signUpResponse1.body.data}`);
         assert.strictEqual(getGradesResponse.statusCode, 200, 'Expected the status code to be 200 for a successful three latest grades retrieval.');
         assert.strictEqual(getGradesResponse.body.data.length, 2, 'Expected the number of retrieved grades to be 2.');
     });
 
     test('getThreeLatestGrades() - validation error', async () => {
-        const getGradesResponse = await sendGetRequest(`/grade/${invalidIdUrl}`);
+        const getGradesResponse = await sendGetRequest(`/grade/latest/${invalidIdUrl}`);
         assert.strictEqual(getGradesResponse.statusCode, 400, 'Expected the status code to be 400 for a validation error.');
         assert.strictEqual(getGradesResponse.body.errors.length, 1, 'Expected the number of validation errors to be 1.');
     });
 
     test('getThreeLatestGrades() - student does not exist', async () => {
-        const getGradesResponse = await sendGetRequest(`/grade/${nonExistentId}`);
+        const getGradesResponse = await sendGetRequest(`/grade/latest/${nonExistentId}`);
         assert.strictEqual(getGradesResponse.statusCode, 404, 'Expected the status code to be 404 for a student that does not exist.');
     });
 

@@ -743,7 +743,6 @@ suite('lessonsRouter', () => {
             semesterId: createSemesterResponse.body.data.id
         });
         assert.strictEqual(createLessonsResponse.statusCode, 200, 'Expected the status code to be 200 for a successful lessons creation.');
-        console.log(createLessonsResponse.body)
 
         const getLessonsResponse = await sendGetRequest(`/lesson/today/${signUpResponse2.body.data}`);
         assert.strictEqual(getLessonsResponse.statusCode, 200, 'Expected the status code to be 200 for a successful lessons today retrieval.');
