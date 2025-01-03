@@ -111,6 +111,7 @@ model lessons {
   subject_id   Bytes         @db.Binary(16)
   semester_id  Bytes         @db.Binary(16)
   attendances  attendances[]
+  exams        exams[]
   homeworks    homeworks?
   teachers     teachers      @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_1")
   classes      classes       @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_2")
@@ -380,4 +381,14 @@ model class_names {
   id      Bytes     @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   name    String    @unique(map: "name") @db.VarChar(10)
   classes classes[]
+}
+
+model exams {
+  id        Bytes   @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
+  topic     String  @db.VarChar(255)
+  scope     String  @db.VarChar(512)
+  lesson_id Bytes   @db.Binary(16)
+  lessons   lessons @relation(fields: [lesson_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "exams_ibfk_1")
+
+  @@index([lesson_id], map: "lesson_id")
 }
