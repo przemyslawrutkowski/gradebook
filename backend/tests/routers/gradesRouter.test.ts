@@ -34,8 +34,9 @@ suite('gradesRouter', () => {
             teacherId: signUpResponse2.body.data,
         });
         assert.strictEqual(createGradeResponse.statusCode, 200, 'Expected the status code to be 200 for a successful grade creation.');
-        assert.strictEqual(createGradeResponse.body.data.grade, grade1.grade, `Expected the grade to be "${grade1.grade}".`);
         assert.strictEqual(createGradeResponse.body.data.description, grade1.description, `Expected the description to be "${grade1.description}".`);
+        assert.strictEqual(createGradeResponse.body.data.grade, grade1.grade, `Expected the grade to be "${grade1.grade}".`);
+        assert.strictEqual(createGradeResponse.body.data.weight, grade1.weight, `Expected the weight to be "${grade1.weight}".`);
         assert.strictEqual(createGradeResponse.body.data.student_id, signUpResponse1.body.data, 'Expected the student ID to match the created student ID.');
         assert.strictEqual(createGradeResponse.body.data.subject_id, createSubjectResponse.body.data.id, 'Expected the subject ID to match the created subject ID.');
         assert.strictEqual(createGradeResponse.body.data.teacher_id, signUpResponse2.body.data, 'Expected the teacher ID to match the created teacher ID.');
@@ -45,13 +46,14 @@ suite('gradesRouter', () => {
     test('createGrade() - validation error', async () => {
         const createGradeResponse = await sendPostRequest('/grade', {
             description: emptyString,
-            name: emptyString,
+            grade: 0,
+            weight: 0,
             studentId: emptyString,
             subjectId: emptyString,
             teacherId: emptyString,
         });
         assert.strictEqual(createGradeResponse.statusCode, 400, 'Expected the status code to be 400 for a validation error.');
-        assert.strictEqual(createGradeResponse.body.errors.length, 5, 'Expected the number of validation errors to be 5.');
+        assert.strictEqual(createGradeResponse.body.errors.length, 6, 'Expected the number of validation errors to be 6.');
     });
 
     test('createGrade() - student does not exist', async () => {
@@ -207,18 +209,23 @@ suite('gradesRouter', () => {
             `/grade/${createGradeResponse.body.data.id}`,
             {
                 description: grade2.description,
-                grade: grade2.grade
+                grade: grade2.grade,
+                weight: grade2.weight
+
             }
         );
         assert.strictEqual(updateGradeResponse.statusCode, 200, 'Expected the status code to be 200 for a successful grade update.');
         assert.strictEqual(updateGradeResponse.body.data.description, grade2.description, `Expected the updated description to be "${grade2.description}".`);
         assert.strictEqual(updateGradeResponse.body.data.grade, grade2.grade, `Expected the updated grade to be "${grade2.grade}".`);
+        assert.strictEqual(updateGradeResponse.body.data.weight, grade2.weight, `Expected the updated weight to be "${grade2.weight}".`);
     });
 
     test('updateGrade() - validation error', async () => {
         const updateGradeResponse = await sendPatchRequest(`/grade/${invalidIdUrl}`, {
             description: emptyString,
-            grade: emptyString
+            grade: 0,
+            weight: 0
+
         });
         assert.strictEqual(updateGradeResponse.statusCode, 400, 'Expected the status code to be 400 for a validation error.');
         assert.strictEqual(updateGradeResponse.body.errors.length, 2, 'Expected the number of validation errors to be 2.');
@@ -229,7 +236,8 @@ suite('gradesRouter', () => {
             `/grade/${nonExistentId}`,
             {
                 description: grade2.description,
-                grade: grade2.grade
+                grade: grade2.grade,
+                weight: grade2.weight
             }
         );
         assert.strictEqual(updateGradeResponse.statusCode, 404, 'Expected the status code to be 404 for a grade that does not exist.');

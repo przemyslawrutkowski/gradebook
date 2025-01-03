@@ -209,11 +209,13 @@ export const className2 = {
 
 export const grade1 = {
     grade: 3,
+    weight: 1,
     description: 'Activity during the lesson'
 };
 
 export const grade2 = {
     grade: 6,
+    weight: 2,
     description: 'Graphing geometry shadows in axonometry'
 };
 

@@ -76,6 +76,7 @@ model grades_gradebook {
   id          Bytes    @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   description String   @db.VarChar(255)
   grade       Int      @db.TinyInt
+  weight      Int      @db.TinyInt
   date_given  DateTime @db.Timestamp(0)
   student_id  Bytes    @db.Binary(16)
   subject_id  Bytes    @db.Binary(16)

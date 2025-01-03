@@ -9,6 +9,7 @@ export const createGrade = async (req: Request, res: Response) => {
     try {
         const description: string = req.body.description;
         const grade: number = req.body.grade;
+        const weight: number = req.body.weight;
         const studentId: string = req.body.studentId;
         const subjectId: string = req.body.subjectId;
         const teacherId: string = req.body.teacherId;
@@ -47,6 +48,7 @@ export const createGrade = async (req: Request, res: Response) => {
             data: {
                 description: description,
                 grade: grade,
+                weight: weight,
                 date_given: new Date(),
                 student_id: Buffer.from(uuidParse(studentId)),
                 subject_id: Buffer.from(uuidParse(subjectId)),
@@ -215,6 +217,7 @@ export const updateGrade = async (req: Request, res: Response) => {
         const gradeId: string = req.params.gradeId;
         const description: string = req.body.description;
         const grade: number = req.body.grade;
+        const weight: number = req.body.weight;
 
         const existingGrade: grades_gradebook | null = await prisma.grades_gradebook.findUnique({
             where: {
@@ -226,10 +229,11 @@ export const updateGrade = async (req: Request, res: Response) => {
             return res.status(404).json(createErrorResponse(`Grade does not exist.`));
         }
 
-        const data: { description?: string, grade?: number } = {};
+        const data: { description?: string, grade?: number, weight?: number } = {};
 
         if (description) data.description = description;
         if (grade) data.grade = grade;
+        if (weight) data.weight = weight;
 
         const updatedGrade = await prisma.grades_gradebook.update({
             where: {

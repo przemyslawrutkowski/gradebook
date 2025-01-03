@@ -5,12 +5,14 @@ const atLeastOneFieldValidation = () => {
     return body().custom((value, { req }) => {
         const description: string = req.body.description;
         const grade: number = req.body.grade;
+        const weight: number = req.body.weight;
 
-        if (!description && !grade)
+        if (!description && !grade && !weight)
             throw new Error('At least one field must be provided.')
 
         if (description) createNotEmptyValidation('description').run(req);
-        if (grade) createNotEmptyValidation('grade').run(req);
+        if (grade) createIntValidation('grade', 'body', 1, 6).run(req);
+        if (weight) createIntValidation('weight', 'body', 1, 3).run(req);
 
         const result = validationResult(req);
         if (!result.isEmpty()) return false;
@@ -21,7 +23,8 @@ const atLeastOneFieldValidation = () => {
 
 export const validateCreateGrade = () => [
     createNotEmptyValidation('description'),
-    createIntValidation('grade'),
+    createIntValidation('grade', 'body', 1, 6),
+    createIntValidation('weight', 'body', 1, 3),
     createNotEmptyValidation('studentId'),
     createNotEmptyValidation('subjectId'),
     createNotEmptyValidation('teacherId')
