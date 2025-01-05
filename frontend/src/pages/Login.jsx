@@ -49,7 +49,6 @@ export function Login({ onLogin }) {
       });
   
       const data = await response.json();
-      console.log('Odpowiedź z serwera:', data); 
   
       if (response.ok) {
         const token = data.token || data.data?.jwt || data.jwt; 

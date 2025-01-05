@@ -76,6 +76,12 @@ function Tooltip({ children, content, position = 'top', width = 'auto'}) {
     setVisible(true);
   };
 
+  const handleContentClick = () => {
+    // Ukryj tooltip po kliknięciu na zawartość
+    setVisible(false);
+    setLocked(false);
+  };
+
   const tooltipContent = visible ? (
     <div
       ref={tooltipRef}
@@ -85,6 +91,7 @@ function Tooltip({ children, content, position = 'top', width = 'auto'}) {
         ...tooltipStyles,
         position: 'fixed',
       }}
+      onClick={handleContentClick}
     >
       {content}
     </div>

@@ -429,7 +429,7 @@ export function Grades() {
                                       size="s"
                                       type="link"
                                       icon={<Pen size={16} color="#fff"/>}
-                                      onClick={() => {openEditModal(grade); document.activeElement.blur();}}
+                                      onClick={() => openEditModal(grade)}
                                       className="px-2 py-1"
                                     />
                                     <Button
