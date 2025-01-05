@@ -114,14 +114,16 @@ const AddAttendanceForm = ({
             id: attendance.id, 
             studentId: attendance.studentId, 
             wasPresent: true, 
-            wasLate: false 
+            wasLate: false,
+            wasExcused: false // Dodane
           };
         case 'Late':
           return { 
             id: attendance.id,
             studentId: attendance.studentId, 
             wasPresent: true, 
-            wasLate: true 
+            wasLate: true,
+            wasExcused: false // Dodane
           };
         case 'Absent':
         default:
@@ -129,7 +131,8 @@ const AddAttendanceForm = ({
             id: attendance.id,
             studentId: attendance.studentId, 
             wasPresent: false, 
-            wasLate: false 
+            wasLate: false,
+            wasExcused: false // Dodane
           };
       }
     })
@@ -159,6 +162,7 @@ const AddAttendanceForm = ({
             body: JSON.stringify({
               wasPresent: attendance.wasPresent,
               wasLate: attendance.wasLate,
+              // wasExcused is not updated via PATCH; it's always false on creation
             }),
           })
         ));
@@ -195,7 +199,7 @@ const AddAttendanceForm = ({
 
     const date = new Date(selectedEvent.date).toISOString().split('T')[0];
     try {
-      const response = await fetch(`http://localhost:3000/attendance/student/${studentId}/by-date?date=${encodeURIComponent(date)}`, 
+      const response = await fetch(`http://localhost:3000/attendance/student/${studentId}/by-date/${encodeURIComponent(date)}`, 
       {
         method: 'GET',
         headers: {
@@ -270,8 +274,8 @@ const AddAttendanceForm = ({
                         (attendanceDetails[student.id]?.data?.length > 0 ? (
                           <div>
                             {attendanceDetails[student.id].data.map((att, index) => (
-                              <div key={index} className="grid grid-cols-2">
-                                <p className="font-semibold text-textBg-100 text-left">{att.lesson.subject_name}</p>
+                              <div key={index} className="grid grid-cols-2 gap-2">
+                                <p className="font-semibold text-textBg-100 text-left">{att.lesson.subject.name}</p>
                                 <p className='text-textBg-300 text-right'> {(att.was_present && !att.was_late) ? 'Present' : (att.was_present && att.was_late) ? 'Late' : 'Absent'}</p>
                               </div>
                             ))}
@@ -341,4 +345,4 @@ const AddAttendanceForm = ({
   );
 };
 
-export default AddAttendanceForm;
+export default AddAttendanceForm; 

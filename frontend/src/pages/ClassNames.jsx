@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import PageTitle from '../components/PageTitle';
 import { Search, Plus } from 'lucide-react';
 import Button from "../components/Button";
@@ -10,7 +10,8 @@ import { getToken } from '../utils/UserRoleUtils';
 import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm";
 
 export function ClassNames() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [editingClassName, setEditingClassName] = useState(null);
@@ -49,13 +50,34 @@ export function ClassNames() {
     fetchClassNames();
   }, []);
 
-  const handleSearch = (e) => {
+  const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  const filteredData = classNames.filter(cls =>
-    cls.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSortChange = (e) => {
+    setSortOption(e.target.value);
+  };
+
+  const filteredAndSortedClassNames = useMemo(() => {
+    const filtered = classNames.filter(className =>
+      className.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const sorted = [...filtered].sort((a, b) => {
+      const nameA = a.name.toLowerCase();
+      const nameB = b.name.toLowerCase();
+
+      if (sortOption === 'name-asc') {
+        return nameA.localeCompare(nameB);
+      } else if (sortOption === 'name-desc') {
+        return nameB.localeCompare(nameA);
+      } else {
+        return 0;
+      }
+    });
+
+    return sorted;
+  }, [searchTerm, sortOption, classNames]);
 
   const openCreateModal = () => setIsCreateModalOpen(true);
   const closeCreateModal = () => setIsCreateModalOpen(false);
@@ -111,32 +133,40 @@ export function ClassNames() {
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
       <PageTitle text="Class Names"/>
-      <div className='flex flex-wrap justify-between mb-8'>
-        <div className='w-full md:w-auto mb-4 md:mb-0'>
-          <div className='flex gap-4 flex-wrap'>
-            <div className="flex h-9 w-full md:w-96 items-center px-3 py-3 bg-white rounded border border-solid border-textBg-200 text-textBg-600">
-              <Search size={20} className='mr-2 text-textBg-600' />
-              <input
-                type='text'
-                placeholder='Search Class Names'
-                value={searchTerm}
-                onChange={handleSearch}
-                className="w-full focus:outline-none text-sm lg:text-base"
-              />
+      <div className='flex flex-col md:flex-row gap-4 flex-wrap mb-6 justify-between'>
+              <div className="flex flex-col tn:flex-row items-center gap-4">
+                <div className="flex h-9 w-full md:w-64 items-center px-3 py-2 bg-white rounded border border-solid border-textBg-200 text-textBg-600">
+                  <Search size={20} className='mr-2 text-textBg-600' />
+                  <input
+                    type='text'
+                    placeholder='Search Event Types'
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    className="w-full focus:outline-none lg:text-base placeholder:text-textBg-600"
+                  />
+                </div>
+      
+                <select
+                  value={sortOption}
+                  onChange={handleSortChange}
+                  className="h-9 w-full md:w-56 px-3 bg-white rounded border border-solid border-textBg-200 text-textBg-600 focus:outline-none"
+                >
+                  <option value="" disabled hidden>Sort By</option>
+                  <option value="name-asc">Name (A-Z)</option>
+                  <option value="name-desc">Name (Z-A)</option>
+                </select>
+              </div>
+              <div className='w-full md:w-auto'>
+                <Button
+                  size="m"
+                  icon={<Plus size={16} />}
+                  text="Create Event Type"
+                  className='w-full md:w-auto'
+                  type="primary"
+                  onClick={openCreateModal}
+                />
+              </div>
             </div>
-          </div>
-        </div>
-        <div className='w-full md:w-auto'>
-          <Button
-            size="m"
-            icon={<Plus size={16} />}
-            text="Create Class Name"
-            className='w-full md:w-auto'
-            type="primary"
-            onClick={openCreateModal}
-          />
-        </div>
-      </div>
 
       {loading ? (
         <p className="text-textBg-900 text-lg">Loading...</p>
@@ -144,8 +174,8 @@ export function ClassNames() {
         <p className="text-red-500">{error}</p>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {filteredData.length > 0 ? (
-            filteredData.map(cls => (
+          {filteredAndSortedClassNames.length > 0 ? (
+            filteredAndSortedClassNames.map(cls => (
               <ClassNameCard
                 key={cls.id}
                 id={cls.id}

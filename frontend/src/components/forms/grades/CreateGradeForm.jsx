@@ -5,6 +5,7 @@ import { getToken } from '../../../utils/UserRoleUtils';
 
 function CreateGradeForm({ isOpen, onClose, onSuccess, students, lessonId, subjectId, teacherId }) {
   const [description, setDescription] = useState('');
+  const [weight, setWeight] = useState('');
   const [grades, setGrades] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -23,10 +24,17 @@ function CreateGradeForm({ isOpen, onClose, onSuccess, students, lessonId, subje
     setLoading(true);
     setError(null);
   
+    // Check if weight has been entered
+    if (weight === '') {
+      setError('Please enter the weight.');
+      setLoading(false);
+      return;
+    }
+
     try {
       const gradePromises = Object.entries(grades).map(async ([studentId, grade]) => {
         if (grade === '') return null;
-  
+
         const response = await fetch('http://localhost:3000/grade', {
           method: 'POST',
           headers: {
@@ -36,23 +44,25 @@ function CreateGradeForm({ isOpen, onClose, onSuccess, students, lessonId, subje
           body: JSON.stringify({
             description,
             grade: Number(grade),
+            weight: Number(weight),
             studentId,
             subjectId,
             teacherId,
           }),
         });
-  
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.message || `Error: ${response.status}`);
         }
-  
+
         return response.json();
       });
-  
+
       await Promise.all(gradePromises);
-  
+
       onSuccess();
+      handleClose();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -62,6 +72,7 @@ function CreateGradeForm({ isOpen, onClose, onSuccess, students, lessonId, subje
 
   const handleClose = () => {
     setDescription('');
+    setWeight('');
     setGrades({});
     setError(null);
     onClose();
@@ -84,6 +95,19 @@ function CreateGradeForm({ isOpen, onClose, onSuccess, students, lessonId, subje
         </div>
 
         <div>
+          <label className="block text-sm font-medium text-gray-700">Weight</label>
+          <input
+            type="number"
+            min="1"
+            max="10"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+            required
+            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+            placeholder="Enter grade weight"
+          />
+        </div>
+        <div>
           <label className="block text-sm font-medium text-gray-700">Students</label>
           <div className="mt-2 space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
             {students.map(student => (
@@ -97,6 +121,7 @@ function CreateGradeForm({ isOpen, onClose, onSuccess, students, lessonId, subje
                   onChange={(e) => handleGradeChange(student.id, e.target.value)}
                   className="w-20 border border-gray-300 rounded-md p-1"
                   placeholder="Grade"
+                  required
                 />
               </div>
             ))}

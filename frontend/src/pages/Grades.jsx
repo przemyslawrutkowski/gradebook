@@ -105,7 +105,6 @@ export function Grades() {
         throw new Error(`Error: ${response.status}`);
       }
       const result = await response.json();
-      console.log(result.data);
       setFetchedClasses(result.data);
     } catch(err){
       setError(err.message);
@@ -132,7 +131,6 @@ export function Grades() {
       }
 
       const result = await response.json();
-      console.log(result.data);
 
       const gradesWithSemester = result.data.map(grade => ({
         ...grade,
@@ -166,7 +164,6 @@ export function Grades() {
       }
 
       const result = await response.json();
-      console.log(result.data);
       setSemesters(result.data);
     } catch (err) {
       console.error('Error fetching semesters:', err);
@@ -200,7 +197,6 @@ export function Grades() {
       }
 
       const result = await response.json();
-      console.log(result.data);
       setStudents(result.data);
     } catch (err) {
       console.error('Error fetching students:', err);
@@ -320,7 +316,6 @@ export function Grades() {
       }
       group[subjectId].grades.push(grade);
     });
-    console.log(group);
     return Object.values(group);
   }, [filteredGrades]);
 
@@ -398,30 +393,6 @@ export function Grades() {
             </div>
           </div>
 
-          {/*
-          <div className="mb-6">
-            <div className="flex flex-wrap gap-2">
-              {subjects.map((subject, index) => (
-                <Button
-                  key={index}
-                  size="s"
-                  text={subject}
-                  type={selectedSubject === subject ? "primary" : "secondary"}
-                  onClick={() => setSelectedSubject(subject)}
-                />
-              ))}
-              {selectedSubject && (
-                <Button
-                  size="s"
-                  text="Clear"
-                  type="link"
-                  onClick={() => setSelectedSubject("")}
-                />
-              )}
-            </div>
-          </div>
-          */}
-
           <div className="grid gap-4 sm:grid-cols-1">
             {filteredGrades.length > 0 ? (
               <div className='w-full flex flex-col'>
@@ -458,7 +429,7 @@ export function Grades() {
                                       size="s"
                                       type="link"
                                       icon={<Pen size={16} color="#fff"/>}
-                                      onClick={() => openEditModal(grade)}
+                                      onClick={() => {openEditModal(grade); document.activeElement.blur();}}
                                       className="px-2 py-1"
                                     />
                                     <Button

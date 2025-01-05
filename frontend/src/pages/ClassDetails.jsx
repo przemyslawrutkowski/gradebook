@@ -62,7 +62,6 @@ function ClassDetails() {
             throw new Error(`Error: ${response.status}`);
         }
         const result = await response.json();
-        console.log(result.data);
         const available = result.data.filter(student => student.class_name === "N/A");
         setAvailableStudents(available);
     } catch (err) {
@@ -87,7 +86,7 @@ function ClassDetails() {
     try {
       for (const student of selectedStudents) {
         const studentId = student.value;
-        const response = await fetch(`http://localhost:3000/class/${id}/assign-student`, {
+        const response = await fetch(`http://localhost:3000/class/assign-student/${id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -111,7 +110,7 @@ function ClassDetails() {
 
   const handleRemoveStudent = async (studentId) => {
     try {
-        const response = await fetch(`http://localhost:3000/class/${id}/remove-student`, {
+        const response = await fetch(`http://localhost:3000/class/unassign-student/${id}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -166,8 +165,6 @@ function ClassDetails() {
       closeDeleteModal();
     }
   };
-
-  console.log('Available students:', availableStudents);
 
 
   if (loading) {
@@ -225,7 +222,7 @@ function ClassDetails() {
         <div>
         <Select
           options={availableStudents.map((student) => ({ value: student.id, label: student.first_name + " " + student.last_name}))}
-          onChange={(selected) => { setSelectedStudents(selected); console.log(selected); }}
+          onChange={(selected) => { setSelectedStudents(selected)}}
           isMulti
           placeholder="Select students to add"
           className="w-full mb-4"

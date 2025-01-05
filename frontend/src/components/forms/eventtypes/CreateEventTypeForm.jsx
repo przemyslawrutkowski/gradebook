@@ -35,11 +35,12 @@ function CreateEventTypeForm({ onSuccess, onClose, isOpen }) {
       setError(err.response?.data?.message || 'Error.');
     } finally {
       setLoading(false);
+      setName('');
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} widthHeightClassname="max-w-lg">
+    <Modal isOpen={isOpen} onClose={onClose} widthHeightClassname="max-w-sm sm:max-w-lg">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-textBg-700">Create Event Type</h2>
         <X size={24} className="hover:cursor-pointer" onClick={onClose}/>
@@ -64,13 +65,13 @@ function CreateEventTypeForm({ onSuccess, onClose, isOpen }) {
             text="Cancel"
             type="secondary"
             onClick={onClose}
-            className="px-4 py-2"
+            className="px-4 py-2 min-w-24 w-24 xs:min-w-36 xs:w-36"
           />
           <Button
             text={loading ? "Creating..." : "Create"}
             type="primary"
             disabled={loading}
-            className="px-4 py-2"
+            className="px-4 py-2 min-w-24 w-24 xs:min-w-36 xs:w-36"
           />
         </div>
       </form>

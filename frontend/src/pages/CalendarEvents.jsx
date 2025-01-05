@@ -246,12 +246,14 @@ export function CalendarEvents() {
                 </span>
               )}
             </p>
-            <Button 
-              size="m" 
-              text="Create Event" 
-              icon={<Plus size={16} color="#fff"/>} 
-              onClick={() => setIsCreateModalOpen(true)}
-            />
+            {userRole === UserRoles.Teacher || userRole === UserRoles.Administrator && (
+              <Button 
+                size="m" 
+                text="Create Event" 
+                icon={<Plus size={16} color="#fff"/>} 
+                onClick={() => setIsCreateModalOpen(true)}
+              />
+            )}
           </div>
 
           <div className='flex flex-col gap-4 xl:flex-row xl:gap-16'>

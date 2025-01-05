@@ -1,7 +1,8 @@
+// Schedule.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import PageTitle from '../components/PageTitle';
 import Button from '../components/Button';
-import { Plus, Trash, Pen, Info, MoreVertical, NotebookPen } from 'lucide-react'; // Import MoreVertical
+import { Plus, Trash, Pen, Info, MoreVertical, NotebookPen } from 'lucide-react';
 import Modal from '../components/Modal';
 import {
   dayNames,
@@ -26,6 +27,7 @@ import ConfirmDeletionForm from '../components/forms/lessons/ConfirmDeleteLesson
 import Tooltip from '../components/Tooltip';
 import CreateHomeworkForm from "../components/forms/homeworks/CreateHomeworkForm"; 
 import CreateGradeForm from '../components/forms/grades/CreateGradeForm';
+import DropdownMenu from '../components/Dropdown';
 
 const today = new Date();
 let baseYear = today.getFullYear();
@@ -77,7 +79,6 @@ export function Schedule() {
         if (decoded) {
           const role = getUserRole();
           setUserRole(role);
-          console.log('User role:', role);
 
           if (role === UserRoles.Teacher) {
             setSelectedClass(null);
@@ -131,7 +132,6 @@ export function Schedule() {
         throw new Error(`Error: ${response.status}`);
       }
       const result = await response.json();
-      console.log(result.data);
       setFetchedClasses(result.data);
     } catch(err){
       setError(err.message);
@@ -163,7 +163,6 @@ export function Schedule() {
       }
 
       const result = await response.json();
-      console.log(result.data);
       setLessons(result.data);
     } catch (err) {
       setError(err.message);
@@ -196,7 +195,6 @@ export function Schedule() {
         }
   
         const result = await response.json();
-        console.log(result.data);
         setLessons(result.data);
       } catch (err) {
         setError(err.message);
@@ -306,7 +304,6 @@ export function Schedule() {
   };
 
   const openCreateGradeModal = (lesson) => {
-    console.log('Opening CreateGradeModal for lesson:', lesson);
     setSelectedLessonForGrade(lesson);
     setIsCreateGradeModalOpen(true);
   };
@@ -411,7 +408,6 @@ export function Schedule() {
       }
   
       const data = await response.json();
-      console.log('Attendances saved successfully:', data);
   
       if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
         if (selectedClass) {
@@ -447,25 +443,34 @@ export function Schedule() {
     setSelectedEvent(null);
   };
 
-  useEffect(() => {
-    console.log('selectedLessonForGrade:', selectedLessonForGrade);
-    console.log('isCreateGradeModalOpen:', isCreateGradeModalOpen);
-  }, [selectedLessonForGrade, isCreateGradeModalOpen]);
-
+  // Zarządzanie Dropdownem
   const [openDropdownId, setOpenDropdownId] = useState(null);
-  const dropdownRef = useRef(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpenDropdownId(null);
-      }
+      setOpenDropdownId(null);
     };
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('click', handleClickOutside);
     };
   }, []);
+
+  const openDropdown = (event, buttonElement) => {
+    const rect = buttonElement.getBoundingClientRect();
+    const dropdownWidth = 176; // px, odpowiada Tailwind klasie w-44
+    let left = rect.left + window.scrollX - dropdownWidth; // Pozycja po lewej stronie przycisku
+
+    // Jeśli dropdown wychodzi poza lewą krawędź ekranu, ustaw na 0
+    if (left < 0) left = rect.left + window.scrollX;
+
+    setDropdownPosition({
+      top: rect.bottom + window.scrollY,
+      left: left,
+    });
+    setOpenDropdownId(event.id);
+  };
 
   if (loading) {
     return <div className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">Loading...</div>;
@@ -566,6 +571,7 @@ export function Schedule() {
                 <>
                   <div className="w-full sm:w-full mt-1 max-w-full overflow-x-auto relative">
                     <div className="relative overflow-hidden" style={{ height: `${calendarHeight}px` }}>
+                      {/* Siatka czasu */}
                       <div className="grid grid-cols-[auto,1fr] grid-rows-[repeat(11,66px)] w-full h-full">
                         {['07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'].map(
                           (time, idx) => (
@@ -577,6 +583,7 @@ export function Schedule() {
                         )}
                       </div>
 
+                      {/* Lekcje */}
                       {events
                       .filter((event) => areDatesEqual(event.date, selectedDate))
                       .map((event, eventIdx) => {
@@ -624,6 +631,7 @@ export function Schedule() {
                                   />
                                 </Tooltip>
 
+                                {/* Akcje dla desktop */}
                                 {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
                                   <div className='hidden md:flex -space-x-1'>
                                     <Button 
@@ -659,26 +667,29 @@ export function Schedule() {
                                   </div>
                                 )}
 
+                                {/* Akcje dla mobile z dropdownem */}
                                 {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
-                                  <div className='md:hidden relative ml-1' ref={dropdownRef}>
+                                  <div className='md:hidden relative ml-1'>
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        setOpenDropdownId(openDropdownId === event.id ? null : event.id);
+                                        openDropdown(event, e.currentTarget);
                                       }}
                                       className="text-white focus:outline-none flex items-center justify-center"
                                     >
                                       <MoreVertical size={16} />
                                     </button>
                                     {openDropdownId === event.id && (
-                                      <div className="absolute right-0 mt-2 w-44 pl-3 py-1 bg-white border border-gray-200 rounded shadow-lg z-20">
-                                        <div className='flex items-center gap-2 text-textBg-600'>
+                                      <DropdownMenu
+                                        position={dropdownPosition}
+                                        onClose={() => setOpenDropdownId(null)}
+                                      >
+                                        <div className='flex items-center gap-2 text-textBg-600 p-2'>
                                           <NotebookPen size={16} strokeWidth={3}/>
                                           <button
-                                            className="py-2 text-sm font-medium"
+                                            className="py-2 text-sm font-medium w-full text-left"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              console.log('Add Grades button clicked for lesson:', event); // Debugging
                                               openCreateGradeModal(event);
                                               setOpenDropdownId(null);
                                             }}
@@ -686,10 +697,10 @@ export function Schedule() {
                                             Add Grades
                                           </button>
                                         </div>
-                                        <div className='flex items-center gap-2 text-textBg-600'>
+                                        <div className='flex items-center gap-2 text-textBg-600 p-2'>
                                           <Plus size={16} strokeWidth={3}/>
                                           <button
-                                            className="py-2 text-sm font-medium"
+                                            className="py-2 text-sm font-medium w-full text-left"
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               openCreateHomeworkModal(event);
@@ -700,10 +711,10 @@ export function Schedule() {
                                           </button>
                                         </div>
 
-                                        <div className='flex items-center gap-2 text-textBg-600'>
+                                        <div className='flex items-center gap-2 text-textBg-600 p-2'>
                                           <Trash size={16} strokeWidth={3}/>
                                           <button
-                                            className="py-2 text-sm font-medium"
+                                            className="py-2 text-sm font-medium w-full text-left"
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               openDeleteModal(event);
@@ -713,7 +724,7 @@ export function Schedule() {
                                             Delete
                                           </button>
                                         </div>
-                                      </div>
+                                      </DropdownMenu>
                                     )}
                                   </div>
                                 )}
@@ -723,6 +734,7 @@ export function Schedule() {
                         );
                       })}
 
+                      {/* Indykator aktualnego czasu */}
                       {currentTimePosition < calendarHeight && (
                         <div
                           className="absolute right-0 left-8 sm:left-4 flex items-center"
@@ -762,6 +774,7 @@ export function Schedule() {
 
                     <div className="relative w-full sm:w-full mt-4 max-w-full overflow-x-auto">
                       <div className="relative overflow-hidden" style={{ height: `${calendarHeight}px` }}>
+                        {/* Siatka czasu tygodniowego */}
                         <div className="grid grid-cols-[auto,repeat(5,1fr)] grid-rows-[repeat(11,66px)] w-full h-full">
                           {['07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'].map(
                             (time, idx) => (
@@ -775,6 +788,7 @@ export function Schedule() {
                           )}
                         </div>
 
+                        {/* Lekcje tygodniowe */}
                         {events
                           .filter((event) => 
                             getCurrentWeekDates().some((date) => areDatesEqual(date, event.date))
@@ -811,6 +825,7 @@ export function Schedule() {
                             );
                           })}
 
+                        {/* Indykator aktualnego czasu */}
                         {currentTimePosition < calendarHeight && (
                           <div
                             className="absolute right-0 left-8 sm:left-4 flex items-center"
@@ -830,6 +845,7 @@ export function Schedule() {
         </div>
       </div>
 
+      {/* Formularze modali */}
       <CreateLessonForm
         isOpen={isCreateModalOpen} 
         onSuccess={() => {
@@ -885,27 +901,26 @@ export function Schedule() {
         lessonId={selectedLessonForHomework ? selectedLessonForHomework.id : null}
       />
 
-<CreateGradeForm
-  isOpen={isCreateGradeModalOpen}
-  onClose={closeCreateGradeModal}
-  onSuccess={() => {
-    console.log('Oceny zostały dodane pomyślnie');
-    closeCreateGradeModal();
-    if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
-      if (selectedClass) {
-        fetchLessonsForClass(selectedClass);
-      } else {
-        fetchLessonsForUser(userId);
-      }
-    } else if (userRole === UserRoles.Student && userId) {
-      fetchLessonsForUser(userId);
-    }
-  }}
-  students={selectedLessonForGrade ? selectedLessonForGrade.students : []}
-  lessonId={selectedLessonForGrade ? selectedLessonForGrade.id : null}
-  subjectId={selectedLessonForGrade ? selectedLessonForGrade.subjectId : null}
-  teacherId={selectedLessonForGrade ? selectedLessonForGrade.teacherId : null}
-/>
+      <CreateGradeForm
+        isOpen={isCreateGradeModalOpen}
+        onClose={closeCreateGradeModal}
+        onSuccess={() => {
+          closeCreateGradeModal();
+          if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
+            if (selectedClass) {
+              fetchLessonsForClass(selectedClass);
+            } else {
+              fetchLessonsForUser(userId);
+            }
+          } else if (userRole === UserRoles.Student && userId) {
+            fetchLessonsForUser(userId);
+          }
+        }}
+        students={selectedLessonForGrade ? selectedLessonForGrade.students : []}
+        lessonId={selectedLessonForGrade ? selectedLessonForGrade.id : null}
+        subjectId={selectedLessonForGrade ? selectedLessonForGrade.subjectId : null}
+        teacherId={selectedLessonForGrade ? selectedLessonForGrade.teacherId : null}
+      />
 
       {updating && <div className="mt-4 text-blue-500">Updating lesson...</div>}
       {updateError && <div className="mt-4 text-red-500">Error: {updateError}</div>}

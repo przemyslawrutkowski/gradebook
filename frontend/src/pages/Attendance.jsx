@@ -62,7 +62,6 @@ export function Attendance() {
         if (decoded) {
           const role = getUserRole();
           setUserRole(role);
-          console.log('User role:', role);
         } else {
           setUserRole(null);
         }
@@ -94,7 +93,6 @@ export function Attendance() {
         throw new Error(`Error: ${response.status}`);
       }
       const result = await response.json();
-      console.log(result.data);
       setFetchedClasses(result.data);
     } catch(err){
       setError(err.message);
@@ -124,7 +122,6 @@ export function Attendance() {
     }
   }, [userRole, selectedClass]);
 
-
   const fetchAttendance = async () => {
     setLoading(true);
     setError(null);
@@ -140,8 +137,6 @@ export function Attendance() {
         throw new Error(`Error: ${response.status}`);
       }
       const result = await response.json();
-      console.log(result.data);
-
       setAttendanceData(result.data);
     } catch (err) {
       setError(err.message); 
@@ -149,7 +144,6 @@ export function Attendance() {
       setLoading(false); 
     }
   };
-
 
   const fetchClassAttendances = async () => {
     if (!selectedClass) return; 
@@ -171,7 +165,6 @@ export function Attendance() {
       }
       
       const result = await response.json();
-      console.log(result.data);
       setClassAttendances(result.data);
     } catch (err) {
       setError(err.message);
@@ -273,21 +266,36 @@ export function Attendance() {
 
   const groupedAttendances = useMemo(() => {
     const group = {};
-
+  
     filteredClassAttendances.forEach(attendance => {
       const studentId = attendance.student.id;
       if (!group[studentId]) {
         group[studentId] = {
           student: attendance.student,
-          attendances: []
+          attendances: [],
+          stats: { present: 0, late: 0, absent: 0 },
         };
       }
+      
       group[studentId].attendances.push(attendance);
+  
+      if (attendance.was_present && !attendance.was_late) {
+        group[studentId].stats.present += 1;
+      } else if (attendance.was_present && attendance.was_late) {
+        group[studentId].stats.late += 1;
+      } else {
+        group[studentId].stats.absent += 1;
+      }
     });
-
-    console.log(Object.values(group))
+  
     return Object.values(group);
   }, [filteredClassAttendances]);
+
+  const formatTime = (timeString) => {
+    if (!timeString) return 'N/A';
+    const date = new Date(timeString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  };
 
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
@@ -380,12 +388,12 @@ export function Attendance() {
                                   <div className='w-full flex justify-between items-center'>
                                     <div className='flex flex-col gap-1'>
                                       <p className='text-textBg-900 font-semibold text-base'>
-                                        {attendance.lesson?.subject_name || 'No lesson'}
+                                        {attendance.lesson?.subject.name || 'No lesson'}
                                       </p>
                                       <div className='flex gap-2 items-center'>
                                         <Clock size={12} />
                                         <p className='text-textBg-700 text-sm'>
-                                          {attendance.lesson.start_time} - {attendance.lesson.end_time}
+                                        {formatTime(attendance.lesson.start_time)} - {formatTime(attendance.lesson.end_time)}
                                         </p>
                                       </div>
                                     </div>
@@ -416,11 +424,35 @@ export function Attendance() {
                       <>
                         {filteredClassAttendances.length > 0 ? (
                           <div className='w-full flex flex-col gap-2'>
-                            {groupedAttendances.map(({ student, attendances }) => (
+                            {groupedAttendances.map(({ student, attendances, stats }) => (
                               <div key={student.id} className='flex items-center justify-between'>
                                 <div className='flex items-center gap-4'>
                                   <div className='flex items-center'>
-                                    <span className='font-medium'>{student.first_name} {student.last_name}</span>
+                                    <span className='font-medium flex items-center w-32 overflow-hidden text-ellipsis'>
+                                      {student.first_name} {student.last_name}
+                                    </span>
+                                    <Tooltip
+                                      content={
+                                        <div>
+                                          <p className="mb-1">Student Statistics</p>
+                                          <div className='flex gap-2 justify-between'>
+                                            <p className="font-semibold">Present:</p>
+                                            <p>{stats.present}</p>
+                                          </div>
+                                          <div className='flex gap-2 justify-between'>
+                                            <p className="font-semibold">Late:</p>
+                                            <p>{stats.late}</p>
+                                          </div>
+                                          <div className='flex gap-2 justify-between'>
+                                            <p className="font-semibold">Absent:</p>
+                                            <p>{stats.absent}</p>
+                                          </div>
+                                        </div>
+                                      }
+                                      position="top"
+                                    >
+                                      <Info className="w-4 h-4 ml-2 text-gray-500 cursor-pointer" />
+                                    </Tooltip>
                                   </div>
                                 </div>
                                 <div className='flex gap-2'>
@@ -428,7 +460,7 @@ export function Attendance() {
                                     let status = 'Absent';
                                     if (attendance.was_present) status = 'Present';
                                     if (attendance.was_late) status = 'Late';
-                                    
+
                                     return (
                                       <div
                                         key={index}
@@ -437,20 +469,20 @@ export function Attendance() {
                                         <Tooltip content={
                                           <div className='w-fit'>
                                             <div className='flex gap-2'>
-                                              <p >Subject:</p>
-                                              <p>{attendance.lesson.subject_name || 'N/A'}</p>
+                                              <p className="w-10 font-semibold">Subject:</p>
+                                              <p>{attendance.lesson.subject.name || 'N/A'}</p>
                                             </div>
                                             <div className='flex gap-2'>
-                                              <p>Hours:</p>
+                                              <p className="w-10 font-semibold">Hours:</p>
                                               <p>
                                                 {attendance.lesson.start_time && attendance.lesson.end_time
-                                                  ? `${attendance.lesson.start_time} - ${attendance.lesson.end_time}`
+                                                  ? `${formatTime(attendance.lesson.start_time)} - ${formatTime(attendance.lesson.end_time)}`
                                                   : 'N/A'}
                                               </p>
                                             </div>
                                           </div>
                                         } position="left">
-                                          <Info className="w-3 h-3 text-white cursor-pointer" strokeWidth={3} onClick={(e) => e.stopPropagation()}/>
+                                          <Info className="w-3 h-3 text-white cursor-pointer" strokeWidth={3} onClick={(e) => e.stopPropagation()} />
                                         </Tooltip>
                                       </div>
                                     );

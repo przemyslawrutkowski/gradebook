@@ -210,7 +210,9 @@ export const getStudentAttendances = async (req: Request, res: Response) => {
                 },
             },
             orderBy: {
-                date_time: 'asc'
+                lessons:{
+                    start_time: 'asc',
+                } 
             }
         });
 
@@ -232,7 +234,7 @@ export const getStudentAttendances = async (req: Request, res: Response) => {
                 semester_id: uuidStringify(attendance.lessons.semester_id),
                 subject: {
                     ...attendance.lessons.subjects,
-                    id: uuidStringify(attendance.lessons.subjects.id)
+                    id: uuidStringify(attendance.lessons.subjects.id),
                 }
             } : null
         }));
@@ -280,7 +282,9 @@ export const getClassAttendances = async (req: Request, res: Response) => {
                 }
             },
             orderBy: {
-                date_time: 'asc'
+                lessons:{
+                    start_time: 'asc',
+                } 
             }
         });
 
@@ -309,7 +313,7 @@ export const getClassAttendances = async (req: Request, res: Response) => {
                 semester_id: uuidStringify(attendance.lessons.semester_id),
                 subject: {
                     ...attendance.lessons.subjects,
-                    id: uuidStringify(attendance.lessons.subjects.id)
+                    id: uuidStringify(attendance.lessons.subjects.id),
                 }
             } : null
         }));
@@ -378,7 +382,7 @@ export const getStudentAttendancesByDate = async (req: Request, res: Response) =
                 semester_id: uuidStringify(attendance.lessons.semester_id),
                 subject: {
                     ...attendance.lessons.subjects,
-                    id: uuidStringify(attendance.lessons.subjects.id)
+                    id: uuidStringify(attendance.lessons.subjects.id),  
                 }
             } : null
         }));

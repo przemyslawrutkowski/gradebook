@@ -36,6 +36,7 @@ function CreateClassNameForm({ onSuccess, onClose, isOpen }) {
     } finally {
       setLoading(false);
     }
+    setName('');
   };
 
   return (

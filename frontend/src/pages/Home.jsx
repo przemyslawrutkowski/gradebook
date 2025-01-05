@@ -11,12 +11,16 @@ import { Link } from "react-router-dom";
 import { getToken, getUserId } from "../utils/UserRoleUtils";
 
 export function Home() {
-  const [loadingLatestHomework, setLoadingLatestHomework] = useState(false);
-  const [errorLatestHomework, setErrorLatestHomework] = useState(null);
   const [latestHomework, setLatestHomework] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
+  const [latestGrades, setLatestGrades] = useState([]);
+
+  const [loadingLatestHomework, setLoadingLatestHomework] = useState(false);
+  const [errorLatestHomework, setErrorLatestHomework] = useState(null);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [attendanceError, setAttendanceError] = useState(null);
+  const [latestGradesLoading, setLatestGradesLoading] = useState(false);
+  const [latestGradesError, setLatestGradesError] = useState(null);
 
   const token = getToken();
   const studentId = getUserId();
@@ -83,16 +87,41 @@ export function Home() {
       const all = presence + monthData.absent;
 
       return {
-        name: month.substring(0, 3), // np. 'September' -> 'Sep'
+        name: month.substring(0, 3),
         Presence: presence,
         All: all,
       };
     });
   };
 
+  const fetchLatestGrades = async () => {
+    setAttendanceLoading(true);
+    setAttendanceError(null);
+    try {
+      const response = await fetch(`http://localhost:3000/grade/latest/${studentId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, 
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      const result = await response.json();
+      console.log("Grades:", result.data);
+      setLatestGrades(result.data);
+    } catch (err) {
+      setLatestGradesError(err.message);
+    } finally {
+      setLatestGradesLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchLatestHomework();
     fetchAttendanceData();
+    fetchLatestGrades();
   }, []);
 
 
@@ -121,12 +150,27 @@ export function Home() {
             {/* Last Grades and Homework */}
             <div className="flex flex-col flex-grow gap-8">
               {/* Last Grades */}
-              <div>
-                <p className="text-textBg-700 font-bold text-2xl mb-6">Last Grades</p>
+              <div className="flex flex-col flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-textBg-700 font-bold text-2xl mb-6">Last Grades</p>
+                  <Link to={`/grades`}>
+                    <p className="text-textBg-700 text-sm underline hover:cursor-pointer">See All Grades</p>
+                  </Link>
+                </div>
                 <div className="flex flex-col sm:flex-row w-full gap-4">
-                  <GradeCard title="Physics" subtitle="Second Exam" grade={4} bgColor="bg-[#f1f9fe]" textColor="text-[#1A99EE]" />
-                  <GradeCard title="Math" subtitle="Second Exam" grade={5} bgColor="bg-[#f1f9fe]" textColor="text-[#1A99EE]" />
-                  <GradeCard title="Biology" subtitle="Second Exam" grade={3} bgColor="bg-[#f1f9fe]" textColor="text-[#1A99EE]" />
+                  {latestGrades.map((grade, index) => {
+                    return (
+                      <div key={grade.id} className="w-full">
+                        <GradeCard 
+                          title={grade.description} 
+                          subtitle={grade.description} 
+                          grade={grade.grade}
+                          bgColor="bg-[#f1f9fe]"
+                          textColor="text-[#1A99EE]"
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

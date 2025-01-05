@@ -10,7 +10,7 @@ export default function Sidebar({ children, onLogout }) {
 
   return (
     <>
-      <aside className="fixed top-0 left-0 pb-1 lg:h-full w-screen lg:w-64 bg-white border-b z-10">
+      <aside className="fixed z-50 top-0 left-0 pb-1 lg:h-full w-screen lg:w-64 bg-white border-b">
         <nav className="h-full flex flex-col">
           <div className="p-4 pb-2 flex justify-between items-center h-12">
             <img

@@ -62,6 +62,9 @@ function CreateSchoolYearForm({isOpen, onSuccess, onClose }) {
       setError(err.response?.data?.message || 'Error')
     } finally {
       setLoading(false);
+      setName('');
+      setStartDate('');
+      setEndDate('');
     }
   };
 

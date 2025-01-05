@@ -54,6 +54,7 @@ export default {
         inter: ['Inter', 'sans-serif']
       },
       screens: {
+        'tn': { 'min': '500px' },
         'xs': { 'min': '400px' },
         'xxs': { 'min': '360px' },
       },

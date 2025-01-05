@@ -9,7 +9,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Updated date states
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -44,7 +43,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
         throw new Error(`Error: ${response.status}`);
       }
       const result = await response.json();
-      console.log(result.data);
       setClasses(result.data);
     } catch(err){
       setError(err.message);
@@ -69,7 +67,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
         throw new Error(`Error: ${response.status}`);
       }
       const result = await response.json();
-      console.log(result.data);
       setTeachers(result.data);
     } catch(err){
       setError(err.message);
@@ -94,7 +91,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
         throw new Error(`Error: ${response.status}`);
       }
       const result = await response.json();
-      console.log(result.data);
       setSubjects(result.data);
     } catch(err){
       setError(err.message);
@@ -107,7 +103,7 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:3000/semester/570e054f-c3ac-11ef-aba4-9c6b00209ac2', 
+      const response = await fetch('http://localhost:3000/semester/8457e092-cab2-11ef-8ac6-9c6b00209ac2', 
       {
         method: 'GET',
         headers: {
@@ -119,7 +115,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
         throw new Error(`Error: ${response.status}`);
       }
       const result = await response.json();
-      console.log(result.data);
       setSemesters(result.data);
     } catch(err){
       setError(err.message);
@@ -233,7 +228,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
       <form className="flex flex-col gap-6" onSubmit={handleCreate}>
         {error && <p className="text-red-500">{error}</p>}
         
-        {/* Start Date Input */}
         <div className="flex flex-col gap-2">
           <label htmlFor="startDate" className="font-medium">Start Date</label>
           <input
@@ -246,7 +240,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
           />
         </div>
 
-        {/* End Date Input */}
         <div className="flex flex-col gap-2">
           <label htmlFor="endDate" className="font-medium">End Date</label>
           <input
@@ -259,7 +252,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
           />
         </div>
 
-        {/* Teacher Selection */}
         <div className="flex flex-col gap-2">
           <label htmlFor="teacher" className="font-medium">Teacher</label>
           <select
@@ -278,7 +270,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
           </select>
         </div>
 
-        {/* Class Selection */}
         <div className="flex flex-col gap-2">
           <label htmlFor="class" className="font-medium">Class</label>
           <select
@@ -297,7 +288,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
           </select>
         </div>
 
-        {/* Subject Selection */}
         <div className="flex flex-col gap-2">
           <label htmlFor="subject" className="font-medium">Subject</label>
           <select
@@ -316,7 +306,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
           </select>
         </div>
 
-        {/* Semester Selection */}
         <div className="flex flex-col gap-2">
           <label htmlFor="semester" className="font-medium">Semester</label>
           <select
@@ -335,7 +324,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
           </select>
         </div>
 
-        {/* Lesson Schedules */}
         <div className="flex flex-col gap-4">
           <h3 className="text-lg font-semibold">Lesson Schedules</h3>
           {lessonSchedules.map((schedule, index) => (
@@ -353,7 +341,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
                 )}
               </div>
               <div className="flex flex-col gap-2">
-                {/* Day of the Week */}
                 <div className="flex flex-col gap-1">
                   <label htmlFor={`dayOfWeek-${index}`} className="font-medium">Day of the Week</label>
                   <select
@@ -373,7 +360,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
                   </select>
                 </div>
 
-                {/* Start Time */}
                 <div className="flex flex-col gap-1">
                   <label htmlFor={`startTime-${index}`} className="font-medium">Start Time</label>
                   <input
@@ -386,7 +372,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
                   />
                 </div>
 
-                {/* End Time */}
                 <div className="flex flex-col gap-1">
                   <label htmlFor={`endTime-${index}`} className="font-medium">End Time</label>
                   <input
@@ -399,7 +384,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
                   />
                 </div>
 
-                {/* Frequency */}
                 <div className="flex flex-col gap-1">
                   <label htmlFor={`frequency-${index}`} className="font-medium">Frequency (weeks)</label>
                   <input
@@ -421,10 +405,10 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
             type="secondary"
             onClick={handleAddSchedule}
             className="px-4 py-2 self-start"
+            btnType="button"
           />
         </div>
 
-        {/* Form Buttons */}
         <div className="flex justify-end gap-4">
           <Button
             text="Cancel"

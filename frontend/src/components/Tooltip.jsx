@@ -1,18 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
-function Tooltip({ children, content, position = 'top', width = 'auto' }) {
+function Tooltip({ children, content, position = 'top', width = 'auto'}) {
   const [visible, setVisible] = useState(false);
+  const [locked, setLocked] = useState(false);
   const tooltipRef = useRef(null);
   const containerRef = useRef(null);
   const [tooltipStyles, setTooltipStyles] = useState({});
-
-  const positionClasses = {
-    top: 'bottom-full mb-2',
-    bottom: 'top-full mt-2',
-    left: 'right-full mr-2',
-    right: 'left-full ml-2',
-  };
 
   useEffect(() => {
     if (visible && containerRef.current && tooltipRef.current) {
@@ -53,6 +47,35 @@ function Tooltip({ children, content, position = 'top', width = 'auto' }) {
     }
   }, [visible, position]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        tooltipRef.current &&
+        !tooltipRef.current.contains(event.target) &&
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
+      ) {
+        setLocked(false);
+        setVisible(false);
+      }
+    };
+
+    if (locked) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [locked]);
+
+  const handleTooltipClick = () => {
+    setLocked((prev) => !prev);
+    setVisible(true);
+  };
+
   const tooltipContent = visible ? (
     <div
       ref={tooltipRef}
@@ -72,8 +95,9 @@ function Tooltip({ children, content, position = 'top', width = 'auto' }) {
       <div
         ref={containerRef}
         className="relative flex flex-col items-center w-fit"
-        onMouseEnter={() => setVisible(true)}
-        onMouseLeave={() => setVisible(false)}
+        onMouseEnter={() => !locked && setVisible(true)}
+        onMouseLeave={() => !locked && setVisible(false)}
+        onClick={handleTooltipClick}
       >
         {children}
       </div>

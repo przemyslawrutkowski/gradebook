@@ -27,7 +27,6 @@ function CreateHomeworkForm({ onSuccess, onClose, isOpen, lessonId }) {
         body: JSON.stringify({ description, deadline, lessonId }),
       });
       
-      console.log({ description, deadline, lessonId });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || `Error: ${response.status}`);

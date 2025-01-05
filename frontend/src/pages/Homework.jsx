@@ -20,6 +20,7 @@ export function Homework() {
     } else if(userRole === UserRoles.Teacher) {
       setTeacherId(getUserId())
     }
+    // No need to set an ID for Admin unless required
   }, [userRole])
 
   const fetchStudentHomework = async () => {
@@ -68,12 +69,38 @@ export function Homework() {
     }
   }
 
+  const fetchAdminHomework = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`http://localhost:3000/homework`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`)
+      }
+      const result = await response.json()
+      setHomeworks(result.data)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
     if(userRole === UserRoles.Student && studentId) {
       fetchStudentHomework()
     }
     if(userRole === UserRoles.Teacher && teacherId) {
       fetchTeacherHomework()
+    }
+    if(userRole === UserRoles.Administrator) {
+      fetchAdminHomework()
     }
   }, [userRole, studentId, teacherId])
 
@@ -84,9 +111,9 @@ export function Homework() {
       pending: [],
       notDone: [],
       afterTime: [],
-      current: []
+      current: [],
+      all: []
     }
-
 
     homeworks.forEach(hw => {
       const deadline = new Date(hw.deadline)
@@ -94,12 +121,18 @@ export function Homework() {
       if(userRole === UserRoles.Student){
         if(hw.isCompleted) categories.completed.push(hw);
         if(deadline >= today) categories.pending.push(hw);
-        if(deadline <= today) categories.notDone.push(hw);
+        if(deadline < today && !hw.isCompleted) categories.notDone.push(hw);
       }
 
       if(userRole === UserRoles.Teacher){
         if(deadline >= today) categories.current.push(hw);
-        if(deadline <= today) categories.afterTime.push(hw);
+        if(deadline < today) categories.afterTime.push(hw);
+      }
+
+      if(userRole === UserRoles.Administrator){
+        categories.all.push(hw)
+        if(hw.isCompleted) categories.completed.push(hw);
+        if(deadline < today && !hw.isCompleted) categories.notDone.push(hw);
       }
     })
     return categories
@@ -112,7 +145,7 @@ export function Homework() {
       {loading && <p>Loading...</p>}
       {!loading && !error && (
         <div className="flex flex-col justify-between sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8 gap-8">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-8">
+          <div className="flex flex-col md:flex-row sm:justify-between sm:items-center mb-8 gap-4 xl:gap-8">
             {userRole === UserRoles.Student && (
               <>
                 <div className='flex items-center gap-2 w-full bg-[#eefdf3] p-4 rounded-md'>
@@ -144,7 +177,7 @@ export function Homework() {
                 </div>
               </>
             )}
-    
+
             {userRole === UserRoles.Teacher && (
               <>
                 <div className='flex items-center gap-2 w-full bg-[#fef9ed] p-4 rounded-md'>
@@ -161,6 +194,38 @@ export function Homework() {
                   <div>
                     <p className='text-lg font-semibold'>
                       {categorizedHomeworks.afterTime.length}
+                    </p>
+                    <p className='text-sm text-red-600'>Overdue</p>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {userRole === UserRoles.Administrator && (
+              <>
+                <div className='flex items-center gap-2 w-full bg-blue-50 p-4 rounded-md'>
+                  <User className='text-blue-500 mr-2' size={36} />
+                  <div>
+                    <p className='text-lg font-semibold'>
+                      {categorizedHomeworks.all.length}
+                    </p>
+                    <p className='text-sm text-blue-600'>All Homeworks</p>
+                  </div>
+                </div>
+                <div className='flex items-center gap-2 w-full bg-[#eefdf3] p-4 rounded-md'>
+                  <CheckCircle className='text-green-500 mr-2' size={36} />
+                  <div>
+                    <p className='text-lg font-semibold'>
+                      {categorizedHomeworks.completed.length}
+                    </p>
+                    <p className='text-sm text-green-600'>Completed</p>
+                  </div>
+                </div>
+                <div className='flex items-center gap-2 w-full bg-[#fdecea] p-4 rounded-md'>
+                  <XCircle className='text-red-500 mr-2' size={36} />
+                  <div>
+                    <p className='text-lg font-semibold'>
+                      {categorizedHomeworks.notDone.length}
                     </p>
                     <p className='text-sm text-red-600'>Overdue</p>
                   </div>
@@ -198,7 +263,7 @@ export function Homework() {
                         subject={hw.subject_name}
                         title={hw.description}
                         dueDate={hw.deadline}
-                        status={hw.isCompleted ? 'completed' : (new Date(hw.deadline) >= new Date() ? 'pending' : 'overdue')}
+                        status="completed"
                       />
                     ))
                   ) : (
@@ -215,7 +280,7 @@ export function Homework() {
                         subject={hw.subject_name}
                         title={hw.description}
                         dueDate={hw.deadline}
-                        status={hw.isCompleted ? 'completed' : (new Date(hw.deadline) >= new Date() ? 'pending' : 'overdue')}
+                        status="overdue"
                       />
                     ))
                   ) : (
@@ -245,8 +310,8 @@ export function Homework() {
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold mb-4">Overdue</h2>
-                  {categorizedHomeworks.completed.length > 0 ? (
-                    categorizedHomeworks.completed.map(hw => (
+                  {categorizedHomeworks.afterTime.length > 0 ? (
+                    categorizedHomeworks.afterTime.map(hw => (
                       <HomeworkCard
                         key={hw.id}
                         id={hw.id}
@@ -260,7 +325,62 @@ export function Homework() {
                     <p className="text-textBg-900 text-lg">No overdue homework.</p>
                   )}
                 </div>
-         
+              </>
+            )}
+
+            {userRole === UserRoles.Administrator && (
+              <>
+                <div>
+                  <h2 className="text-xl font-semibold mb-4">All Homeworks</h2>
+                  {categorizedHomeworks.all.length > 0 ? (
+                    categorizedHomeworks.all.map(hw => (
+                      <HomeworkCard
+                        key={hw.id}
+                        id={hw.id}
+                        subject={hw.subject_name}
+                        title={hw.description}
+                        dueDate={hw.deadline}
+                        status={hw.isCompleted ? 'completed' : (new Date(hw.deadline) >= new Date() ? 'pending' : 'overdue')}
+                      />
+                    ))
+                  ) : (
+                    <p className="text-textBg-900 text-lg">No homework available.</p>
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold mb-4">Completed</h2>
+                  {categorizedHomeworks.completed.length > 0 ? (
+                    categorizedHomeworks.completed.map(hw => (
+                      <HomeworkCard
+                        key={hw.id}
+                        id={hw.id}
+                        subject={hw.subject_name}
+                        title={hw.description}
+                        dueDate={hw.deadline}
+                        status="completed"
+                      />
+                    ))
+                  ) : (
+                    <p className="text-textBg-900 text-lg">No completed homework.</p>
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold mb-4">Overdue</h2>
+                  {categorizedHomeworks.notDone.length > 0 ? (
+                    categorizedHomeworks.notDone.map(hw => (
+                      <HomeworkCard
+                        key={hw.id}
+                        id={hw.id}
+                        subject={hw.subject_name}
+                        title={hw.description}
+                        dueDate={hw.deadline}
+                        status="overdue"
+                      />
+                    ))
+                  ) : (
+                    <p className="text-textBg-900 text-lg">No overdue homework.</p>
+                  )}
+                </div>
               </>
             )}
           </div>
