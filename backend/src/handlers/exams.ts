@@ -150,14 +150,25 @@ export const getThreeUpcomingExams = async (req: Request, res: Response) => {
                 lesson_id: {
                     in: lessons.map(lesson => lesson.id)
                 },
-                lessons: {
-                    date: {
-                        gte: now
+                OR: [
+                    {
+                        lessons: {
+                            date: {
+                                gt: now
+                            }
+                        }
                     },
-                    start_time: {
-                        gt: now
+                    {
+                        lessons: {
+                            date: {
+                                equals: now
+                            },
+                            start_time: {
+                                gt: now
+                            }
+                        }
                     }
-                }
+                ]
             },
             orderBy: [
                 { lessons: { date: 'asc' } },
