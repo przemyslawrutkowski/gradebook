@@ -142,6 +142,25 @@ export const lessonsData3 = {
     ],
 };
 
+export const lessonsData4 = {
+    startDate: '2025-01-01',
+    endDate: '2025-02-01',
+    lessonSchedules: [
+        {
+            dayOfWeek: 5,
+            startTime: '13:00',
+            endTime: '14:00',
+            frequency: 2
+        },
+        {
+            dayOfWeek: 5,
+            startTime: '15:00',
+            endTime: '16:00',
+            frequency: 2
+        }
+    ],
+};
+
 export const messageData = {
     subject: "Subject",
     content: "Content",
@@ -264,6 +283,17 @@ export const exam2 = {
     topic: "Advanced SQL Queries",
     scope: "Inner joins, Outer joins, Subqueries, Window Functions"
 };
+
+export const exam3 = {
+    topic: "Node.js Fundamentals",
+    scope: "Event-Driven Architecture, Asynchronous Programming, Middleware, and API Development"
+};
+
+export const exam4 = {
+    topic: "Advanced TypeScript",
+    scope: "Generics, Decorators, Module Augmentation, and Advanced Type Manipulation"
+};
+
 
 export const nonExistentId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
 export const invalidIdUrl = '%20';
