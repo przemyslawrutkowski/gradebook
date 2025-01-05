@@ -1,9 +1,8 @@
 // Schedule.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import PageTitle from '../components/PageTitle';
 import Button from '../components/Button';
-import { Plus, Trash, Pen, Info, MoreVertical, NotebookPen } from 'lucide-react';
-import Modal from '../components/Modal';
+import { Plus, Trash, Info, MoreVertical, NotebookPen } from 'lucide-react';
 import {
   dayNames,
   monthNames,
@@ -16,14 +15,14 @@ import {
   formatWeekRange,
   getYearForMonthIndex,
 } from '../utils/SchedCalUtils';
-import { getToken, getUserRole, decodeToken, getUserId } from '../utils/UserRoleUtils';
+import { getToken, getUserRole, getUserId } from '../utils/UserRoleUtils';
 import UserRoles from '../data/userRoles';
 import '../customCSS/customScrollbar.css';
 import Calendar from '../components/Calendar';
 import Select from 'react-select';
 import CreateLessonForm from "../components/forms/lessons/CreateLessonForm";
 import AddAttendanceForm from '../components/forms/attendance/AddAttendanceForm';
-import ConfirmDeletionForm from '../components/forms/lessons/ConfirmDeleteLessonForm';
+import ConfirmForm from '../components/forms/ConfirmForm';
 import Tooltip from '../components/Tooltip';
 import CreateHomeworkForm from "../components/forms/homeworks/CreateHomeworkForm"; 
 import CreateGradeForm from '../components/forms/grades/CreateGradeForm';
@@ -36,7 +35,6 @@ if (today.getMonth() < 8) {
 }
 
 export function Schedule() {
-  const [userRole, setUserRole] = useState(null); 
   const [selectedDate, setSelectedDate] = useState(today);
   const [scheduleType, setScheduleType] = useState('Day');
   const [currentMonthIndex, setCurrentMonthIndex] = useState(() => {
@@ -63,8 +61,45 @@ export function Schedule() {
   const [deletionType, setDeletionType] = useState('single');
   const [isCreateGradeModalOpen, setIsCreateGradeModalOpen] = useState(false);
   const [selectedLessonForGrade, setSelectedLessonForGrade] = useState(null);
+  const [userId, setUserId] = useState(null);
+
+  const parentId = getUserId();
   const token = getToken();
-  const userId = getUserId();
+  const userRole = getUserRole();
+
+  const fetchStudentForParent = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/student-parent/${parentId}/students`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      const result = await response.json();
+      setUserId(result.data);
+    } catch (err) {
+      console.error("Failed to fetch students for parent:", err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const initializeData = async () => {
+      if (userRole === UserRoles.Student) {
+        const id = getUserId();
+        setUserId(id);
+      } else if (userRole === UserRoles.Parent) {
+        await fetchStudentForParent();
+      }
+    };
+  
+    initializeData();
+  }, [userRole]);
 
   const options = fetchedClasses.map(cls => ({
     value: cls.id,
@@ -72,28 +107,7 @@ export function Schedule() {
   }));
 
   useEffect(() => {
-    const initializeUser = async () => {
-      const token = getToken();
-      if (token) {
-        const decoded = decodeToken(token);
-        if (decoded) {
-          const role = getUserRole();
-          setUserRole(role);
-
-          if (role === UserRoles.Teacher) {
-            setSelectedClass(null);
-          }
-        } else {
-          setUserRole(null);
-        }
-      }
-    };
-
-    initializeUser();
-  }, []);
-
-  useEffect(() => {
-    if (userRole === UserRoles.Administrator && fetchedClasses.length > 0 && !selectedClass) {
+    if ((userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && fetchedClasses.length > 0 && !selectedClass) {
       setSelectedClass(fetchedClasses[0].id);
     }
   }, [userRole, fetchedClasses, selectedClass]);
@@ -106,13 +120,15 @@ export function Schedule() {
         } else {
           fetchLessonsForUser(userId);
         }
-      } else if (userRole === UserRoles.Student && userId) {
-        fetchLessonsForUser(userId);
+      } else if (userRole === UserRoles.Student || userRole === UserRoles.Parent) {
+        if (userId) {
+          fetchLessonsForUser(userId);
+        }
       }
     };
-
+  
     fetchData();
-  }, [userRole, selectedClass]);
+  }, [userRole, selectedClass, userId]);
 
   const fetchClasses = async () => {
     if (userRole !== UserRoles.Teacher && userRole !== UserRoles.Administrator) return;
@@ -180,7 +196,7 @@ export function Schedule() {
     setLoading(true);
     setError(null);
 
-    if(userRole === UserRoles.Student || userRole === UserRoles.Teacher){
+    if(userRole === UserRoles.Student || userRole === UserRoles.Teacher || userRole === UserRoles.Parent){
       try {
         const response = await fetch(`http://localhost:3000/lesson/user/${userId}`, {
           method: 'GET',
@@ -201,6 +217,8 @@ export function Schedule() {
       } finally {
         setLoading(false);
       }
+    } else {
+      setLoading(false);
     }
   };
 
@@ -328,7 +346,7 @@ export function Schedule() {
       students: lesson.students,
       lessonTopic: lesson.description || '',
       isCompleted: lesson.is_completed,
-      teacherName: lesson.teachers.first_name + ' ' + lesson.teachers.last_name
+      teacherName: `${lesson.teachers.first_name} ${lesson.teachers.last_name}`
     }));
   };
 
@@ -415,8 +433,10 @@ export function Schedule() {
         } else {
           fetchLessonsForUser(userId);
         }
-      } else if (userRole === UserRoles.Student && userId) {
-        fetchLessonsForUser(userId);
+      } else if (userRole === UserRoles.Student || userRole === UserRoles.Parent) {
+        if (userId) {
+          fetchLessonsForUser(userId);
+        }
       }
   
       closeModal();
@@ -429,12 +449,12 @@ export function Schedule() {
 
   const openModal = (event) => {
     if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
-        if (event && event.id) {
-            setSelectedEvent({ ...event, description: event.lessonTopic });
-            setIsAttendanceModalOpen(true);
-        } else {
-            console.error('Invalid event data', event);
-        }
+      if (event && event.id) {
+        setSelectedEvent({ ...event, description: event.lessonTopic });
+        setIsAttendanceModalOpen(true);
+      } else {
+        console.error('Invalid event data', event);
+      }
     }
   };
 
@@ -856,8 +876,10 @@ export function Schedule() {
             } else {
               fetchLessonsForUser(userId);
             }
-          } else if (userRole === UserRoles.Student && userId) {
-            fetchLessonsForUser(userId);
+          } else if (userRole === UserRoles.Student || userRole === UserRoles.Parent) {
+            if (userId) {
+              fetchLessonsForUser(userId);
+            }
           }
         }}
         onClose={closeCreateModal}
@@ -875,7 +897,7 @@ export function Schedule() {
         selectedClass={selectedClass}
       />
 
-      <ConfirmDeletionForm
+      <ConfirmForm
         isOpen={isDeleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={handleConfirmDelete}
@@ -894,8 +916,10 @@ export function Schedule() {
             } else {
               fetchLessonsForUser(userId);
             }
-          } else if (userRole === UserRoles.Student && userId) {
-            fetchLessonsForUser(userId);
+          } else if (userRole === UserRoles.Student || userRole === UserRoles.Parent) {
+            if (userId) {
+              fetchLessonsForUser(userId);
+            }
           }
         }}
         lessonId={selectedLessonForHomework ? selectedLessonForHomework.id : null}
@@ -912,8 +936,10 @@ export function Schedule() {
             } else {
               fetchLessonsForUser(userId);
             }
-          } else if (userRole === UserRoles.Student && userId) {
-            fetchLessonsForUser(userId);
+          } else if (userRole === UserRoles.Student || userRole === UserRoles.Parent) {
+            if (userId) {
+              fetchLessonsForUser(userId);
+            }
           }
         }}
         students={selectedLessonForGrade ? selectedLessonForGrade.students : []}

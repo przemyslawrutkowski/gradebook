@@ -9,7 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { BookA, Calendar, CloudUpload, File, Pen, Trash, User, X } from 'lucide-react';
 import Tag from '../components/Tag';
 import { getToken, getUserRole } from '../utils/UserRoleUtils';
-import ConfirmDeletionForm from '../components/forms/ConfirmDeletionForm';
+import ConfirmForm from '../components/forms/ConfirmForm';
 import EditHomeworkForm from '../components/forms/homeworks/EditHomeworkForm';
 import UserRoles from '../data/userRoles';
 
@@ -302,7 +302,7 @@ const HomeworkDetail = () => {
        
       </div>
 
-      <ConfirmDeletionForm
+      <ConfirmForm
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}

@@ -5,7 +5,7 @@ import Button from "../components/Button";
 import SubjectOrEventTypeCard from "../components/SubjectOrEventTypeCard";
 import { validate as validateUUID } from 'uuid'; 
 import { getToken } from '../utils/UserRoleUtils';
-import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm";
+import ConfirmForm from '../components/forms/ConfirmForm';
 import CreateSubjectForm from "../components/forms/subjects/CreateSubjectForm"
 import EditSubjectForm from "../components/forms/subjects/EditSubjectForm"
 
@@ -212,7 +212,7 @@ export function Subjects() {
         />
       )}
 
-      <ConfirmDeletionForm
+      <ConfirmForm
         isOpen={isDeleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={handleConfirmDelete}

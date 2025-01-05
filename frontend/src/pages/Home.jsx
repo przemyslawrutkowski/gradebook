@@ -1,14 +1,15 @@
 /* eslint-disable no-unused-vars */
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import PageTitle from '../components/PageTitle';
 import ExamCard from "../components/ExamCard";
-import {Atom, ChevronRight,  Dna, SquareSigma} from 'lucide-react';
+import { Atom, ChevronRight, Dna, SquareSigma } from 'lucide-react';
 import GradeCard from "../components/GradeCard";
 import AttendanceChart from "../components/BarChart";
 import HomeworkCard from "../components/HomeworkCard";
 import DashboardSchedule from "../components/DashboardSchedule";
 import { Link } from "react-router-dom";
-import { getToken, getUserId } from "../utils/UserRoleUtils";
+import { getToken, getUserId, getUserRole } from "../utils/UserRoleUtils";
+import UserRoles from "../data/userRoles";
 
 export function Home() {
   const [latestHomework, setLatestHomework] = useState([]);
@@ -22,10 +23,32 @@ export function Home() {
   const [latestGradesLoading, setLatestGradesLoading] = useState(false);
   const [latestGradesError, setLatestGradesError] = useState(null);
 
-  const token = getToken();
-  const studentId = getUserId();
+  const [studentId, setStudentId] = useState(null);
 
-  const fetchLatestHomework = async () => {
+  const parentId = getUserId();
+  const token = getToken();
+  const userRole = getUserRole();
+
+  const fetchStudentForParent = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/student-parent/${parentId}/students`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      const result = await response.json();
+      setStudentId(result.data);
+    } catch (err) {
+      console.error("Failed to fetch students for parent:", err.message);
+    }
+  };
+
+  const fetchLatestHomework = async (studentId) => {
     setLoadingLatestHomework(true);
     setErrorLatestHomework(null);
     try {
@@ -33,23 +56,22 @@ export function Home() {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, 
+          'Authorization': `Bearer ${token}`,
         },
       });
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
       const result = await response.json();
-      console.log(result.data);
       setLatestHomework(result.data);
     } catch (err) {
-      setErrorLatestHomework(err.message); 
+      setErrorLatestHomework(err.message);
     } finally {
-      setLoadingLatestHomework(false); 
+      setLoadingLatestHomework(false);
     }
   };
 
-  const fetchAttendanceData = async () => {
+  const fetchAttendanceData = async (studentId) => {
     setAttendanceLoading(true);
     setAttendanceError(null);
     try {
@@ -57,14 +79,13 @@ export function Home() {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, 
+          'Authorization': `Bearer ${token}`,
         },
       });
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
       const result = await response.json();
-      console.log("Attendance Data:", result.data);
       const transformedData = transformAttendanceData(result.data);
       setAttendanceData(transformedData);
     } catch (err) {
@@ -73,43 +94,42 @@ export function Home() {
       setAttendanceLoading(false);
     }
   };
-  
+
   const transformAttendanceData = (data) => {
     const academicMonths = [
       'September', 'October', 'November', 'December',
       'January', 'February', 'March', 'April',
       'May', 'June'
     ];
-
+  
     return academicMonths.map((month) => {
       const monthData = data[month] || { present: 0, late: 0, absent: 0 };
       const presence = monthData.present + monthData.late;
-      const all = presence + monthData.absent;
-
+      const absent = monthData.absent;
+  
       return {
         name: month.substring(0, 3),
         Presence: presence,
-        All: all,
+        Absent: absent,
       };
     });
   };
 
-  const fetchLatestGrades = async () => {
-    setAttendanceLoading(true);
-    setAttendanceError(null);
+  const fetchLatestGrades = async (studentId) => {
+    setLatestGradesLoading(true);
+    setLatestGradesError(null);
     try {
       const response = await fetch(`http://localhost:3000/grade/latest/${studentId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, 
+          'Authorization': `Bearer ${token}`,
         },
       });
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
       const result = await response.json();
-      console.log("Grades:", result.data);
       setLatestGrades(result.data);
     } catch (err) {
       setLatestGradesError(err.message);
@@ -119,15 +139,29 @@ export function Home() {
   };
 
   useEffect(() => {
-    fetchLatestHomework();
-    fetchAttendanceData();
-    fetchLatestGrades();
-  }, []);
+    const initializeData = async () => {
+      if (userRole === UserRoles.Student) {
+        const id = getUserId();
+        setStudentId(id);
+      } else if (userRole === UserRoles.Parent) {
+        await fetchStudentForParent();
+      }
+    };
 
+    initializeData();
+  }, [userRole]);
+
+  useEffect(() => {
+    if (studentId) {
+      fetchLatestHomework(studentId);
+      fetchAttendanceData(studentId);
+      fetchLatestGrades(studentId);
+    }
+  }, [studentId]);
 
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
-      <PageTitle text="Home"/>
+      <PageTitle text="Home" />
       <div className="flex flex-col 2xl:flex-row justify-between sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8 gap-8 2xl:gap-16">
         <div className="flex flex-col w-full justify-between gap-8">
           <div className="flex flex-col lg:flex-row gap-8 2xl:gap-16 w-full">
@@ -135,14 +169,14 @@ export function Home() {
             <div className="lg:w-auto lg:flex-shrink-0">
               <p className="text-textBg-700 font-bold text-2xl mt-4 sm:mt-0 mb-6">Upcoming Exams</p>
               <div className="flex flex-wrap lg:flex-col gap-y-4 gap-x-8 mb-4">
-                <ExamCard title="Physics" date="20 Nov 2023" time="10.00 AM" className="bg-[#d3cafa]" icon={<Atom size={40} color="#7051EE"/>}/>
-                <ExamCard title="Biology" date="20 Nov 2023" time="10.00 AM" className="bg-[#b8f5cd]" icon={<Dna size={40} color="#1dd75b"/>}/>
-                <ExamCard title="Math" date="20 Nov 2023" time="10.00 AM" className="bg-[#bbe1fa]" icon={<SquareSigma size={40} color="#1A99EE"/>}/>
+                <ExamCard title="Physics" date="20 Nov 2023" time="10.00 AM" className="bg-[#d3cafa]" icon={<Atom size={40} color="#7051EE" />} />
+                <ExamCard title="Biology" date="20 Nov 2023" time="10.00 AM" className="bg-[#b8f5cd]" icon={<Dna size={40} color="#1dd75b" />} />
+                <ExamCard title="Math" date="20 Nov 2023" time="10.00 AM" className="bg-[#bbe1fa]" icon={<SquareSigma size={40} color="#1A99EE" />} />
               </div>
               <Link to={`/calendar`}>
                 <div className="flex items-center justify-center gap-2 pt-2 lg:pt-0">
                   <p className="text-textBg-700 text-sm hover:cursor-pointer">See More</p>
-                  <ChevronRight color="#323743" size={20}/>
+                  <ChevronRight color="#323743" size={20} />
                 </div>
               </Link>
             </div>
@@ -158,19 +192,25 @@ export function Home() {
                   </Link>
                 </div>
                 <div className="flex flex-col sm:flex-row w-full gap-4">
-                  {latestGrades.map((grade, index) => {
-                    return (
+                  {latestGradesLoading ? (
+                    <p>Loading grades...</p>
+                  ) : latestGradesError ? (
+                    <p className="text-red-500">Error: {latestGradesError}</p>
+                  ) : latestGrades.length > 0 ? (
+                    latestGrades.map((grade) => (
                       <div key={grade.id} className="w-full">
-                        <GradeCard 
-                          title={grade.description} 
-                          subtitle={grade.description} 
+                        <GradeCard
+                          title={grade.description}
+                          subtitle={grade.description}
                           grade={grade.grade}
                           bgColor="bg-[#f1f9fe]"
                           textColor="text-[#1A99EE]"
                         />
                       </div>
-                    );
-                  })}
+                    ))
+                  ) : (
+                    <p>No grades available.</p>
+                  )}
                 </div>
               </div>
 
@@ -187,12 +227,12 @@ export function Home() {
                     <p>Loading homework...</p>
                   ) : errorLatestHomework ? (
                     <p className="text-red-500">Error: {errorLatestHomework}</p>
-                  ) : latestHomework ? (                  
-                      <HomeworkCard 
-                        key={latestHomework.id} 
-                        id={latestHomework.id} 
-                        subject={latestHomework.subject_name} 
-                        title={latestHomework.description} 
+                  ) : latestHomework ? (
+                      <HomeworkCard
+                        key={latestHomework.id}
+                        id={latestHomework.id}
+                        subject={latestHomework.subject_name}
+                        title={latestHomework.description}
                         dueDate={latestHomework.deadline}
                       />
                   ) : (
@@ -203,7 +243,6 @@ export function Home() {
             </div>
           </div>
 
-          {/* Attendance Chart */}
           <div className="">
             <p className="text-textBg-700 font-bold text-2xl">Attendance</p>
             {attendanceLoading ? (
@@ -218,7 +257,6 @@ export function Home() {
           </div>
         </div>
 
-        {/* Calendar */}
         <div className="flex justify-end">
           <DashboardSchedule />
         </div>

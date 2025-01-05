@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import PageTitle from '../components/PageTitle';
 import Button from "../components/Button";
 import AssignParentForm from "../components/forms/students/AssignParentForm";
-import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm";
+import ConfirmForm from '../components/forms/ConfirmForm';
 import { 
   Fingerprint, 
   GraduationCap, 
@@ -162,7 +162,7 @@ function StudentDetails() {
         studentName={`${studentInfo?.first_name || ''} ${studentInfo?.last_name || ''}`}
       />
 
-      <ConfirmDeletionForm
+      <ConfirmForm
         isOpen={isConfirmModalOpen}
         onClose={closeConfirmModal}
         onConfirm={handleUnassignParent}

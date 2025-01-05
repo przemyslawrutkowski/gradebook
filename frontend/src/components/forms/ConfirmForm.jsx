@@ -2,7 +2,7 @@ import React from 'react';
 import Modal from '../Modal';
 import Button from '../Button';
 
-function ConfirmDeletionForm({ isOpen, onClose, onConfirm, title = "Are you sure?", description = "This action cannot be undone." }) {
+function ConfirmForm({ isOpen, onClose, onConfirm, title = "Are you sure?", description = "This action cannot be undone." }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} widthHeightClassname="max-w-md">
       <div className="text-center">
@@ -17,4 +17,4 @@ function ConfirmDeletionForm({ isOpen, onClose, onConfirm, title = "Are you sure
   );
 }
 
-export default ConfirmDeletionForm;
+export default ConfirmForm;

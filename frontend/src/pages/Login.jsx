@@ -60,7 +60,6 @@ export function Login({ onLogin }) {
         if (!userId) {
           throw new Error('ID użytkownika nie zostało znalezione w odpowiedzi serwera.');
         }
-        console.log(userId);
   
         localStorage.setItem('token', token);
         localStorage.setItem('userId', userId);

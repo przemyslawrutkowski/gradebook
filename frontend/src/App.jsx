@@ -94,7 +94,7 @@ export default function App() {
         <div className="flex">
           {isAuthenticated && (
             <Sidebar onLogout={handleLogout}>
-              {userRole === UserRoles.Student  && (
+              {(userRole === UserRoles.Student || userRole === UserRoles.Parent) && (
                 <>
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Home" path="/" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Schedule" path="/schedule" />
@@ -138,7 +138,7 @@ export default function App() {
             {isAuthenticated ? (
               <>
                 <Route path="/schedule" element={<Schedule />} />
-                {userRole === UserRoles.Student && (
+                {(userRole === UserRoles.Student || userRole === UserRoles.Parent) && (
                   <>
                     <Route path="/" element={<Home />} />
                     <Route path="/messages" element={<Messages />} />

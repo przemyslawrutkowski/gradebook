@@ -29,7 +29,7 @@ homeworksRouter.get('/teacher/:teacherId',
 
 homeworksRouter.get('/student/:studentId',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
     getHomeworksForStudent
 );
 
@@ -43,13 +43,13 @@ homeworksRouter.get('/:lessonId',
 
 homeworksRouter.get('/details/:homeworkId',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
     getHomeworkById,
 );
 
 homeworksRouter.get('/latest/:studentId',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
     validateGetLatestHomework(),
     handleInputErrors,
     getLatestHomework

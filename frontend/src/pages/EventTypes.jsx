@@ -5,7 +5,7 @@ import Button from "../components/Button";
 import SubjectOrEventTypeCard from "../components/SubjectOrEventTypeCard";
 import { validate as validateUUID } from 'uuid'; 
 import { getToken } from '../utils/UserRoleUtils';
-import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm";
+import ConfirmForm from '../components/forms/ConfirmForm';
 import CreateEventTypeForm from "../components/forms/eventtypes/CreateEventTypeForm";
 import EditEventTypeForm from "../components/forms/eventtypes/EditEventTypeForm";
 
@@ -215,7 +215,7 @@ export function EventTypes() {
         />
       )}
 
-      <ConfirmDeletionForm
+      <ConfirmForm
         isOpen={isDeleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={handleConfirmDelete}

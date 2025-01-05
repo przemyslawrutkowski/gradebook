@@ -1,23 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   dayNames,
-  monthNames,
-  displayMonthNames,
-  monthNumbers,
   convertTimeToHours,
   getCurrentTimePosition,
   areDatesEqual,
-  getStartOfWeek,
-  formatWeekRange,
-  getYearForMonthIndex,
-} from '../utils/SchedCalUtils'; // Ensure these utilities are correctly implemented
-import { getToken, getUserId } from "../utils/UserRoleUtils"; // Import token and userId utilities
-import { Plus, Trash, Pen, Info, MoreVertical } from 'lucide-react';
-import Button from '../components/Button';
-import Modal from '../components/Modal';
+} from '../utils/SchedCalUtils'; 
+import { getToken, getUserId, getUserRole } from "../utils/UserRoleUtils"; 
+import { Info } from 'lucide-react';
 import Tooltip from '../components/Tooltip';
-import CreateHomeworkForm from "../components/forms/homeworks/CreateHomeworkForm"; 
-import ConfirmDeletionForm from '../components/forms/lessons/ConfirmDeleteLessonForm';
 import '../customCSS/customScrollbar.css';
 import UserRoles from '../data/userRoles';
 
@@ -28,16 +18,12 @@ const DashboardSchedule = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isCreateHomeworkModalOpen, setIsCreateHomeworkModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [lessonToDelete, setLessonToDelete] = useState(null);
-  const [updateError, setUpdateError] = useState(null);
-  const [updating, setUpdating] = useState(false);
-  const [openDropdownId, setOpenDropdownId] = useState(null);
-  const dropdownRef = useRef(null);
 
+  const [userId, setUserId] = useState(null);
+
+  const parentId = getUserId();
   const token = getToken();
-  const userId = getUserId();
+  const userRole = getUserRole();
 
   const baseDate = new Date();
 
@@ -64,23 +50,29 @@ const DashboardSchedule = () => {
     };
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpenDropdownId(null);
+  const fetchStudentForParent = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/student-parent/${parentId}/students`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
       }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+      const result = await response.json();
+      setUserId(result.data);
+    } catch (err) {
+      console.error("Failed to fetch students for parent:", err.message);
+    }
+  };
 
   const fetchLessons = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch lessons three days back
       const backResponse = await fetch(`http://localhost:3000/lesson/back/${userId}`, {
         method: 'GET',
         headers: {
@@ -89,7 +81,6 @@ const DashboardSchedule = () => {
         },
       });
 
-      // Fetch lessons today
       const todayResponse = await fetch(`http://localhost:3000/lesson/today/${userId}`, {
         method: 'GET',
         headers: {
@@ -98,7 +89,6 @@ const DashboardSchedule = () => {
         },
       });
 
-      // Fetch lessons three days ahead
       const aheadResponse = await fetch(`http://localhost:3000/lesson/ahead/${userId}`, {
         method: 'GET',
         headers: {
@@ -114,11 +104,6 @@ const DashboardSchedule = () => {
       const backData = await backResponse.json();
       const todayData = await todayResponse.json();
       const aheadData = await aheadResponse.json();
-
-      console.log(backData.data);
-      console.log(todayData.data);
-      console.log(aheadData.data);
-
       const combinedLessons = [
         ...backData.data, 
         ...todayData.data, 
@@ -133,22 +118,17 @@ const DashboardSchedule = () => {
     }
   };
 
-  useEffect(() => {
-    fetchLessons();
-  }, []);
-
-  // Transform lessons into events format similar to Schedule component
   const transformLessonsToEvents = (lessons) => {
     return lessons.map((lesson) => {  
-      const lessonDate = new Date(lesson.date); // Ensure 'date' field exists
+      const lessonDate = new Date(lesson.date);
       return {
         id: lesson.id,
-        title: lesson.subjects.name, // Adjust according to your data structure
+        title: lesson.subjects.name,
         classId: lesson.class_id,
         subjectId: lesson.subject_id,
         startTime: new Date(lesson.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         endTime: new Date(lesson.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        bgColor: getBgColor(lesson.subjects.name), // Function to determine color based on subject
+        bgColor: getBgColor(lesson.subjects.name),
         date: lessonDate,
         textColor: 'text-[#ffffff]',
         lessonTopic: lesson.description || '',
@@ -159,7 +139,6 @@ const DashboardSchedule = () => {
     });
   };
 
-  // Function to determine background color based on subject
   const getBgColor = (subject) => {
     switch (subject) {
       case 'Biology':
@@ -177,8 +156,6 @@ const DashboardSchedule = () => {
 
   const eventsData = transformLessonsToEvents(lessons);
 
-  console.log(eventsData);
-
   const currentTimePosition = getCurrentTimePosition();
   const calendarStartHour = 7;
   const calendarEndHour = 18; 
@@ -188,103 +165,24 @@ const DashboardSchedule = () => {
 
   const filteredEvents = eventsData.filter(event => areDatesEqual(event.date, selectedDate));
 
-  const openCreateHomeworkModal = (lesson) => {
-    setSelectedEvent(lesson);
-    setIsCreateHomeworkModalOpen(true);
-  };
-
-  const closeCreateHomeworkModal = () => {
-    setSelectedEvent(null);
-    setIsCreateHomeworkModalOpen(false);
-  };
-
-  const openDeleteModal = (lesson) => {
-    setLessonToDelete(lesson);
-    setIsDeleteModalOpen(true);
-  };
-
-  const closeDeleteModal = () => {
-    setLessonToDelete(null);
-    setIsDeleteModalOpen(false);
-  };
-
-  const handleConfirmDelete = async (type) => {
-    if (!lessonToDelete) return;
-
-    try {
-      let response;
-      if (type === 'single') {
-        response = await fetch(`http://localhost:3000/lesson/${lessonToDelete.id}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-      } else if (type === 'all') {
-        response = await fetch(`http://localhost:3000/lesson/${lessonToDelete.classId}/${lessonToDelete.subjectId}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+  useEffect(() => {
+    const initializeData = async () => {
+      if (userRole === UserRoles.Student) {
+        const id = getUserId();
+        setUserId(id);
+      } else if (userRole === UserRoles.Parent) {
+        await fetchStudentForParent();
       }
+    };
 
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
+    initializeData();
+  }, [userRole]);
 
-      if (type === 'single') {
-        setLessons(prevLessons => prevLessons.filter(lesson => lesson.id !== lessonToDelete.id));
-      } else if (type === 'all') {
-        setLessons(prevLessons => prevLessons.filter(lesson => !(lesson.class_id === lessonToDelete.classId && lesson.subject_id === lessonToDelete.subjectId)));
-      }
-
-      closeDeleteModal();
-    } catch (err) {
-      setError(err.message);
-      closeDeleteModal();
+  useEffect(() => { 
+    if (userId) {
+      fetchLessons();
     }
-  };
-
-  const handleSaveAttendance = async ({ lessonId, attendances }) => {
-    // Implement attendance saving logic here
-  };
-
-  const handleLessonUpdate = async ({ lessonId, lessonTopic }) => {
-    setUpdating(true);
-    setUpdateError(null);
-    try {
-      const response = await fetch(`http://localhost:3000/lesson/${lessonId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          description: lessonTopic,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Error: ${response.status}`);
-      }
-
-      const updatedLesson = await response.json();
-
-      setLessons((prevLessons) =>
-        prevLessons.map((lesson) =>
-          lesson.id === lessonId ? { ...lesson, ...updatedLesson.data } : lesson
-        )
-      );
-    } catch (err) {
-      setUpdateError(err.message);
-    } finally {
-      setUpdating(false);
-    }
-  };
+  }, [userId]);
 
   return (
     <div className='flex flex-col w-full'>
@@ -365,11 +263,11 @@ const DashboardSchedule = () => {
                           content={
                             <div className='w-fit'>
                               <div className='flex gap-2 items-start'>
-                                <p className="font-semibold text-textBg-100 text-left w-10">Topic</p>
+                                <p className="font-semibold text-textBg-100 text-left w-10">Topic:</p>
                                 <p>{event.lessonTopic || 'N/A'}</p>
                               </div>
                               <div className='flex gap-2 items-start'>
-                                <p className="font-semibold text-textBg-100 text-left w-10">Teacher</p>
+                                <p className="font-semibold text-textBg-100 text-left w-10">Teacher:</p>
                                 <p>{event.teacherName || 'N/A'}</p>
                               </div>
                             </div>
@@ -399,27 +297,6 @@ const DashboardSchedule = () => {
               )}
             </div>
           </div>
-
-          {/* Create Homework Modal */}
-          {isCreateHomeworkModalOpen && selectedEvent && (
-            <Modal onClose={closeCreateHomeworkModal}>
-              <CreateHomeworkForm 
-                lesson={selectedEvent}
-                onClose={closeCreateHomeworkModal}
-              />
-            </Modal>
-          )}
-
-          {/* Confirm Deletion Modal */}
-          {isDeleteModalOpen && lessonToDelete && (
-            <Modal onClose={closeDeleteModal}>
-              <ConfirmDeletionForm 
-                lesson={lessonToDelete}
-                onConfirm={() => handleConfirmDelete('single')}
-                onCancel={closeDeleteModal}
-              />
-            </Modal>
-          )}
         </>
       )}
     </div>

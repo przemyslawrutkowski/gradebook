@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
 import { validateCreateStudentParentRelationship, validateDeleteStudentParentRelationship } from '../validations/studentsParentsValidation.js';
-import { createStudentParentRelationship, deleteStudentParentRelationship } from '../handlers/studentsParents.js';
+import { createStudentParentRelationship, deleteStudentParentRelationship, getStudentsForParent } from '../handlers/studentsParents.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { UserType } from '../enums/userTypes.js';
 
@@ -21,6 +21,12 @@ studentsParentsRouter.delete('/:studentId/:parentId',
     validateDeleteStudentParentRelationship(),
     handleInputErrors,
     deleteStudentParentRelationship
+);
+
+studentsParentsRouter.get('/:parentId/students',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
+    getStudentsForParent
 );
 
 export default studentsParentsRouter;

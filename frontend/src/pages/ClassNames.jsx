@@ -7,7 +7,7 @@ import CreateClassNameForm from "../components/forms/classnames/CreateClassNameF
 import EditClassNameForm from "../components/forms/classnames/EditClassNameForm";
 import { validate as validateUUID } from 'uuid'; 
 import { getToken } from '../utils/UserRoleUtils';
-import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm";
+import ConfirmForm from '../components/forms/ConfirmForm';
 
 export function ClassNames() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -212,7 +212,7 @@ export function ClassNames() {
         />
       )}
 
-      <ConfirmDeletionForm
+      <ConfirmForm
         isOpen={isDeleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={handleConfirmDelete}

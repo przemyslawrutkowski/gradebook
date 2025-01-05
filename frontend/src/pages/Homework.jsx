@@ -8,9 +8,12 @@ import UserRoles from "../data/userRoles"
 export function Homework() {
   const [homeworks, setHomeworks] = useState([])
   const [loading, setLoading] = useState(false)
-  const [studentId, setStudentId] = useState(null)
   const [teacherId, setTeacherId] = useState(null)
   const [error, setError] = useState(null)
+  const [studentId, setStudentId] = useState(null)
+
+  
+  const parentId = getUserId();
   const userRole = getUserRole()
   const token = getToken()
 
@@ -20,8 +23,39 @@ export function Homework() {
     } else if(userRole === UserRoles.Teacher) {
       setTeacherId(getUserId())
     }
-    // No need to set an ID for Admin unless required
   }, [userRole])
+
+  const fetchStudentForParent = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/student-parent/${parentId}/students`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      const result = await response.json();
+      setStudentId(result.data);
+    } catch (err) {
+      console.error("Failed to fetch students for parent:", err.message);
+    }
+  };
+
+  useEffect(() => {
+    const initializeData = async () => {
+      if (userRole === UserRoles.Student) {
+        const id = getUserId();
+        setStudentId(id);
+      } else if (userRole === UserRoles.Parent) {
+        await fetchStudentForParent();
+      }
+    };
+
+    initializeData();
+  }, [userRole]);
 
   const fetchStudentHomework = async () => {
     setLoading(true)
@@ -93,7 +127,7 @@ export function Homework() {
   }
 
   useEffect(() => {
-    if(userRole === UserRoles.Student && studentId) {
+    if((userRole === UserRoles.Student || userRole === UserRoles.Parent) && studentId) {
       fetchStudentHomework()
     }
     if(userRole === UserRoles.Teacher && teacherId) {
@@ -118,7 +152,7 @@ export function Homework() {
     homeworks.forEach(hw => {
       const deadline = new Date(hw.deadline)
 
-      if(userRole === UserRoles.Student){
+      if(userRole === UserRoles.Student || userRole === UserRoles.Parent){
         if(hw.isCompleted) categories.completed.push(hw);
         if(deadline >= today) categories.pending.push(hw);
         if(deadline < today && !hw.isCompleted) categories.notDone.push(hw);
@@ -146,7 +180,7 @@ export function Homework() {
       {!loading && !error && (
         <div className="flex flex-col justify-between sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8 gap-8">
           <div className="flex flex-col md:flex-row sm:justify-between sm:items-center mb-8 gap-4 xl:gap-8">
-            {userRole === UserRoles.Student && (
+            {(userRole === UserRoles.Student || userRole === UserRoles.Parent) && (
               <>
                 <div className='flex items-center gap-2 w-full bg-[#eefdf3] p-4 rounded-md'>
                   <CheckCircle className='text-green-500 mr-2' size={36} />
@@ -234,7 +268,7 @@ export function Homework() {
             )}
           </div>
           <div className="flex flex-col gap-8">
-            {userRole === UserRoles.Student && (
+            {(userRole === UserRoles.Student || userRole === UserRoles.Parent) && (
               <>
                 <div>
                   <h2 className="text-xl font-semibold mb-4">Pending</h2>

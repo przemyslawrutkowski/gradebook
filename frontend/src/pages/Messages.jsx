@@ -211,12 +211,19 @@ export function Messages() {
           setParents(fetchedParents);
           setStudents(fetchedStudents);
 
-          const combinedUsers = [
+          let combinedUsers = [
             ...fetchedAdministrators,
             ...fetchedTeachers,
             ...fetchedParents,
             ...fetchedStudents,
           ];
+
+          if(currentUser.role === UserRoles.Student || currentUser.role === UserRoles.Parent){
+            combinedUsers = [
+              ...fetchedAdministrators,
+              ...fetchedTeachers
+            ];
+          }
           setUsersToSearch(combinedUsers);
 
           await fetchUnreadMessages();
@@ -257,6 +264,7 @@ export function Messages() {
         interlocutor: interlocutor,
         messages: messages
       });
+      setSearchTerm('');
     } catch (err) {
       console.error("Error selecting user:", err);
       setError(err.message);

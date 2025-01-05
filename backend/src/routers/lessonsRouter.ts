@@ -23,7 +23,7 @@ lessonsRouter.get('',
 
 lessonsRouter.get('/back/:userId',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
     validateUserId(),
     handleInputErrors,
     getLessonsThreeDaysBack
@@ -31,7 +31,7 @@ lessonsRouter.get('/back/:userId',
 
 lessonsRouter.get('/ahead/:userId',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
     validateUserId(),
     handleInputErrors,
     getLessonsThreeDaysAhead
@@ -39,7 +39,7 @@ lessonsRouter.get('/ahead/:userId',
 
 lessonsRouter.get('/today/:userId',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
     validateUserId(),
     handleInputErrors,
     getLessonsToday
@@ -55,7 +55,7 @@ lessonsRouter.get('/class/:classId',
 
 lessonsRouter.get('/user/:userId',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher, UserType.Student]),
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
     validateUserId(),
     handleInputErrors,
     getLessonsForUser

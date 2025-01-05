@@ -8,7 +8,7 @@ import { Edit, Info, Pen, Trash, User } from 'lucide-react';
 import UserRoles from "../data/userRoles";
 import Select from 'react-select';
 import EditGradeForm from "../components/forms/grades/EditGradeForm";
-import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm";
+import ConfirmForm from '../components/forms/ConfirmForm';
 
 export function Grades() {
   const [semester, setSemester] = useState(null);
@@ -26,12 +26,46 @@ export function Grades() {
   const [gradeToDelete, setGradeToDelete] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
+  const [studentId, setStudentId] = useState(null);
+
+  const parentId = getUserId();
   const token = getToken();
-  const studentId = getUserId();
   const userRole = getUserRole();
 
+  const fetchStudentForParent = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/student-parent/${parentId}/students`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      const result = await response.json();
+      setStudentId(result.data);
+    } catch (err) {
+      console.error("Failed to fetch students for parent:", err.message);
+    }
+  };
+
   useEffect(() => {
-    if (userRole === UserRoles.Student) {
+    const initializeData = async () => {
+      if (userRole === UserRoles.Student) {
+        const id = getUserId();
+        setStudentId(id);
+      } else if (userRole === UserRoles.Parent) {
+        await fetchStudentForParent();
+      }
+    };
+
+    initializeData();
+  }, [userRole]);
+
+  useEffect(() => {
+    if (userRole === UserRoles.Student || userRole === UserRoles.Parent) {
       setSelectedStudent(studentId);
     }
   }, [userRole, studentId]);
@@ -227,7 +261,7 @@ export function Grades() {
 
   useEffect(() => {
     if (semestersList.length > 0) {
-      const idToFetch = userRole === UserRoles.Student ? studentId : selectedStudent;
+      const idToFetch = (userRole === UserRoles.Student || userRole === UserRoles.Parent) ? studentId : selectedStudent;
       if (idToFetch) {
         fetchGrades(idToFetch);
       }
@@ -289,7 +323,6 @@ export function Grades() {
         throw new Error(errorData.message || `Error: ${response.status}`);
       }
 
-      // Update grades state by removing the deleted grade
       setGrades(prev => prev.filter(cls => cls.id !== gradeToDelete.id));
     } catch (err) {
       setError(err.message || 'Failed to delete grade.');
@@ -476,7 +509,7 @@ export function Grades() {
       )}
 
       {gradeToDelete && (
-        <ConfirmDeletionForm
+        <ConfirmForm
           isOpen={isDeleteModalOpen}
           onClose={closeDeleteModal}
           onConfirm={handleConfirmDelete}

@@ -6,7 +6,7 @@ import SchoolYearAndSemesterCard from "../components/SchoolYearAndSemesterCard";
 import CreateSchoolYearForm from "../components/forms/schoolyears/CreateSchoolYearForm";
 import { getToken } from "../utils/UserRoleUtils";
 import { validate as validateUUID } from 'uuid'; 
-import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm";
+import ConfirmForm from '../components/forms/ConfirmForm';
 import EditSchoolYearForm from "../components/forms/schoolyears/EditSchoolYearForm";
 
 export function SchoolYears() {
@@ -215,7 +215,7 @@ export function SchoolYears() {
         />
       )}
 
-      <ConfirmDeletionForm
+      <ConfirmForm
         isOpen={isDeleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={handleConfirmDelete}

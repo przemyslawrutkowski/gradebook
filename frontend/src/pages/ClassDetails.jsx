@@ -7,7 +7,7 @@ import Modal from '../components/Modal';
 import Select from 'react-select';
 import StudentCard from "../components/StudentCard";
 import { getToken } from "../utils/UserRoleUtils";
-import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm";
+import ConfirmForm from '../components/forms/ConfirmForm';
 import { validate as validateUUID } from 'uuid'; 
 
 function ClassDetails() {
@@ -236,7 +236,7 @@ function ClassDetails() {
         </div>
       </Modal>
 
-      <ConfirmDeletionForm
+      <ConfirmForm
         isOpen={isDeleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={handleConfirmDeleteClass}

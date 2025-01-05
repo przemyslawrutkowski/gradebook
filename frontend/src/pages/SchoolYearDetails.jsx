@@ -8,7 +8,7 @@ import SchoolYearAndSemesterCard from "../components/SchoolYearAndSemesterCard";
 import { validate as validateUUID } from 'uuid';
 import CreateSemesterForm from "../components/forms/semesters/CreateSemesterForm";
 import EditSemesterForm from "../components/forms/semesters/EditSemester"; 
-import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm";
+import ConfirmForm from '../components/forms/ConfirmForm';
 
 function SchoolYearDetails() {
   const [schoolYearInfo, setSchoolYearInfo] = useState(null);
@@ -174,7 +174,7 @@ function SchoolYearDetails() {
         />
       )}
 
-      <ConfirmDeletionForm
+      <ConfirmForm
           isOpen={isDeleteModalOpen}
           onClose={closeDeleteModal}
           onConfirm={handleConfirmDelete}

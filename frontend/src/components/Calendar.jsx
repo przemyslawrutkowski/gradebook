@@ -18,12 +18,9 @@ const Calendar = ({
   onDateSelect,
   selectedDate,
   renderDateContent,
-  scheduleType,
-  handleButtonChangeScheduleType,
   handlePrev,
   handleNext,
   currentMonthIndex,
-  setCurrentMonthIndex
 }) => {
   const today = new Date();
 

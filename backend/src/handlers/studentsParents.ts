@@ -115,3 +115,41 @@ export const deleteStudentParentRelationship = async (req: Request, res: Respons
         return res.status(500).json(createErrorResponse('An unexpected error occurred while unassigning parent from student. Please try again later.'));
     }
 };
+
+export const getStudentsForParent = async (req: Request, res: Response) => {
+    try {
+        const parentId: string = req.params.parentId;
+
+        if (!parentId) {
+            return res.status(401).json(createErrorResponse('Parent ID not found.'));
+        }
+
+        const existingParent = await prisma.parents.findUnique({
+            where: { id: Buffer.from(uuidParse(parentId)) },
+        });
+
+        if (!existingParent) {
+            return res.status(404).json(createErrorResponse('Parent does not exist.'));
+        }
+
+        const studentRelations: students_parents[] = await prisma.students_parents.findMany({
+            where: { parent_id: Buffer.from(uuidParse(parentId)) },
+            include: { students: true },
+        });
+
+        if (studentRelations.length === 0) {
+            return res.status(200).json(createSuccessResponse([], 'No students associated with this parent.'));
+        }
+
+        const studentIds = studentRelations.map((relation) => uuidStringify(relation.student_id));
+
+        return res.status(200).json(
+            createSuccessResponse(studentIds, 'Students retrieved successfully.')
+        );
+    } catch (err) {
+        console.error('Error retrieving students for parent:', err);
+        return res.status(500).json(
+            createErrorResponse('An unexpected error occurred while retrieving students. Please try again later.')
+        );
+    }
+};

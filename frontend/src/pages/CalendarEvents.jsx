@@ -15,7 +15,7 @@ import Button from "../components/Button";
 import { getToken, getUserRole } from "../utils/UserRoleUtils";
 import CreateEventForm from "../components/forms/events/CreateEventForm"; 
 import EditEventForm from "../components/forms/events/EditEventForm";
-import ConfirmDeletionForm from "../components/forms/ConfirmDeletionForm"; // Upewnij się, że ścieżka jest poprawna
+import ConfirmForm from "../components/forms/ConfirmForm";
 import UserRoles from "../data/userRoles";
 
 const today = new Date();
@@ -224,6 +224,7 @@ export function CalendarEvents() {
     }
   };
 
+
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
       <PageTitle text="Calendar"/>
@@ -350,7 +351,7 @@ export function CalendarEvents() {
         />
       )}
 
-      <ConfirmDeletionForm
+      <ConfirmForm
         isOpen={isDeleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={handleConfirmDelete}
