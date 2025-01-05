@@ -425,7 +425,7 @@ export function Attendance() {
               />
 
               <div className='w-full bg-white'>
-                <div className='w-full grid md:grid-cols-4 gap-4 mb-8'>
+                <div className='w-full grid md:grid-cols-2 2xl:grid-cols-4 gap-4 mb-8'>
                   <div className='flex items-center gap-2 bg-[#eefdf3] p-4 rounded-md'>
                     <CheckCircle className='text-green-500 mr-2' size={36} />
                     <div>
