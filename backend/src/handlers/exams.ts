@@ -48,7 +48,7 @@ export const createExam = async (req: Request, res: Response) => {
 
 export const getExams = async (req: Request, res: Response) => {
     try {
-        const userId: string = req.params.studentId;
+        const userId: string = req.params.userId;
 
         let existingUser: teachers | students | null = await prisma.teachers.findUnique({
             where: {
@@ -107,7 +107,7 @@ export const getExams = async (req: Request, res: Response) => {
 
 export const getThreeUpcomingExams = async (req: Request, res: Response) => {
     try {
-        const userId: string = req.params.studentId;
+        const userId: string = req.params.userId;
 
         let existingUser: teachers | students | null = await prisma.teachers.findUnique({
             where: {

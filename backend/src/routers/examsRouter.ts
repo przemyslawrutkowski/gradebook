@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { createExam, updateExam, deleteExam } from '../handlers/exams.js';
-import { validateCreateExam, validateUpdateExam, validateDeleteExam } from '../validations/examsValidation.js';
+import { createExam, updateExam, deleteExam, getExams, getThreeUpcomingExams } from '../handlers/exams.js';
+import { validateCreateExam, validateUserId, validateUpdateExam, validateDeleteExam } from '../validations/examsValidation.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { UserType } from '../enums/userTypes.js';
 
@@ -13,6 +13,22 @@ examsRouter.post('',
     validateCreateExam(),
     handleInputErrors,
     createExam
+)
+
+examsRouter.get('/:userId',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
+    validateUserId(),
+    handleInputErrors,
+    getExams
+)
+
+examsRouter.get('/upcoming/:userId',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
+    validateUserId(),
+    handleInputErrors,
+    getThreeUpcomingExams
 )
 
 examsRouter.patch('/:examId',

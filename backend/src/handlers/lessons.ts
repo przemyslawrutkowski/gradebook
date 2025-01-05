@@ -22,7 +22,10 @@ export const createLessons = async (req: Request, res: Response) => {
         const teacherId: string = req.body.teacherId;
         const classId: string = req.body.classId;
         const subjectId: string = req.body.subjectId;
-        const semesterId: string = req.body.semesterId;
+
+        if (startDate >= endDate) {
+            return res.status(400).json(createErrorResponse('Start date must be earlier than end date.'));
+        }
 
         const existingTeacher: teachers | null = await prisma.teachers.findUnique({
             where: {
@@ -52,20 +55,6 @@ export const createLessons = async (req: Request, res: Response) => {
 
         if (!existingSubject) {
             return res.status(404).json(createErrorResponse(`Subject does not exist.`));
-        }
-
-        const existingSemester: semesters | null = await prisma.semesters.findUnique({
-            where: {
-                id: Buffer.from(uuidParse(semesterId))
-            }
-        });
-
-        if (!existingSemester) {
-            return res.status(404).json(createErrorResponse(`Semester does not exist.`));
-        }
-
-        if (startDate < existingSemester.start_date || endDate > existingSemester.end_date) {
-            return res.status(400).json(createErrorResponse('start and end dates must be within the semester dates.'));
         }
 
         const dayMilliseconds = 24 * 60 * 60 * 1000;
@@ -126,11 +115,9 @@ export const createLessons = async (req: Request, res: Response) => {
             date: Date;
             start_time: Date;
             end_time: Date;
-            is_completed: boolean;
             teacher_id: Buffer;
             class_id: Buffer;
             subject_id: Buffer;
-            semester_id: Buffer;
         }[] = [];
 
         lessonSchedules.forEach((schedule: LessonSchedule) => {
@@ -157,11 +144,9 @@ export const createLessons = async (req: Request, res: Response) => {
                         date: currentDate,
                         start_time: lessonStartTime,
                         end_time: lessonEndTime,
-                        is_completed: false,
                         teacher_id: Buffer.from(uuidParse(teacherId)),
                         class_id: Buffer.from(uuidParse(classId)),
-                        subject_id: Buffer.from(uuidParse(subjectId)),
-                        semester_id: Buffer.from(uuidParse(semesterId))
+                        subject_id: Buffer.from(uuidParse(subjectId))
                     });
                 }
 
@@ -220,8 +205,7 @@ export const getLessons = async (req: Request, res: Response) => {
             end_time: lesson.end_time.toISOString(),
             teacher_id: uuidStringify(lesson.teacher_id),
             class_id: uuidStringify(lesson.class_id),
-            subject_id: uuidStringify(lesson.subject_id),
-            semester_id: uuidStringify(lesson.semester_id)
+            subject_id: uuidStringify(lesson.subject_id)
         }));
 
         return res.status(200).json(createSuccessResponse(responseData, `Lessons retrieved successfully.`));
@@ -243,8 +227,7 @@ export const getAllLessons = async (req: Request, res: Response) => {
             end_time: lesson.end_time.toISOString(),
             teacher_id: uuidStringify(lesson.teacher_id),
             class_id: uuidStringify(lesson.class_id),
-            subject_id: uuidStringify(lesson.subject_id),
-            semester_id: uuidStringify(lesson.semester_id)
+            subject_id: uuidStringify(lesson.subject_id)
         }));
 
         return res.status(200).json(createSuccessResponse(responseData, `All lessons retrieved successfully.`));
@@ -299,7 +282,6 @@ export const getLessonsByClassId = async (req: Request, res: Response) => {
             teacher_id: uuidStringify(lesson.teacher_id),
             class_id: uuidStringify(lesson.class_id),
             subject_id: uuidStringify(lesson.subject_id),
-            semester_id: uuidStringify(lesson.semester_id),
             teachers: {
                 ...lesson.teachers,
                 id: uuidStringify(lesson.teachers.id),
@@ -328,14 +310,17 @@ export const getLessonsForUser = async (req: Request, res: Response) => {
     try {
         const userId: string = req.params.userId;
 
-        // Correct UUID conversion without Buffer.from
         let existingUser: teachers | students | null = await prisma.teachers.findUnique({
-            where: { id: uuidParse(userId) }
+            where: {
+                id: Buffer.from(uuidParse(userId))
+            }
         });
 
         if (!existingUser) {
             existingUser = await prisma.students.findUnique({
-                where: { id: uuidParse(userId) }
+                where: {
+                    id: Buffer.from(uuidParse(userId))
+                }
             });
         }
 
@@ -362,8 +347,7 @@ export const getLessonsForUser = async (req: Request, res: Response) => {
         if (isStudent(existingUser) && existingUser.class_id) {
             lessonsData = await prisma.lessons.findMany({
                 where: {
-                    class_id: existingUser.class_id,
-                    semester_id: currentSemester.id
+                    class_id: existingUser.class_id
                 },
                 include: {
                     teachers: true,
@@ -380,8 +364,7 @@ export const getLessonsForUser = async (req: Request, res: Response) => {
         } else {
             lessonsData = await prisma.lessons.findMany({
                 where: {
-                    teacher_id: existingUser.id,
-                    semester_id: currentSemester.id
+                    teacher_id: existingUser.id
                 },
                 include: {
                     teachers: true,
@@ -406,7 +389,6 @@ export const getLessonsForUser = async (req: Request, res: Response) => {
             teacher_id: uuidStringify(lesson.teacher_id),
             class_id: uuidStringify(lesson.class_id),
             subject_id: uuidStringify(lesson.subject_id),
-            semester_id: uuidStringify(lesson.semester_id),
             teachers: {
                 ...lesson.teachers,
                 id: uuidStringify(lesson.teachers.id),
@@ -431,7 +413,6 @@ export const getLessonsForUser = async (req: Request, res: Response) => {
     }
 };
 
-//For teacher/student
 export const getLessonsThreeDaysBack = async (req: Request, res: Response) => {
     try {
         const userId: string = req.params.userId;
@@ -506,7 +487,6 @@ export const getLessonsThreeDaysBack = async (req: Request, res: Response) => {
             teacher_id: uuidStringify(lesson.teacher_id),
             class_id: uuidStringify(lesson.class_id),
             subject_id: uuidStringify(lesson.subject_id),
-            semester_id: uuidStringify(lesson.semester_id),
             teachers: {
                 ...lesson.teachers,
                 id: uuidStringify(lesson.teachers.id),
@@ -600,7 +580,6 @@ export const getLessonsThreeDaysAhead = async (req: Request, res: Response) => {
             teacher_id: uuidStringify(lesson.teacher_id),
             class_id: uuidStringify(lesson.class_id),
             subject_id: uuidStringify(lesson.subject_id),
-            semester_id: uuidStringify(lesson.semester_id),
             teachers: {
                 ...lesson.teachers,
                 id: uuidStringify(lesson.teachers.id),
@@ -687,7 +666,6 @@ export const getLessonsToday = async (req: Request, res: Response) => {
             teacher_id: uuidStringify(lesson.teacher_id),
             class_id: uuidStringify(lesson.class_id),
             subject_id: uuidStringify(lesson.subject_id),
-            semester_id: uuidStringify(lesson.semester_id),
             teachers: {
                 ...lesson.teachers,
                 id: uuidStringify(lesson.teachers.id),
@@ -726,8 +704,7 @@ export const updateLesson = async (req: Request, res: Response) => {
             where: {
                 id: Buffer.from(uuidParse(lessonId))
             }, data: {
-                description: description,
-                is_completed: true
+                description: description
             }
         });
 
@@ -739,8 +716,7 @@ export const updateLesson = async (req: Request, res: Response) => {
             end_time: updatedLesson.end_time.toISOString(),
             teacher_id: uuidStringify(updatedLesson.teacher_id),
             class_id: uuidStringify(updatedLesson.class_id),
-            subject_id: uuidStringify(updatedLesson.subject_id),
-            semester_id: uuidStringify(updatedLesson.semester_id)
+            subject_id: uuidStringify(updatedLesson.subject_id)
         };
 
         return res.status(200).json(createSuccessResponse(responseData, `Lesson updated successfully.`));
@@ -750,7 +726,7 @@ export const updateLesson = async (req: Request, res: Response) => {
     }
 };
 
-export const deleteLessons = async (req: Request, res: Response) => {
+export const deleteLessonsByClassAndSubjectIds = async (req: Request, res: Response) => {
     try {
         const classId: string = req.params.classId;
         const subjectId: string = req.params.subjectId;
@@ -789,6 +765,35 @@ export const deleteLessons = async (req: Request, res: Response) => {
     }
 };
 
+export const deleteLessonsByClassIdAndDate = async (req: Request, res: Response) => {
+    try {
+        const classId: string = req.params.classId;
+        const lessonDate = new Date(req.params.date);
+
+        const existingClass: classes | null = await prisma.classes.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(classId))
+            }
+        });
+
+        if (!existingClass) {
+            return res.status(404).json(createErrorResponse(`Class does not exist.`));
+        }
+
+        const payload = await prisma.lessons.deleteMany({
+            where: {
+                class_id: Buffer.from(uuidParse(classId)),
+                date: lessonDate
+            }
+        });
+
+        res.status(200).json(createSuccessResponse(payload.count, `Lessons deleted successfully.`));
+    } catch (err) {
+        console.error('Error deleting lessons', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while deleting lessons. Please try again later.'));
+    }
+};
+
 export const deleteLesson = async (req: Request, res: Response) => {
     try {
         const lessonId: string = req.params.lessonId;
@@ -817,8 +822,7 @@ export const deleteLesson = async (req: Request, res: Response) => {
             end_time: deletedLesson.end_time.toISOString(),
             teacher_id: uuidStringify(deletedLesson.teacher_id),
             class_id: uuidStringify(deletedLesson.class_id),
-            subject_id: uuidStringify(deletedLesson.subject_id),
-            semester_id: uuidStringify(deletedLesson.semester_id)
+            subject_id: uuidStringify(deletedLesson.subject_id)
         };
 
         return res.status(200).json(createSuccessResponse(responseData, `Lesson deleted successfully.`));

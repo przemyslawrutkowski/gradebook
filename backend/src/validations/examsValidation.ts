@@ -18,11 +18,14 @@ const atLeastOneFieldValidation = () => {
     });
 };
 
-
 export const validateCreateExam = () => [
     createNotEmptyValidation('topic'),
     createNotEmptyValidation('scope'),
     createNotEmptyValidation('lessonId'),
+];
+
+export const validateUserId = () => [
+    createNotEmptyValidation('userId', 'param'),
 ];
 
 export const validateUpdateExam = () => [

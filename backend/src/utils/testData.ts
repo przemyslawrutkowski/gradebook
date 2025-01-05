@@ -255,6 +255,16 @@ export const schoolEvent2 = {
     endTime: '18:00'
 }
 
+export const exam1 = {
+    topic: "Introduction to TypeScript",
+    scope: "Overview of types, interfaces, classes, and generics"
+};
+
+export const exam2 = {
+    topic: "Advanced SQL Queries",
+    scope: "Inner joins, Outer joins, Subqueries, Window Functions"
+};
+
 export const nonExistentId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
 export const invalidIdUrl = '%20';
 export const emptyString = '';

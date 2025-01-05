@@ -114,13 +114,17 @@ export const getAttendancesStatistics = async (req: Request, res: Response) => {
         const currentYear: number = new Date().getUTCFullYear();
         const currentMonth: number = new Date().getUTCMonth();
 
-        let year = null;
+        let startDateYear = null;
+        let endDateYear = null;
         if (currentMonth < 7) {
-            year = currentYear - 1;
+            startDateYear = currentYear - 1;
+            endDateYear = currentYear;
         } else {
-            year = currentYear
+            startDateYear = currentYear;
+            endDateYear = currentYear + 1;
         }
-
+        let startDate = new Date(startDateYear, 8, 1);
+        let endDate = new Date(endDateYear, 5, 30);
 
         const existingStudent: students | null = await prisma.students.findUnique({
             where: {
@@ -135,10 +139,10 @@ export const getAttendancesStatistics = async (req: Request, res: Response) => {
         const attendances = await prisma.attendances.findMany({
             where: {
                 lessons: {
-                    semesters: {
-                        school_years: {
-                            name: `${year}/${year + 1}`
-                        }
+                    date: {
+                        gt: startDate,
+                        lt: endDate
+
                     }
                 }
             }
@@ -229,7 +233,6 @@ export const getStudentAttendances = async (req: Request, res: Response) => {
                 teacher_id: uuidStringify(attendance.lessons.teacher_id),
                 class_id: uuidStringify(attendance.lessons.class_id),
                 subject_id: uuidStringify(attendance.lessons.subject_id),
-                semester_id: uuidStringify(attendance.lessons.semester_id),
                 subject: {
                     ...attendance.lessons.subjects,
                     id: uuidStringify(attendance.lessons.subjects.id)
@@ -306,7 +309,6 @@ export const getClassAttendances = async (req: Request, res: Response) => {
                 teacher_id: uuidStringify(attendance.lessons.teacher_id),
                 class_id: uuidStringify(attendance.lessons.class_id),
                 subject_id: uuidStringify(attendance.lessons.subject_id),
-                semester_id: uuidStringify(attendance.lessons.semester_id),
                 subject: {
                     ...attendance.lessons.subjects,
                     id: uuidStringify(attendance.lessons.subjects.id)
@@ -375,7 +377,6 @@ export const getStudentAttendancesByDate = async (req: Request, res: Response) =
                 teacher_id: uuidStringify(attendance.lessons.teacher_id),
                 class_id: uuidStringify(attendance.lessons.class_id),
                 subject_id: uuidStringify(attendance.lessons.subject_id),
-                semester_id: uuidStringify(attendance.lessons.semester_id),
                 subject: {
                     ...attendance.lessons.subjects,
                     id: uuidStringify(attendance.lessons.subjects.id)

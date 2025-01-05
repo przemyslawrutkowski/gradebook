@@ -100,28 +100,24 @@ model homeworks {
 }
 
 model lessons {
-  id           Bytes         @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
-  description  String?       @db.VarChar(255)
-  date         DateTime      @db.Date
-  start_time   DateTime      @db.Time(0)
-  end_time     DateTime      @db.Time(0)
-  is_completed Boolean       @default(dbgenerated("b'0'")) @db.Bit(1)
-  teacher_id   Bytes         @db.Binary(16)
-  class_id     Bytes         @db.Binary(16)
-  subject_id   Bytes         @db.Binary(16)
-  semester_id  Bytes         @db.Binary(16)
-  attendances  attendances[]
-  exams        exams[]
-  homeworks    homeworks?
-  teachers     teachers      @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_1")
-  classes      classes       @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_2")
-  subjects     subjects      @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_3")
-  semesters    semesters     @relation(fields: [semester_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_4")
+  id          Bytes         @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
+  description String?       @db.VarChar(255)
+  date        DateTime      @db.Date
+  start_time  DateTime      @db.Time(0)
+  end_time    DateTime      @db.Time(0)
+  teacher_id  Bytes         @db.Binary(16)
+  class_id    Bytes         @db.Binary(16)
+  subject_id  Bytes         @db.Binary(16)
+  attendances attendances[]
+  exams       exams[]
+  homeworks   homeworks?
+  teachers    teachers      @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_1")
+  classes     classes       @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_2")
+  subjects    subjects      @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "lessons_ibfk_3")
 
   @@index([class_id], map: "class_id")
   @@index([subject_id], map: "subject_id")
   @@index([teacher_id], map: "teacher_id")
-  @@index([semester_id], map: "semester_id")
 }
 
 model messages {
@@ -370,7 +366,6 @@ model semesters {
   start_date     DateTime     @db.Date
   end_date       DateTime     @db.Date
   school_year_id Bytes        @db.Binary(16)
-  lessons        lessons[]
   school_years   school_years @relation(fields: [school_year_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "semesters_ibfk_1")
 
   @@unique([semester, school_year_id], map: "semester")
