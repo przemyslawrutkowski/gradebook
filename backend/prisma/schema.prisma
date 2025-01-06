@@ -387,3 +387,13 @@ model exams {
 
   @@index([lesson_id], map: "lesson_id")
 }
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model final_grades {
+  id          Bytes @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
+  grade       Int   @db.TinyInt
+  student_id  Bytes @db.Binary(16)
+  subject_id  Bytes @db.Binary(16)
+  teacher_id  Bytes @db.Binary(16)
+  semester_id Bytes @db.Binary(16)
+}

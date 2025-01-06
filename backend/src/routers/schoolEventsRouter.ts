@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { validateCreateGrade, validateGetGrades, validateGetThreeLatestGrades, validateUpdateGrade, validateDeleteGrade } from '../validations/gradesValidation.js';
+import { validateCreateGrade, validateGetGrades, validateStudentId, validateUpdateGrade, validateDeleteGrade } from '../validations/gradesValidation.js';
 import { createGrade, getGrades, getThreeLatestGrades, updateGrade, deleteGrade } from '../handlers/grades.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { UserType } from '../enums/userTypes.js';

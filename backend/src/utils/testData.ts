@@ -238,6 +238,14 @@ export const grade2 = {
     description: 'Graphing geometry shadows in axonometry'
 };
 
+export const finalGrade1 = {
+    grade: 3
+};
+
+export const finalGrade2 = {
+    grade: 6
+};
+
 export const homework1 = {
     description: 'Homework short description',
     deadline: '2025-01-10'

@@ -20,7 +20,6 @@ const atLeastOneFieldValidation = () => {
     });
 };
 
-
 export const validateCreateGrade = () => [
     createNotEmptyValidation('description'),
     createIntValidation('grade', 'body', 1, 6),
@@ -30,18 +29,31 @@ export const validateCreateGrade = () => [
     createNotEmptyValidation('teacherId')
 ];
 
+export const validateCreateFinalGrade = () => [
+    createIntValidation('grade', 'body', 1, 6),
+    createNotEmptyValidation('studentId'),
+    createNotEmptyValidation('subjectId'),
+    createNotEmptyValidation('teacherId'),
+    createNotEmptyValidation('semesterId'),
+];
+
 export const validateGetGrades = () => [
     createNotEmptyValidation('studentId', 'param'),
     createNotEmptyValidation('subjectId', 'param')
 ];
 
-export const validateGetThreeLatestGrades = () => [
+export const validateStudentId = () => [
     createNotEmptyValidation('studentId', 'param')
 ];
 
 export const validateUpdateGrade = () => [
     createNotEmptyValidation('gradeId', 'param'),
     atLeastOneFieldValidation()
+];
+
+export const validateUpdateFinalGrade = () => [
+    createNotEmptyValidation('gradeId', 'param'),
+    createIntValidation('grade', 'body', 1, 6),
 ];
 
 export const validateDeleteGrade = () => [
