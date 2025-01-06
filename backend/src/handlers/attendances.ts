@@ -7,6 +7,7 @@ import { attendances, lessons, students } from '@prisma/client';
 import { parse as uuidParse, stringify as uuidStringify } from 'uuid';
 import MonthlyAttendance from '../interfaces/MonthlyAttendance';
 import { Month } from '../enums/months';
+import attendanceUpdate from '../interfaces/attendanceUpdate';
 
 export const createAttendances = async (req: Request, res: Response) => {
     try {
@@ -395,47 +396,59 @@ export const getStudentAttendancesByDate = async (req: Request, res: Response) =
     }
 };
 
-export const updateAttendance = async (req: Request, res: Response) => {
+export const updateAttendances = async (req: Request, res: Response) => {
     try {
-        const attendanceId: string = req.params.attendanceId;
-        const wasPresent: boolean = req.body.wasPresent;
-        const wasLate: boolean = req.body.wasLate;
-        const wasExcused: boolean = req.body.wasExcused;
+        const attendancesUpdate: attendanceUpdate[] = req.body.attendancesUpdate;
 
-        if (!wasPresent && wasLate) {
-            return res.status(422).json(createErrorResponse('Invalid attendance status: cannot be marked as late if student is absent'));
-        }
-
-        if (wasPresent && !wasLate && wasExcused) {
-            return res.status(422).json(createErrorResponse('Invalid attendance status: cannot be marked as excused if student is present and not late.'));
-        }
-
-        const attendance = await prisma.attendances.findUnique({
-            where: {
-                id: Buffer.from(uuidParse(attendanceId))
+        for (var attendanceUpdate of attendancesUpdate) {
+            if (!attendanceUpdate.wasPresent && attendanceUpdate.wasLate) {
+                return res.status(422).json(createErrorResponse('Invalid attendance status: cannot be marked as late if student is absent'));
             }
-        });
 
-        if (!attendance) {
-            return res.status(404).json(createErrorResponse(`Attendance does not exist.`));
+            if (attendanceUpdate.wasPresent && !attendanceUpdate.wasLate && attendanceUpdate.wasExcused) {
+                return res.status(422).json(createErrorResponse('Invalid attendance status: cannot be marked as excused if student is present and not late.'));
+            }
         }
 
-        const updatedAttendance = await prisma.attendances.update({
-            where: {
-                id: Buffer.from(uuidParse(attendanceId))
+        const updatedAttendances: attendances[] = [];
 
-            },
-            data: {
-                was_present: wasPresent,
-                was_late: wasLate,
-                was_excused: wasExcused
+        for (var attendanceUpdate of attendancesUpdate) {
+            const existingAttendance = await prisma.attendances.findUnique({
+                where: {
+                    id: Buffer.from(uuidParse(attendanceUpdate.id))
+                }
+            });
+
+            if (!existingAttendance) {
+                return res.status(404).json(createErrorResponse(`Attendance does not exist.`));
             }
-        });
 
-        return res.status(200).json(createSuccessResponse(updatedAttendance, `Attendance updated successfully.`));
+            const updatedAttendance = await prisma.attendances.update({
+                where: {
+                    id: Buffer.from(uuidParse(attendanceUpdate.id))
+                },
+                data: {
+                    was_present: attendanceUpdate.wasPresent,
+                    was_late: attendanceUpdate.wasLate,
+                    was_excused: attendanceUpdate.wasExcused
+                }
+            });
+
+            updatedAttendances.push(updatedAttendance);
+        };
+
+        const responseData = updatedAttendances.map(updatedAttendance => ({
+            ...updatedAttendance,
+            id: uuidStringify(updatedAttendance.id),
+            date_time: updatedAttendance.date_time.toISOString(),
+            student_id: uuidStringify(updatedAttendance.student_id),
+            lesson_id: uuidStringify(updatedAttendance.lesson_id)
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, `Attendances updated successfully.`));
     } catch (err) {
-        console.error('Error updating attendance', err);
-        return res.status(500).json(createErrorResponse('An unexpected error occurred while updating attendance. Please try again later.'));
+        console.error('Error updating attendances', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while updating attendances. Please try again later.'));
     }
 };
 

@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { handleInputErrors } from '../modules/middleware.js';
-import { createAttendances, getLessonAttendances, getAttendancesStatistics, getClassAttendances, getStudentAttendances, getStudentAttendancesByDate, updateAttendance, excuseAbsencesForStudent } from '../handlers/attendances.js';
+import { createAttendances, getLessonAttendances, getAttendancesStatistics, getClassAttendances, getStudentAttendances, getStudentAttendancesByDate, updateAttendances } from '../handlers/attendances.js';
 import { authenticate, authorize } from '../modules/auth.js';
-import { validateCreateAttendances, validateGetAttendances, validateGetAttendancesByDate, validateGetClassAttendances, validateStudentId, validateUpdateAttendance } from '../validations/attendancesValidation.js';
+import { validateCreateAttendances, validateGetAttendances, validateGetAttendancesByDate, validateGetClassAttendances, validateStudentId, validateUpdateAttendances } from '../validations/attendancesValidation.js';
 import { UserType } from '../enums/userTypes.js';
 
 const attendancesRouter = Router();
@@ -55,19 +55,12 @@ attendancesRouter.get('/student/:studentId/by-date/:date',
     getStudentAttendancesByDate
 );
 
-attendancesRouter.patch('/:attendanceId',
+attendancesRouter.patch('/update',
     authenticate,
     authorize([UserType.Administrator, UserType.Teacher]),
-    validateUpdateAttendance(),
+    validateUpdateAttendances(),
     handleInputErrors,
-    updateAttendance
-);
-
-attendancesRouter.patch('/excuse/:studentId',
-    authenticate,
-    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent]),
-    validateUpdateAttendance(),
-    excuseAbsencesForStudent
+    updateAttendances
 );
 
 export default attendancesRouter;
