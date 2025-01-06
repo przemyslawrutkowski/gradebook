@@ -1,12 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Mail, Bell, User, ChevronDown, Search, LogOut, Settings } from 'lucide-react';
 
 export default function Topbar({ messNot, messNotNumber, bellNot, bellNotNumber, onLogout }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
+
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setIsDropdownOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <header className="hidden lg:flex justify-end py-3 px-8 gap-8 items-center w-full pt whitespace-nowrap bg-textBg-100">
@@ -33,7 +47,7 @@ export default function Topbar({ messNot, messNotNumber, bellNot, bellNotNumber,
         <Bell size={24} className="text-textBg-700 hover:cursor-pointer" />
       </div>
 
-      <div className="relative">
+      <div className="relative" ref={dropdownRef}>
         <div className="flex flex-row items-center hover:cursor-pointer" onClick={toggleDropdown}>
           <div className="bg-primary-500 w-9 h-9 rounded-full flex items-center justify-center">
             <User size={18} className="text-textBg-100" />

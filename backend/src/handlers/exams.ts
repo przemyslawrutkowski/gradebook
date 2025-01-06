@@ -89,13 +89,26 @@ export const getExams = async (req: Request, res: Response) => {
                 lesson_id: {
                     in: lessons.map(lesson => lesson.id)
                 }
+            },
+            include: {
+                lessons: true
             }
         });
 
         const responseData = exams.map(exam => ({
-            ...exam,
             id: uuidStringify(exam.id),
-            lesson_id: uuidStringify(exam.lesson_id)
+            topic: exam.topic,
+            scope: exam.scope,
+            lesson: {
+                id: uuidStringify(exam.lessons.id),
+                description: exam.lessons.description,
+                date: exam.lessons.date,
+                start_time: exam.lessons.start_time,
+                end_time: exam.lessons.end_time,
+                teacher_id: uuidStringify(exam.lessons.teacher_id),
+                class_id: uuidStringify(exam.lessons.class_id),
+                subject_id: uuidStringify(exam.lessons.subject_id),
+            }
         }));
 
         return res.status(200).json(createSuccessResponse(responseData, 'Exams retrieved successfully.'));
@@ -170,17 +183,30 @@ export const getThreeUpcomingExams = async (req: Request, res: Response) => {
                     }
                 ]
             },
+            include: {
+                lessons: true
+            },
             orderBy: [
                 { lessons: { date: 'asc' } },
                 { lessons: { start_time: 'asc' } }
             ],
             take: 3
         });
-
+ 
         const responseData = exams.map(exam => ({
-            ...exam,
             id: uuidStringify(exam.id),
-            lesson_id: uuidStringify(exam.lesson_id)
+            topic: exam.topic,
+            scope: exam.scope,
+            lesson: {
+                id: uuidStringify(exam.lessons.id),
+                description: exam.lessons.description,
+                date: exam.lessons.date,
+                start_time: exam.lessons.start_time,
+                end_time: exam.lessons.end_time,
+                teacher_id: uuidStringify(exam.lessons.teacher_id),
+                class_id: uuidStringify(exam.lessons.class_id),
+                subject_id: uuidStringify(exam.lessons.subject_id),
+            }
         }));
 
         return res.status(200).json(createSuccessResponse(responseData, 'Exams retrieved successfully.'));
@@ -261,5 +287,36 @@ export const deleteExam = async (req: Request, res: Response) => {
     } catch (err) {
         console.error('Error deleting exam', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while deleting exam. Please try again later.'));
+    }
+};
+
+export const getAllExams = async (req: Request, res: Response) => {
+    try {
+        const exams = await prisma.exams.findMany({
+            include: {
+                lessons: true,
+            },
+        });
+
+        const responseData = exams.map(exam => ({
+            id: uuidStringify(exam.id),
+            topic: exam.topic,
+            scope: exam.scope,
+            lesson: {
+                id: uuidStringify(exam.lessons.id),
+                description: exam.lessons.description,
+                date: exam.lessons.date,
+                start_time: exam.lessons.start_time,
+                end_time: exam.lessons.end_time,
+                teacher_id: uuidStringify(exam.lessons.teacher_id),
+                class_id: uuidStringify(exam.lessons.class_id),
+                subject_id: uuidStringify(exam.lessons.subject_id),
+            },
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, 'All exams retrieved successfully.'));
+    } catch (err) {
+        console.error('Error retrieving all exams', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving all exams. Please try again later.'));
     }
 };

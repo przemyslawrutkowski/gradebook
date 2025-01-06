@@ -243,6 +243,7 @@ export const getAllGradesForStudent = async (req: Request, res: Response) => {
             id: uuidStringify(grade.id),
             description: grade.description,
             grade: grade.grade,
+            weight: grade.weight,
             date_given: grade.date_given.toISOString(),
             subject_id: uuidStringify(grade.subject_id),
             teacher_id: uuidStringify(grade.teacher_id),

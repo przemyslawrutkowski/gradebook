@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Cloud,
@@ -26,6 +26,8 @@ import {
   ZapOff,
 } from 'lucide-react';
 import Button from '../components/Button';
+import { toast } from 'react-toastify';
+
 
 export function Login({ onLogin }) {
   const [email, setEmail] = useState('');
@@ -53,12 +55,12 @@ export function Login({ onLogin }) {
       if (response.ok) {
         const token = data.token || data.data?.jwt || data.jwt; 
         if (!token) {
-          throw new Error('Token nie został znaleziony w odpowiedzi serwera.');
+          throw new Error('Token not found in server response.');
         }
   
         const userId = data.data?.id || data.id;
         if (!userId) {
-          throw new Error('ID użytkownika nie zostało znalezione w odpowiedzi serwera.');
+          throw new Error('User ID not found in server response.');
         }
   
         localStorage.setItem('token', token);
@@ -69,13 +71,14 @@ export function Login({ onLogin }) {
         onLogin();
         navigate('/');
       } else {
-        setError(data.message || 'Wystąpił błąd podczas logowania.');
+        setError(data.message || 'An error occurred during login.');
+        toast.error(data.message || 'An error occurred during login.');
       }
     } catch (error) {
-      console.error('Błąd podczas logowania:', error);
-      setError('Wystąpił błąd podczas logowania.');
+      setError('An error occurred during login.');
     }
-  };
+  }; 
+
   return (
     <div className="relative h-svh sm:h-screen w-screen flex items-center justify-center bg-white overflow-hidden">
 
@@ -127,9 +130,6 @@ export function Login({ onLogin }) {
           <h2 className="font-epilogue text-3xl font-bold text-center mb-8 text-textBg-900">
             Sign in
           </h2>
-          {error && (
-            <p className="text-red-500 mb-4 text-center">{error}</p>
-          )}
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             <div className="flex flex-col justify-center gap-[2px] w-full bg-textBg-200 px-3 py-0 h-12 rounded-md">
               <label

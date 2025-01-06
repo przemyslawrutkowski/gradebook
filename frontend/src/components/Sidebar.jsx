@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { LogOut, Menu, X } from "lucide-react";
-import { createContext, useState } from "react";
+import { createContext, useState, useContext } from "react";
 import { Link, useLocation } from 'react-router-dom';
 
 const SidebarContext = createContext();
@@ -26,7 +26,7 @@ export default function Sidebar({ children, onLogout }) {
             </button>
           </div>
 
-          <SidebarContext.Provider value={{ isMobileMenuOpen }}>
+          <SidebarContext.Provider value={{ isMobileMenuOpen, setIsMobileMenuOpen }}>
             <ul
               className={`
                 flex-1 px-3 lg:block mt-5
@@ -44,20 +44,31 @@ export default function Sidebar({ children, onLogout }) {
 
 export function SidebarItem({ icon, text, path, alert, onClick, className }) {
   const location = useLocation();
+  const { isMobileMenuOpen, setIsMobileMenuOpen } = useContext(SidebarContext);
   const isActive = location.pathname === path;
+
+  const handleClick = (e) => {
+    if (onClick) {
+      onClick(e);
+    }
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+    }
+  };
+
   return (
     <Link
       to={path}
-      onClick={onClick}
+      onClick={handleClick}
       className={`relative flex items-center py-3 px-3 my-1
         font-medium rounded-md cursor-pointer
         transition-colors ${className}
         ${isActive ? "bg-primary-100 text-primary-500" : "hover:bg-textBg-200 text-textBg-600"}
-    `}
+      `}
     >
       {icon}
       <span className="w-52 ml-3">{text}</span>
       {alert && <div className="absolute right-2 w-2 h-2 rounded bg-primary-500" />}
     </Link>
   );
-} 
+}

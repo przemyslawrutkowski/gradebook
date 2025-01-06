@@ -10,10 +10,10 @@ import Select from 'react-select';
 import EditGradeForm from "../components/forms/grades/EditGradeForm";
 import ConfirmForm from '../components/forms/ConfirmForm';
 import { toast } from "react-toastify";
+import FinalGradeForm from "../components/forms/grades/FinalGrade";
 
 export function Grades() {
   const [semester, setSemester] = useState(null);
-  const [selectedSubject, setSelectedSubject] = useState("");
   const [grades, setGrades] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -26,12 +26,18 @@ export function Grades() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [gradeToDelete, setGradeToDelete] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isFinalGradeModalOpen, setIsFinalGradeModalOpen] = useState(false);  
+  const [subjectIdFinalGrade, setSubjectIdFinalGrade] = useState(null);
+  const [teacherIdFinalGrade, setTeacherIdFinalGrade] = useState(null);
+  const [finalGrades, setFinalGrades] = useState([]);
+  const [existingFinalGrade, setExistingFinalGrade] = useState(null);
 
   const [studentId, setStudentId] = useState(null);
 
   const parentId = getUserId();
   const token = getToken();
   const userRole = getUserRole();
+  const currentUserId = getUserId();
 
   const fetchStudentForParent = async () => {
     try {
@@ -74,7 +80,6 @@ export function Grades() {
 
   const handleSemesterChange = (sem) => {
     setSemester(sem);
-    setSelectedSubject("");
   };
 
   const options = fetchedClasses.map(cls => ({
@@ -243,6 +248,33 @@ export function Grades() {
     }
   };
 
+  const fetchFinalGrades = async (studentId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`http://localhost:3000/grade/final/${studentId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error: ${response.status}`);
+      }
+  
+      const result = await response.json();
+      setFinalGrades(result.data);
+    } catch (err) {
+      setError(err.message || 'Failed to fetch final grades. Please try again later.');
+      toast.error(err.message || 'An unexpected error occurred.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator){
       fetchClasses();
@@ -267,6 +299,7 @@ export function Grades() {
       const idToFetch = (userRole === UserRoles.Student || userRole === UserRoles.Parent) ? studentId : selectedStudent;
       if (idToFetch) {
         fetchGrades(idToFetch);
+        fetchFinalGrades(idToFetch);
       }
     }
   }, [semestersList, studentId, token, userRole, selectedStudent]);
@@ -286,6 +319,7 @@ export function Grades() {
     if (semestersList.length > 0) {
       const currentSem = getCurrentSemester();
       setSemester(currentSem);
+
     }
   }, [semestersList]);
 
@@ -307,6 +341,19 @@ export function Grades() {
   const closeDeleteModal = () => {
     setGradeToDelete(null);
     setIsDeleteModalOpen(false);
+  };
+
+  const openFinalGradeModal = (subjectId, teacherId, existingGrade = null) => {
+    setSubjectIdFinalGrade(subjectId);
+    setTeacherIdFinalGrade(teacherId);
+    setExistingFinalGrade(existingGrade);
+    setIsFinalGradeModalOpen(true);
+  };
+  const closeFinalGradeModal = () => {
+    setSubjectIdFinalGrade(null);
+    setTeacherIdFinalGrade(null);
+    setExistingFinalGrade(null);
+    setIsFinalGradeModalOpen(false);
   };
 
   const handleConfirmDelete = async () => {
@@ -339,9 +386,8 @@ export function Grades() {
 
   const gradesBySemester = useMemo(() => grades.filter(grade => grade.semester === semester), [grades, semester]);
 
-  const filteredGrades = useMemo(() => selectedSubject
-    ? gradesBySemester.filter((item) => item.subject === selectedSubject)
-    : gradesBySemester, [gradesBySemester, selectedSubject]);
+  const filteredGrades = useMemo(() => 
+    gradesBySemester, [gradesBySemester]);
 
   const groupedGrades = useMemo(() => {
     const group = {};
@@ -357,6 +403,17 @@ export function Grades() {
     });
     return Object.values(group);
   }, [filteredGrades]);
+
+  const groupedFinalGrades = useMemo(() => {
+    const group = {};
+    finalGrades.forEach(finalGrade => {
+      const subjectId = finalGrade.subject_id;
+      if (!group[subjectId]) {
+        group[subjectId] = finalGrade;
+      }
+    });
+    return group;
+  }, [finalGrades]);
 
   const getGradeColor = (gradeValue) => {
     switch (true) {
@@ -401,7 +458,7 @@ export function Grades() {
       )}
       <div className="flex flex-col 2xl:flex-row justify-between sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8 gap-8 2xl:gap-16">
         <div className="w-full">
-          <div className="flex justify-between mb-4">
+          <div className="flex justify-between items-center mb-4">
             <div>
               <p className="text-textBg-700 text-2xl font-semibold">Your Grades</p>
             </div>
@@ -435,65 +492,100 @@ export function Grades() {
           <div className="grid gap-4 sm:grid-cols-1">
             {filteredGrades.length > 0 ? (
               <div className='w-full flex flex-col'>
-                {groupedGrades.map(({subject, grades}) =>(
-                  <div key={grades[0].subject_id} className='flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-2'>
-                    <div className='flex items-center gap-4'>
-                      <span className='font-medium text-lg overflow-hidden text-ellipsis'>{subject}</span>
-                    </div>
+                {groupedGrades.map(({ subject, grades }) => {
+                  const finalGrade = groupedFinalGrades[grades[0].subject_id];
+                  
+                  const isAuthorizedTeacher = 
+                    userRole === UserRoles.Teacher && 
+                    grades.some(grade => grade.teacher_id === currentUserId);
 
-                    <div className='flex flex-wrap gap-2'>
-                      {grades.map((grade) => (
-                        <div
-                          key={grade.id}
-                          className={`flex items-center gap-1`}
-                        >
-                          <Tooltip content={
-                            <div className='w-fit p-2'>
-                              <div className='flex flex-col gap-1'>
-                                <div className='flex gap-2'>
-                                  <p className='font-semibold'>Date Given:</p>
-                                  <p>{new Date(grade.date_given).toLocaleDateString()}</p>
-                                </div>
-                                <div className='flex gap-2'>
-                                  <p className='font-semibold'>Description:</p>
-                                  <p>{grade.description}</p>
-                                </div>
-                                <div className='flex gap-2'>
-                                  <p className='font-semibold'>Teacher:</p>
-                                  <p>{`${grade.teacher_first_name} ${grade.teacher_last_name}`}</p>
-                                </div>
-                                {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
-                                  <div className='flex'>
-                                    <Button
-                                      size="s"
-                                      type="link"
-                                      icon={<Pen size={16} color="#fff"/>}
-                                      onClick={() => openEditModal(grade)}
-                                      className="px-2 py-1"
-                                    />
-                                    <Button
-                                      size="s"
-                                      type="link" 
-                                      icon={<Trash size={16} color="#fff"/>}
-                                      onClick={() => openDeleteModal(grade)}
-                                      className="px-2 py-1"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          } position="left">
-                            <span
-                              className={`grid font-semibold place-items-center w-7 h-7 bg-textBg-150 rounded ${getGradeColor(grade.grade)} hover:cursor-pointer`}
+                  return (
+                    <div key={grades[0].subject_id} className='flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-2'>
+                      <div className='flex items-center gap-4'>
+                        <span className='font-medium text-lg overflow-hidden text-ellipsis'>{subject}</span>
+                      </div>
+
+                      <div className="flex items-center gap-6">
+                        <div className='flex flex-wrap gap-2'>
+                          {grades.map((grade) => (
+                            <div
+                              key={grade.id}
+                              className={`flex items-center gap-1`}
                             >
-                              {grade.grade} 
-                            </span>
-                          </Tooltip>
+                              <Tooltip content={
+                                <div className='p-2'>
+                                  <div className='flex flex-col gap-1'>
+                                    <div className='flex gap-2'>
+                                      <p className='font-semibold w-[72px]'>Description:</p>
+                                      <p>{grade.description}</p>
+                                    </div>
+                                    <div className='flex gap-2'>
+                                      <p className='font-semibold w-[72px]'>Weight:</p>
+                                      <p>{grade.weight}</p>
+                                    </div>
+                                    <div className='flex gap-2'>
+                                      <p className='font-semibold w-[72px]'>Date Given:</p>
+                                      <p>{new Date(grade.date_given).toLocaleDateString()}</p>
+                                    </div>
+                                    <div className='flex gap-2'>
+                                      <p className='font-semibold w-[72px]'>Teacher:</p>
+                                      <p>{`${grade.teacher_first_name} ${grade.teacher_last_name}`}</p>
+                                    </div>
+                                    {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
+                                      <div className='flex'>
+                                        <Button
+                                          size="s"
+                                          type="link"
+                                          icon={<Pen size={16} color="#fff"/>}
+                                          onClick={() => openEditModal(grade)}
+                                          className="px-2 py-1"
+                                        />
+                                        <Button
+                                          size="s"
+                                          type="link" 
+                                          icon={<Trash size={16} color="#fff"/>}
+                                          onClick={() => openDeleteModal(grade)}
+                                          className="px-2 py-1"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              } position="left">
+                                <span
+                                  className={`grid font-semibold place-items-center w-7 h-7 bg-textBg-150 rounded ${getGradeColor(grade.grade)} hover:cursor-pointer`}
+                                >
+                                  {grade.grade} 
+                                </span>
+                              </Tooltip>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                        
+
+                        <Tooltip position="bottom">
+                          <div
+                            className={`w-8 h-8 font-bold text-xl bg-textBg-200 rounded grid place-items-center cursor-pointer ${
+                              isAuthorizedTeacher ? 'hover:bg-textBg-250' : 'bg-gray-300 cursor-not-allowed'
+                            }`}
+                            title="Final Grade"
+                            onClick={() => {
+                              if (isAuthorizedTeacher) {
+                                openFinalGradeModal(
+                                  grades[0].subject_id, 
+                                  currentUserId,
+                                  finalGrade
+                                );
+                              }
+                            }}
+                          >
+                            {finalGrade ? finalGrade.grade : "+"}
+                          </div>
+                        </Tooltip>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div> 
             ) : (
               <p className='text-textBg-500'>No grades records.</p>
@@ -501,6 +593,21 @@ export function Grades() {
           </div>
         </div>
       </div>
+      
+      <FinalGradeForm
+        isOpen={isFinalGradeModalOpen}
+        onClose={closeFinalGradeModal}
+        onSuccess={() => {
+          fetchGrades(userRole === UserRoles.Student ? studentId : selectedStudent);
+          fetchFinalGrades(userRole === UserRoles.Student ? studentId : selectedStudent);
+          closeFinalGradeModal();
+        }}
+        studentId={selectedStudent}
+        semesterId={semester}
+        teacherId={teacherIdFinalGrade}
+        subjectId={subjectIdFinalGrade}
+        existingFinalGrade={existingFinalGrade}
+      />
 
       {editingGrade && (
         <EditGradeForm
@@ -527,4 +634,4 @@ export function Grades() {
   );
 }
 
-export default Grades;
+export default Grades; 

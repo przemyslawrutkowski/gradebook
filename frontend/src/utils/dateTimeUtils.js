@@ -21,3 +21,15 @@ export function formatDateToInput(dateString) {
     const minutes = date.getUTCMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
   };
+
+  export function formatDate(dateString) {
+    const date = new Date(dateString);
+    
+    const options = { 
+      day: 'numeric', 
+      month: 'short', 
+      year: 'numeric' 
+    };
+    
+    return date.toLocaleDateString('en-GB', options);
+  }

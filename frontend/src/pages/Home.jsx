@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import PageTitle from '../components/PageTitle';
 import ExamCard from "../components/ExamCard";
-import { Atom, ChevronRight, Dna, SquareSigma } from 'lucide-react';
+import { Atom, ChevronRight, Dna, GraduationCap, NotepadText, SquareSigma } from 'lucide-react';
 import GradeCard from "../components/GradeCard";
 import AttendanceChart from "../components/BarChart";
 import HomeworkCard from "../components/HomeworkCard";
@@ -10,18 +10,21 @@ import DashboardSchedule from "../components/DashboardSchedule";
 import { Link } from "react-router-dom";
 import { getToken, getUserId, getUserRole } from "../utils/UserRoleUtils";
 import UserRoles from "../data/userRoles";
+import { formatTime, formatDate } from "../utils/dateTimeUtils";
 
 export function Home() {
   const [latestHomework, setLatestHomework] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
   const [latestGrades, setLatestGrades] = useState([]);
-
+  const [upcomingExams, setUpcomingExams] = useState([]);
   const [loadingLatestHomework, setLoadingLatestHomework] = useState(false);
   const [errorLatestHomework, setErrorLatestHomework] = useState(null);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [attendanceError, setAttendanceError] = useState(null);
   const [latestGradesLoading, setLatestGradesLoading] = useState(false);
   const [latestGradesError, setLatestGradesError] = useState(null);
+  const [upcomingExamsLoading, setUpcomingExamsLoading] = useState(false);
+  const [upcomingExamsError, setUpcomingExamsError] = useState(null);
 
   const [studentId, setStudentId] = useState(null);
 
@@ -59,10 +62,12 @@ export function Home() {
           'Authorization': `Bearer ${token}`,
         },
       });
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
       const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || `Error: ${response.status}`);
+      }
+
       setLatestHomework(result.data);
     } catch (err) {
       setErrorLatestHomework(err.message);
@@ -138,6 +143,29 @@ export function Home() {
     }
   };
 
+  const fetchUpcomingExams = async (studentId) => {
+    setUpcomingExamsLoading(true);
+    setUpcomingExamsError(null);
+    try {
+      const response = await fetch(`http://localhost:3000/exam/upcoming/${studentId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || `Error: ${response.status}`);
+      }
+      setUpcomingExams(result.data);
+    } catch (err) {
+      setUpcomingExamsError(err.message);
+    } finally {
+      setUpcomingExamsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const initializeData = async () => {
       if (userRole === UserRoles.Student) {
@@ -156,6 +184,7 @@ export function Home() {
       fetchLatestHomework(studentId);
       fetchAttendanceData(studentId);
       fetchLatestGrades(studentId);
+      fetchUpcomingExams(studentId);
     }
   }, [studentId]);
 
@@ -169,9 +198,24 @@ export function Home() {
             <div className="lg:w-auto lg:flex-shrink-0">
               <p className="text-textBg-700 font-bold text-2xl mt-4 sm:mt-0 mb-6">Upcoming Exams</p>
               <div className="flex flex-wrap lg:flex-col gap-y-4 gap-x-8 mb-4">
-                <ExamCard title="Physics" date="20 Nov 2023" time="10.00 AM" className="bg-[#d3cafa]" icon={<Atom size={40} color="#7051EE" />} />
-                <ExamCard title="Biology" date="20 Nov 2023" time="10.00 AM" className="bg-[#b8f5cd]" icon={<Dna size={40} color="#1dd75b" />} />
-                <ExamCard title="Math" date="20 Nov 2023" time="10.00 AM" className="bg-[#bbe1fa]" icon={<SquareSigma size={40} color="#1A99EE" />} />
+                {upcomingExamsLoading ? (
+                  <p>Loading exams...</p>
+                ) : upcomingExamsError ? (
+                  <p className="text-red-500">Error: {upcomingExamsError}</p>
+                ) : upcomingExams.length > 0 ? (
+                  upcomingExams.map((exam) => (
+                    <div key={exam.id} className="w-full">
+                      <ExamCard 
+                        title={exam.topic} 
+                        date={formatDate(exam.lesson.date)} 
+                        time={formatTime(exam.lesson.start_time)} 
+                        className="bg-[#d3cafa]" 
+                        icon={<NotepadText size={40} color="#7051EE" />} />
+                    </div>
+                  ))
+                ) : (
+                  <p>No grades available.</p>
+                )}
               </div>
               <Link to={`/calendar`}>
                 <div className="flex items-center justify-center gap-2 pt-2 lg:pt-0">
@@ -194,7 +238,7 @@ export function Home() {
                 <div className="flex flex-col sm:flex-row w-full gap-4">
                   {latestGradesLoading ? (
                     <p>Loading grades...</p>
-                  ) : latestGradesError ? (
+                  ) : latestGradesError ? ( 
                     <p className="text-red-500">Error: {latestGradesError}</p>
                   ) : latestGrades.length > 0 ? (
                     latestGrades.map((grade) => (
@@ -226,7 +270,7 @@ export function Home() {
                   {loadingLatestHomework ? (
                     <p>Loading homework...</p>
                   ) : errorLatestHomework ? (
-                    <p className="text-red-500">Error: {errorLatestHomework}</p>
+                    <p className="text-red-500"> {errorLatestHomework}</p>
                   ) : latestHomework ? (
                       <HomeworkCard
                         key={latestHomework.id}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PageTitle from '../components/PageTitle';
-import { Clock, MapPin, PartyPopper, Plus, Edit, Trash2, Pen, Trash } from 'lucide-react';
+import { Clock, MapPin, PartyPopper, Plus, Pen, Trash, Info } from 'lucide-react';
 import {
   dayNames,
   monthNames,
@@ -12,9 +12,10 @@ import {
 } from '../utils/SchedCalUtils';
 import Calendar from '../components/Calendar';
 import Button from "../components/Button";
-import { getToken, getUserRole } from "../utils/UserRoleUtils";
+import { getToken, getUserRole, getUserId } from "../utils/UserRoleUtils";
 import CreateEventForm from "../components/forms/events/CreateEventForm"; 
 import EditEventForm from "../components/forms/events/EditEventForm";
+import EditExamForm from "../components/forms/exams/EditExamForm";
 import ConfirmForm from "../components/forms/ConfirmForm";
 import UserRoles from "../data/userRoles";
 import { toast } from "react-toastify";
@@ -36,13 +37,19 @@ export function CalendarEvents() {
   const [error, setError] = useState(null);
   const [events, setEvents] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isEditEventModalOpen, setIsEditEventModalOpen] = useState(false);
   const [eventToEdit, setEventToEdit] = useState(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleteEventModalOpen, setIsDeleteEventModalOpen] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
+
+  const [isEditExamModalOpen, setIsEditExamModalOpen] = useState(false);
+  const [examToEdit, setExamToEdit] = useState(null);
+  const [isDeleteExamModalOpen, setIsDeleteExamModalOpen] = useState(false);
+  const [examToDelete, setExamToDelete] = useState(null);
 
   const token = getToken();
   const userRole = getUserRole();
+  const userId = getUserId();
   const [eventTypes, setEventTypes] = useState([]);
   const [eventTypeCardColors, setEventTypeCardColors] = useState({});
   const [eventTypeLegendColors, setEventTypeLegendColors] = useState({});
@@ -76,8 +83,10 @@ export function CalendarEvents() {
     const newEventTypeLegendColors = {};
     types.forEach((type, index) => {
       newEventTypeCardColors[type.id] = cardColors[index % cardColors.length];
-      newEventTypeLegendColors[type.id] = legendColors[index % cardColors.length];
+      newEventTypeLegendColors[type.id] = legendColors[index % legendColors.length];
     });
+    newEventTypeCardColors['exam'] = 'bg-red-100 text-red-600';
+    newEventTypeLegendColors['exam'] = 'bg-red-600';
     setEventTypeCardColors(newEventTypeCardColors);
     setEventTypeLegendColors(newEventTypeLegendColors);
   };
@@ -99,6 +108,10 @@ export function CalendarEvents() {
 
       setEventTypes(result.data);
       assignColorsToEventTypeCardColors(result.data);
+      setEventTypes(prevTypes => [
+        ...prevTypes,
+        { id: 'exam', name: 'Exam' }
+      ]);
     } catch (err) {
       setError(err.message || 'Failed to load event types.');
       toast.error(err.message || 'An unexpected error occurred.');
@@ -113,29 +126,73 @@ export function CalendarEvents() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:3000/school-event', {
+      const eventsResponse = await fetch('http://localhost:3000/school-event', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`, 
         },
       });
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+
+      if (!eventsResponse.ok) {
+        throw new Error(`Error fetching events: ${eventsResponse.status}`);
       }
-      const result = await response.json();
-      setEvents(result.data);
+
+      const eventsResult = await eventsResponse.json();
+
+      let examsUrl = 'http://localhost:3000/exam';
+      if (userRole !== UserRoles.Administrator) {
+        examsUrl = `http://localhost:3000/exam/${userId}`;
+      }
+
+      const examsResponse = await fetch(examsUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, 
+        },
+      });
+
+      if (!examsResponse.ok) {
+        throw new Error(`Error fetching exams: ${examsResponse.status}`);
+      }
+
+      const examsResult = await examsResponse.json();
+
+      const mappedExams = examsResult.data.map(exam => ({
+        id: exam.id,
+        name: `Exam ${exam.topic}`,
+        date: exam.lesson.date || '',
+        start_time: exam.lesson.start_time || '',
+        end_time: exam.lesson.end_time || '',
+        location: exam.location || 'N/A',
+        event_type_id: 'exam',
+        type: 'exam',
+        topic: exam.topic || '',
+        scope: exam.scope || '', 
+      }));
+
+      const combinedEvents = [
+        ...eventsResult.data.map(event => ({
+          ...event,
+          type: 'event',
+        })),
+        ...mappedExams,
+      ];
+
+      setEvents(combinedEvents);
+      console.log(combinedEvents);
     } catch (err) {
-      setError(err.message); 
+      setError(err.message || 'Failed to load events and exams.');
       toast.error(err.message || 'An unexpected error occurred.');
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
   
   useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [token, userId, userRole]);
 
   useEffect(() => {
     setDaysInMonth(getDaysInMonth(monthNumbers[currentMonthIndex], getYearForMonthIndex(currentMonthIndex, baseYear)));
@@ -184,27 +241,47 @@ export function CalendarEvents() {
     fetchEvents(); 
   };
 
-  const openEditModal = (event) => {
+  const openEditEventModal = (event) => {
     setEventToEdit(event);
-    setIsEditModalOpen(true);
+    setIsEditEventModalOpen(true);
   };
 
-  const closeEditModal = () => {
+  const closeEditEventModal = () => {
     setEventToEdit(null);
-    setIsEditModalOpen(false);
+    setIsEditEventModalOpen(false);
   };
 
-  const openDeleteModal = (event) => {
+  const openDeleteEventModal = (event) => {
     setEventToDelete(event);
-    setIsDeleteModalOpen(true);
+    setIsDeleteEventModalOpen(true);
   };
 
-  const closeDeleteModal = () => {
+  const closeDeleteEventModal = () => {
     setEventToDelete(null);
-    setIsDeleteModalOpen(false);
+    setIsDeleteEventModalOpen(false);
   };
 
-  const handleConfirmDelete = async () => {
+  const openEditExamModal = (event) => {
+    setExamToEdit(event);
+    setIsEditExamModalOpen(true);
+  };
+
+  const closeEditExamModal = () => {
+    setExamToEdit(null);
+    setIsEditExamModalOpen(false);
+  };
+
+  const openDeleteExamModal = (event) => {
+    setExamToDelete(event);
+    setIsDeleteExamModalOpen(true);
+  };
+
+  const closeDeleteExamModal = () => {
+    setExamToDelete(null);
+    setIsDeleteExamModalOpen(false);
+  };
+
+  const handleConfirmEventDelete = async () => {
     if (!eventToDelete) return;
 
     try {
@@ -221,15 +298,40 @@ export function CalendarEvents() {
       const data = await response.json();
 
       handleSuccess();
-      toast.success(data.message || 'Class name deleted successfully.');
+      toast.success(data.message || 'Event deleted successfully.');
     } catch (err) {
       setError(err.message);
       toast.error(err.message || 'An unexpected error occurred.');
     } finally {
-      closeDeleteModal();
+      closeDeleteEventModal();
     }
   };
 
+  const handleConfirmExamDelete = async () => {
+    if (!examToDelete) return;
+
+    try {
+      const response = await fetch(`http://localhost:3000/exam/${examToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      const data = await response.json();
+
+      handleSuccess();
+      toast.success(data.message || 'Event deleted successfully.');
+    } catch (err) {
+      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
+    } finally {
+      closeDeleteExamModal();
+    }
+  };
 
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
@@ -253,7 +355,7 @@ export function CalendarEvents() {
                 </span>
               )}
             </p>
-            {userRole === UserRoles.Teacher || userRole === UserRoles.Administrator && (
+            {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
               <Button 
                 size="m" 
                 text="Create Event" 
@@ -302,7 +404,7 @@ export function CalendarEvents() {
                           <div key={idx} className='flex justify-between items-center border border-textBg-200 w-full p-3 rounded'>
                             <div className="flex gap-4">
                               <div className={`hidden w-12 h-12 ${eventTypeCardColors[event.event_type_id] || 'bg-gray-500'} rounded sm:flex items-center justify-center`}>
-                                  <PartyPopper size={16}/>
+                                  {event.type === 'exam' ? <Pen size={16} color="#dc2626" /> : <PartyPopper size={16}/>}
                               </div>
                               <div className='flex flex-col justify-center gap-1'>
                                 <p className='text-textBg-900 font-semibold text-base'>{event.name}</p>
@@ -311,17 +413,35 @@ export function CalendarEvents() {
                                     <Clock size={16} />
                                     <p className='text-sm'>{new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(event.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                   </div>
-                                  <div className='flex items-center gap-2 text-textBg-500'>
-                                    <MapPin size={16} />
-                                    <p className='text-sm'>{event.location}</p>
-                                  </div>
+                                  {event.type === 'exam' ? (
+                                    <div className='flex items-center gap-2 text-textBg-500'>
+                                      <Info size={16} />
+                                      <p className='text-sm'>{event.scope}</p>
+                                    </div>
+                                  ) : (
+                                    <div className='flex items-center gap-2 text-textBg-500'>
+                                      <MapPin size={16} />
+                                      <p className='text-sm'>{event.location}</p>
+                                    </div>
+                                  )}
+                                  
                                 </div>
                               </div>
                             </div>
                             {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
                             <div className="flex">
-                              <Button icon={<Pen size={16} color='#1A99EE'/>} type="link" onClick={() => openEditModal(event)}/>
-                              <Button icon={<Trash size={16}/>} type="link" onClick={() => openDeleteModal(event)}/>
+                              {event.type !== 'exam' && (
+                                <>
+                                  <Button icon={<Pen size={16} color='#1A99EE'/>} type="link" onClick={() => openEditEventModal(event)}/>
+                                  <Button icon={<Trash size={16}/>} type="link" onClick={() => openDeleteEventModal(event)}/>
+                                </>
+                              )}
+                              {event.type === 'exam' && (
+                                <>
+                                  <Button icon={<Pen size={16} color='#1A99EE'/>} type="link" onClick={() => openEditExamModal(event)}/>
+                                  <Button icon={<Trash size={16}/>} type="link" onClick={() => openDeleteExamModal(event)}/>
+                                </>
+                              )}
                             </div>
                             )}
                           </div>
@@ -348,19 +468,36 @@ export function CalendarEvents() {
 
       {eventToEdit && (
         <EditEventForm
-          isOpen={isEditModalOpen}
-          onClose={closeEditModal}
+          isOpen={isEditEventModalOpen}
+          onClose={closeEditEventModal}
           onSuccess={handleSuccess}
           event={eventToEdit}
         />
       )}
 
+      {examToEdit && (
+        <EditExamForm
+          isOpen={isEditExamModalOpen}
+          onClose={closeEditExamModal}
+          onSuccess={handleSuccess}
+          exam={examToEdit}
+        />
+      )}
+
       <ConfirmForm
-        isOpen={isDeleteModalOpen}
-        onClose={closeDeleteModal}
-        onConfirm={handleConfirmDelete}
+        isOpen={isDeleteEventModalOpen}
+        onClose={closeDeleteEventModal}
+        onConfirm={handleConfirmEventDelete}
         title="Confirm Deletion"
         description="Are you sure you want to delete this event? This action is irreversible."
+      />
+
+      <ConfirmForm
+        isOpen={isDeleteExamModalOpen}
+        onClose={closeDeleteExamModal}
+        onConfirm={handleConfirmExamDelete}
+        title="Confirm Deletion"
+        description="Are you sure you want to delete this exam? This action is irreversible."
       />
     </main>
   );

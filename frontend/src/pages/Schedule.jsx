@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PageTitle from '../components/PageTitle';
 import Button from '../components/Button';
-import { Plus, Trash, Info, MoreVertical, NotebookPen } from 'lucide-react';
+import { Plus, Trash, Info, MoreVertical, NotebookPen, FilePlus, Award, FilePlus2 } from 'lucide-react';
 import {
   dayNames,
   monthNames,
@@ -28,6 +28,7 @@ import CreateGradeForm from '../components/forms/grades/CreateGradeForm';
 import DropdownMenu from '../components/Dropdown';
 import { toast } from 'react-toastify';
 import {formatTime} from '../utils/dateTimeUtils'
+import CreateExamForm from '../components/forms/exams/CreateExamForm';
 
 const today = new Date();
 let baseYear = today.getFullYear();
@@ -62,6 +63,8 @@ export function Schedule() {
   const [isCreateGradeModalOpen, setIsCreateGradeModalOpen] = useState(false);
   const [selectedLessonForGrade, setSelectedLessonForGrade] = useState(null);
   const [userId, setUserId] = useState(null);
+  const [isCreateExamModalOpen, setIsCreateExamModalOpen] = useState(false);
+  const [selectedLessonForExam, setSelectedLessonForExam] = useState(null);
 
   const parentId = getUserId();
   const token = getToken();
@@ -329,6 +332,16 @@ export function Schedule() {
   const closeCreateGradeModal = () => {
     setSelectedLessonForGrade(null);
     setIsCreateGradeModalOpen(false);
+  };
+
+  const openCreateExamModal = (lesson) => {
+    setSelectedLessonForExam(lesson);
+    setIsCreateExamModalOpen(true);
+  };
+
+  const closeCreateExamModal = () => {
+    setSelectedLessonForExam(null);
+    setIsCreateExamModalOpen(false);
   };
 
   const mapLessonsToEvents = () => {
@@ -655,7 +668,17 @@ export function Schedule() {
                                   <div className='hidden md:flex -space-x-1'>
                                     <Button 
                                       type="link" 
-                                      icon={<Plus size={20} color='#fff' strokeWidth={3}/>} 
+                                      icon={<Award size={16} color='#fff' strokeWidth={3}/>} 
+                                      size="xs"
+                                      className="z-10" 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openCreateGradeModal(event);
+                                      }}
+                                    />
+                                    <Button 
+                                      type="link" 
+                                      icon={<FilePlus2 size={16} color='#fff' strokeWidth={3}/>} 
                                       size="xs"
                                       className="z-10" 
                                       onClick={(e) => {
@@ -670,7 +693,7 @@ export function Schedule() {
                                       className="z-10" 
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        openCreateGradeModal(event);
+                                        openCreateExamModal(event);
                                       }}
                                     />
                                     <Button 
@@ -727,6 +750,20 @@ export function Schedule() {
                                             }}
                                           > 
                                             Create Homework
+                                          </button>
+                                        </div>
+
+                                        <div className='flex items-center gap-2 text-textBg-600 p-2'>
+                                        <FilePlus size={16} strokeWidth={3}/>
+                                          <button
+                                            className="py-2 text-sm font-medium w-full text-left"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              openCreateExamModal(event);
+                                              setOpenDropdownId(null);
+                                            }}
+                                          >
+                                            Create Exam
                                           </button>
                                         </div>
 
@@ -915,11 +952,7 @@ export function Schedule() {
             } else {
               fetchLessonsForUser(userId);
             }
-          } else if (userRole === UserRoles.Student || userRole === UserRoles.Parent) {
-            if (userId) {
-              fetchLessonsForUser(userId);
-            }
-          }
+          } 
         }}
         lessonId={selectedLessonForHomework ? selectedLessonForHomework.id : null}
       />
@@ -935,16 +968,22 @@ export function Schedule() {
             } else {
               fetchLessonsForUser(userId);
             }
-          } else if (userRole === UserRoles.Student || userRole === UserRoles.Parent) {
-            if (userId) {
-              fetchLessonsForUser(userId);
-            }
-          }
+          } 
         }}
         students={selectedLessonForGrade ? selectedLessonForGrade.students : []}
         lessonId={selectedLessonForGrade ? selectedLessonForGrade.id : null}
         subjectId={selectedLessonForGrade ? selectedLessonForGrade.subjectId : null}
         teacherId={selectedLessonForGrade ? selectedLessonForGrade.teacherId : null}
+      />
+
+      <CreateExamForm
+        isOpen={isCreateExamModalOpen}
+        onClose={closeCreateExamModal}
+        onSuccess={() => {
+          closeCreateExamModal();
+          fetchLessonsForClass();
+        }}
+        lessonId={selectedLessonForExam ? selectedLessonForExam.id : null}
       />
 
       {updating && <div className="mt-4 text-blue-500">Updating lesson...</div>}

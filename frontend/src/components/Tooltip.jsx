@@ -77,7 +77,6 @@ function Tooltip({ children, content, position = 'top', width = 'auto'}) {
   };
 
   const handleContentClick = () => {
-    // Ukryj tooltip po kliknięciu na zawartość
     setVisible(false);
     setLocked(false);
   };
@@ -85,7 +84,7 @@ function Tooltip({ children, content, position = 'top', width = 'auto'}) {
   const tooltipContent = visible ? (
     <div
       ref={tooltipRef}
-      className={`absolute bg-gray-700 text-white text-xs py-1 px-2 rounded shadow-lg z-50`}
+      className={`${content && 'absolute bg-gray-700 text-white text-xs py-1 px-2 rounded shadow-lg z-50'}`}
       style={{
         width: width === 'auto' ? 'max-content' : width,
         ...tooltipStyles,

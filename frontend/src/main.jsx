@@ -6,6 +6,6 @@ import React from "react";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
-            <App />
+        <App />
     </BrowserRouter>
 );

@@ -4,7 +4,6 @@ import { X } from 'lucide-react';
 import Modal from '../../Modal';
 import { getToken } from '../../../utils/UserRoleUtils';
 import '../../../customCSS/customScrollbar.css';
-import { formatTime } from '../../../utils/dateTimeUtils'
 import { toast } from 'react-toastify';
 
 function CreateLessonForm({ onSuccess, onClose, isOpen }) {
@@ -17,7 +16,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
   const [teacherId, setTeacherId] = useState('');
   const [classId, setClassId] = useState('');
   const [subjectId, setSubjectId] = useState('');
-  const [semesterId, setSemesterId] = useState('');
   const [lessonSchedules, setLessonSchedules] = useState([
     { dayOfWeek: 1, startTime: '09:00', endTime: '10:00', frequency: 1 },
   ]);
@@ -25,7 +23,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
   const [teachers, setTeachers] = useState([]);
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
-  const [semesters, setSemesters] = useState([]);
 
   const token = getToken();
 
@@ -104,31 +101,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
     }
   };
 
-  const fetchSemesters = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('http://localhost:3000/semester/8457e092-cab2-11ef-8ac6-9c6b00209ac2', 
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, 
-        }
-      });
-      if(!response.ok){
-        throw new Error(`Error: ${response.status}`);
-      }
-      const result = await response.json();
-      setSemesters(result.data);
-    } catch(err){
-      setError(err.message);
-      toast.error(err.message || 'An unexpected error occurred.');
-    } finally{
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     const loadDropdownData = async () => {
       try {
@@ -136,7 +108,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
           fetchTeachers(),
           fetchClasses(),
           fetchSubjects(),
-          fetchSemesters(),
         ]);
       } catch (err) {
         setError('Failed to load dropdown data.');
@@ -186,7 +157,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
       !teacherId ||
       !classId ||
       !subjectId ||
-      !semesterId ||
       lessonSchedules.length === 0
     ) {
       setError('Please fill in all required fields.');
@@ -208,7 +178,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
           teacherId,
           classId,
           subjectId,
-          semesterId,
           lessonSchedules,
         }),
       });
@@ -217,7 +186,7 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
         const errorData = await response.json();
         throw new Error(errorData.message || `Error: ${response.status}`);
       }
-      const data = response.json();
+      const data = await response.json();
 
       onSuccess(); 
       onClose(); 
@@ -311,24 +280,6 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
             {subjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
                 {subject.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label htmlFor="semester" className="font-medium">Semester</label>
-          <select
-            id="semester"
-            value={semesterId}
-            onChange={(e) => setSemesterId(e.target.value)}
-            required
-            className="border p-2 rounded"
-          >
-            <option value="" hidden disabled>Select Semester</option>
-            {semesters.map((semester) => (
-              <option key={semester.id} value={semester.id}>
-                {semester.semester}
               </option>
             ))}
           </select>
