@@ -3,6 +3,7 @@ import Button from "../../Button";
 import Modal from '../../Modal';
 import { X } from 'lucide-react';
 import { getToken } from '../../../utils/UserRoleUtils';
+import { toast } from 'react-toastify';
 
 function CreateSchoolYearForm({isOpen, onSuccess, onClose }) {
   const [name, setName] = useState('');
@@ -32,6 +33,7 @@ function CreateSchoolYearForm({isOpen, onSuccess, onClose }) {
 
     if (start >= end) {
       setError('The start date must be before the end date.');
+      toast.error('The start date must be before the end date.');
       setLoading(false);
       return;
     }
@@ -56,10 +58,14 @@ function CreateSchoolYearForm({isOpen, onSuccess, onClose }) {
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
+      const data = response.json();
+
       onSuccess(); 
-      onClose();  
+      onClose(); 
+      toast.success(data.message || 'School year created successfully.') 
     } catch (err) {
-      setError(err.response?.data?.message || 'Error')
+      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
       setName('');
@@ -75,8 +81,6 @@ function CreateSchoolYearForm({isOpen, onSuccess, onClose }) {
         <X size={24} className="hover:cursor-pointer" onClick={onClose}/>
       </div>
       <form className="flex flex-col gap-6" onSubmit={handleCreate}>
-        {error && <p className="text-red-500">{error}</p>}
-
         <div className="flex flex-col gap-2">
           <label className="text-base text-textBg-700" htmlFor="schoolYearName">School Year Name</label>
           <input

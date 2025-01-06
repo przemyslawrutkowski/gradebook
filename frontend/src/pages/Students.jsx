@@ -4,19 +4,18 @@ import { Link } from 'react-router-dom';
 import { Search } from "lucide-react";
 import StudentCard from "../components/StudentCard";
 import { getToken } from "../utils/UserRoleUtils";
+import { toast } from "react-toastify";
 
 export function Students() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState('');
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const token = getToken();
 
   const fetchStudents = async () => {
     setLoading(true);
-    setError(null);
     try {
       const response = await fetch('http://localhost:3000/student', {
         method: 'GET',
@@ -31,7 +30,7 @@ export function Students() {
       const result = await response.json();
       setStudents(result.data);
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -97,10 +96,9 @@ export function Students() {
         </select>
       </div>  
 
-      {error && <p className="text-red-500">{error}</p>}
       {loading && <p>Loading...</p>}
 
-      {!loading && !error && filteredAndSortedStudents.length === 0 && (
+      {!loading && filteredAndSortedStudents.length === 0 && (
         <p className="text-gray-500">No students found.</p>
       )}
 

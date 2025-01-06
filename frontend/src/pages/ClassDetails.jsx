@@ -9,6 +9,7 @@ import StudentCard from "../components/StudentCard";
 import { getToken } from "../utils/UserRoleUtils";
 import ConfirmForm from '../components/forms/ConfirmForm';
 import { validate as validateUUID } from 'uuid'; 
+import { toast } from "react-toastify";
 
 function ClassDetails() {
   const { id } = useParams();
@@ -23,11 +24,9 @@ function ClassDetails() {
   const [availableStudents, setAvailableStudents] = useState([]);
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const fetchClassDetails = async () => {
     setLoading(true);
-    setError(null);
     try {
       const response = await fetch(`http://localhost:3000/class/${id}`, {
         method: 'GET',
@@ -43,13 +42,14 @@ function ClassDetails() {
       setClassInfo(result.data);
       setStudents(result.data.students);
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
   };
 
   const fetchAvailableStudents = async () => {
+    setLoading(true);
     try {
         const response = await fetch('http://localhost:3000/student', {
             method: 'GET',
@@ -65,7 +65,9 @@ function ClassDetails() {
         const available = result.data.filter(student => student.class_name === "N/A");
         setAvailableStudents(available);
     } catch (err) {
-        console.error('Error fetching available students', err);
+      toast.error(err.message || 'An unexpected error occurred.');
+    } finally{
+      setLoading(false);
     }
 };
 
@@ -82,7 +84,8 @@ function ClassDetails() {
 
   const handleAddStudents = async () => {
     if (selectedStudents.length === 0) return;
-  
+    
+    setLoading(true);
     try {
       for (const student of selectedStudents) {
         const studentId = student.value;
@@ -98,13 +101,17 @@ function ClassDetails() {
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
         }
+        const data = await response.json();
+
+        fetchClassDetails();
+        fetchAvailableStudents();
+        closeModal();
+        toast.success(data.message || 'Students added successfully.');
       }
-  
-      fetchClassDetails();
-      fetchAvailableStudents();
-      closeModal();
     } catch (err) {
-      console.error('Error adding students', err);
+      toast.error(err.message || 'An unexpected error occurred.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -123,10 +130,13 @@ function ClassDetails() {
             throw new Error(`Error: ${response.status}`);
         }
 
+        const data = await response.json();
+
         await fetchClassDetails();
         await fetchAvailableStudents();
+        toast.success(data.message || 'Student removed successfully.');
     } catch (err) {
-        console.error('Error removing student from class', err);
+      toast.error(err.message || 'An unexpected error occurred.');
     }
   };
 
@@ -146,21 +156,24 @@ function ClassDetails() {
     if (!classToDelete) return;
 
     try {
-        const response = await fetch(`http://localhost:3000/class/${classToDelete}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-        });
+      const response = await fetch(`http://localhost:3000/class/${classToDelete}`, {
+          method: 'DELETE',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+          },
+      });
 
-        if (!response.ok) {
-            throw new Error(`Error: ${response.status}`);
-        }
+      if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+      }
 
-        navigate("/classes");
+      const data = await response.json();
+
+      navigate("/classes");
+      toast.success(data.message || 'Student removed successfully.');
     } catch (err) {
-        setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally{
       closeDeleteModal();
     }
@@ -169,10 +182,6 @@ function ClassDetails() {
 
   if (loading) {
     return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500">Error: {error}</div>;
   }
 
   if (!classInfo) {

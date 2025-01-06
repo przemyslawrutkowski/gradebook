@@ -9,6 +9,7 @@ import UserRoles from "../data/userRoles";
 import Select from 'react-select';
 import EditGradeForm from "../components/forms/grades/EditGradeForm";
 import ConfirmForm from '../components/forms/ConfirmForm';
+import { toast } from "react-toastify";
 
 export function Grades() {
   const [semester, setSemester] = useState(null);
@@ -48,6 +49,7 @@ export function Grades() {
       setStudentId(result.data);
     } catch (err) {
       console.error("Failed to fetch students for parent:", err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     }
   };
 
@@ -142,6 +144,7 @@ export function Grades() {
       setFetchedClasses(result.data);
     } catch(err){
       setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally{
       setLoading(false);
     }
@@ -173,8 +176,8 @@ export function Grades() {
 
       setGrades(gradesWithSemester);
     } catch (err) {
-      console.error('Error fetching grades:', err);
       setError(err.message || 'Failed to fetch grades. Please try again later.');
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -200,8 +203,8 @@ export function Grades() {
       const result = await response.json();
       setSemesters(result.data);
     } catch (err) {
-      console.error('Error fetching semesters:', err);
       setError(err.message || 'Failed to fetch semesters. Please try again later.');
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -209,7 +212,7 @@ export function Grades() {
   
   const fetchStudentsFromClass = async () => {
     if (!selectedClass) {
-      console.warn("Selected class is null. Skipping fetch.");
+      toast.error('Selected class is null. Skipping fetch.');
       return;
     }
 
@@ -233,8 +236,8 @@ export function Grades() {
       const result = await response.json();
       setStudents(result.data);
     } catch (err) {
-      console.error('Error fetching students:', err);
       setError(err.message || 'Failed to fetch students. Please try again later.');
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -322,10 +325,13 @@ export function Grades() {
         const errorData = await response.json();
         throw new Error(errorData.message || `Error: ${response.status}`);
       }
+      const data = await response.json();
 
       setGrades(prev => prev.filter(cls => cls.id !== gradeToDelete.id));
+      toast.success(data.message || 'Grade deleted successfully.');
     } catch (err) {
       setError(err.message || 'Failed to delete grade.');
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       closeDeleteModal();
     }

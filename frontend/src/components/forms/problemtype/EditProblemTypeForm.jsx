@@ -6,9 +6,10 @@ import { X } from 'lucide-react';
 import { getToken } from '../../../utils/UserRoleUtils';
 import { toast } from 'react-toastify';
 
-const EditClassNameForm = ({ id, currentName, isOpen, onSuccess, onClose}) => {
+const EditProblemTypeForm = ({ id, currentName, isOpen, onSuccess, onClose }) => {
   const [name, setName] = useState(currentName);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const token = getToken();
 
@@ -16,13 +17,15 @@ const EditClassNameForm = ({ id, currentName, isOpen, onSuccess, onClose}) => {
     e.preventDefault();
 
     if (!validateUUID(id)) {
+      setError('Invalid UUID identifier.');
       return;
     }
 
     setLoading(true);
+    setError(null);
 
     try {
-      const response = await fetch(`http://localhost:3000/class-name/${id}`, {
+      const response = await fetch(`http://localhost:3000/problem-types/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -32,13 +35,15 @@ const EditClassNameForm = ({ id, currentName, isOpen, onSuccess, onClose}) => {
       });
 
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error: ${response.status}`);
       }
       const data = await response.json();
 
       onSuccess(data);
-      toast.success(data.message || 'Class name edited successfully.');
+      toast.success(data.message || 'Problem type updated successfully.');
     } catch (err) {
+      setError(err.message);
       toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
@@ -46,14 +51,14 @@ const EditClassNameForm = ({ id, currentName, isOpen, onSuccess, onClose}) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} widthHeightClassname="max-w-lg">
+    <Modal isOpen={isOpen} onClose={onClose} widthHeightClassname="max-w-md">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-textBg-700">Edit Class Name</h2>
+        <h2 className="text-xl font-bold text-textBg-700">Edit Problem Type</h2>
         <X size={24} className="hover:cursor-pointer" onClick={onClose} />
       </div>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label htmlFor="name" className="block text-textBg-700 mb-2">Class Name</label>
+          <label htmlFor="name" className="block text-textBg-700 mb-2">Problem Type Name</label>
           <input
             type="text"
             id="name"
@@ -63,6 +68,7 @@ const EditClassNameForm = ({ id, currentName, isOpen, onSuccess, onClose}) => {
             className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
           />
         </div>
+        {error && <p className="text-red-500 mb-4">{error}</p>}
         <div className="flex justify-end space-x-2">
           <Button
             type="secondary"
@@ -81,4 +87,4 @@ const EditClassNameForm = ({ id, currentName, isOpen, onSuccess, onClose}) => {
   );
 };
 
-export default EditClassNameForm;
+export default EditProblemTypeForm;

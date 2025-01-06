@@ -14,3 +14,10 @@ export function formatDateToInput(dateString) {
     const minutes = (`0${date.getUTCMinutes()}`).slice(-2);
     return `${hours}:${minutes}`;
   }
+
+  export function formatTime(timeString) {
+    const date = new Date(timeString);
+    const hours = date.getUTCHours().toString().padStart(2, '0');
+    const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };

@@ -16,6 +16,8 @@ import Select from 'react-select';
 import Tooltip from '../components/Tooltip';
 import Button from "../components/Button";
 import ConfirmForm from '../components/forms/ConfirmForm';
+import { toast } from "react-toastify";
+import { formatTime } from '../utils/dateTimeUtils'
 
 const attendanceTypeColors = {
   Present: 'bg-green-500',
@@ -43,18 +45,12 @@ export function Attendance() {
 
   const [attendanceData, setAttendanceData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [fetchedClasses, setFetchedClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
   const [classAttendances, setClassAttendances] = useState([]);
+  const [isConfirmFormOpen, setIsConfirmFormOpen] = useState(false);
 
   const [studentId, setStudentId] = useState(null);
-
-  const [excuseLoading, setExcuseLoading] = useState(false);
-  const [excuseError, setExcuseError] = useState(null);
-  const [excuseSuccess, setExcuseSuccess] = useState(null);
-
-  const [isConfirmFormOpen, setIsConfirmFormOpen] = useState(false); // Added state for ConfirmForm
 
   const parentId = getUserId();
   const token = getToken();
@@ -86,13 +82,12 @@ export function Attendance() {
       const result = await response.json();
       setStudentId(result.data);
     } catch (err) {
-      console.error("Failed to fetch students for parent:", err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     }
   };
 
   const fetchClasses = async () => {
     setLoading(true);
-    setError(null);
     try {
       const response = await fetch('http://localhost:3000/class', 
       {
@@ -108,7 +103,7 @@ export function Attendance() {
       const result = await response.json();
       setFetchedClasses(result.data);
     } catch(err){
-      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally{
       setLoading(false);
     }
@@ -150,7 +145,6 @@ export function Attendance() {
 
   const fetchAttendance = async (studentId) => {
     setLoading(true);
-    setError(null);
     try {
       const response = await fetch(`http://localhost:3000/attendance/student/${studentId}`, { 
         method: 'GET',
@@ -165,7 +159,7 @@ export function Attendance() {
       const result = await response.json();
       setAttendanceData(result.data);
     } catch (err) {
-      setError(err.message); 
+      toast.error(err.message || 'An unexpected error occurred.'); 
     } finally {
       setLoading(false); 
     }
@@ -175,7 +169,6 @@ export function Attendance() {
     if (!selectedClass) return; 
 
     setLoading(true);
-    setError(null);
     try {
       const response = await fetch(`http://localhost:3000/attendance/class/${selectedClass}`, {
           method: 'GET',
@@ -193,7 +186,7 @@ export function Attendance() {
       const result = await response.json();
       setClassAttendances(result.data);
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -321,13 +314,32 @@ export function Attendance() {
     return Object.values(group);
   }, [filteredClassAttendances]);
 
-  const formatTime = (timeString) => {
-    if (!timeString) return 'N/A';
-    const date = new Date(timeString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-  }; 
+  const cumulativeGroupedAttendances = useMemo(() => {
+    const group = {};
 
-  // 1. Define a computed variable to check for unexcused absences
+    classAttendances.forEach((attendance) => {
+      const studentId = attendance.student.id;
+      if (!group[studentId]) {
+        group[studentId] = {
+          student: attendance.student,
+          stats: { present: 0, late: 0, absent: 0, excused: 0 },
+        };
+      }
+
+      if (attendance.was_excused) {
+        group[studentId].stats.excused += 1;
+      } else if (attendance.was_present && !attendance.was_late) {
+        group[studentId].stats.present += 1;
+      } else if (attendance.was_present && attendance.was_late) {
+        group[studentId].stats.late += 1;
+      } else {
+        group[studentId].stats.absent += 1;
+      }
+    });
+
+    return group;
+  }, [classAttendances]);
+
   const canExcuseAbsences = useMemo(() => {
     if (userRole === UserRoles.Parent && studentId) {
       return attendanceData.some(attendance => !attendance.was_present && !attendance.was_excused);
@@ -336,15 +348,9 @@ export function Attendance() {
   }, [userRole, studentId, attendanceData]);
 
   const handleExcuseAbsences = async () => {
-    // 3. Prevent action if there are no absences to excuse
     if (!canExcuseAbsences) {
-      setExcuseError("There are no unexcused absences to excuse.");
       return;
     }
-
-    setExcuseLoading(true);
-    setExcuseError(null);
-    setExcuseSuccess(null);
 
     try {
       const response = await fetch(`http://localhost:3000/attendance/excuse/${studentId}`, {
@@ -359,12 +365,14 @@ export function Attendance() {
         const errorData = await response.json();
         throw new Error(errorData.error || `Error: ${response.status}`);
       }
-      setExcuseSuccess("All absences have been excused successfully.");
+      const data = await response.json();
+
       fetchAttendance(studentId);
+      toast.success(data.message || 'Absences excused successfully.');
     } catch (err) {
-      setExcuseError(err.message || "An error occurred while excusing absences.");
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
-      setExcuseLoading(false);
+      setLoading(false);
     }
   };
 
@@ -381,12 +389,11 @@ export function Attendance() {
         <PageTitle text="Attendance"/>
         {userRole === UserRoles.Parent && (
           <div className='w-full mb-4 sm:w-auto'>
-            {excuseError && <p className='text-red-500'>{excuseError}</p>}
-            {excuseSuccess && <p className='text-green-500'>{excuseSuccess}</p>}
+            
             <Button
-              text={!canExcuseAbsences ? "No Unexcused Absences" : excuseLoading ? 'Excusing...' : 'Excuse All Absences'}
+              text={!canExcuseAbsences ? "No Unexcused Absences" : 'Excuse All Absences'}
               onClick={openConfirmForm}
-              disabled={excuseLoading || !canExcuseAbsences}
+              disabled={!canExcuseAbsences}
               className='w-full md:w-auto'
             />
           </div>
@@ -410,9 +417,7 @@ export function Attendance() {
         <div className='flex flex-col w-full'>
           {loading ? (
             <p className="text-textBg-900 text-lg">Loading...</p>
-          ) : error ? (
-            <p className="text-red-500">{error}</p>
-          ) : (
+          ): (
             <div className="flex flex-col xl:flex-row gap-16">
               <Calendar
                 baseYear={baseYear}
@@ -532,85 +537,89 @@ export function Attendance() {
                       <>
                         {filteredClassAttendances.length > 0 ? (
                           <div className='w-full flex flex-col gap-2'>
-                            {groupedAttendances.map(({ student, attendances, stats }) => (
-                              <div key={student.id} className='flex items-center justify-between'>
-                                <div className='flex items-center gap-4'>
-                                  <div className='flex items-center'>
-                                    <span className='font-medium flex items-center w-32 overflow-hidden text-ellipsis'>
-                                      {student.first_name} {student.last_name}
-                                    </span>
-                                    <Tooltip
-                                      content={
-                                        <div>
-                                          <p className="mb-1">Student Statistics</p>
-                                          <div className='flex gap-2 justify-between'>
-                                            <p className="font-semibold">Present:</p>
-                                            <p>{stats.present}</p>
+                            {groupedAttendances.map(({ student, attendances }) => {
+                              const cumulativeStats = cumulativeGroupedAttendances[student.id]?.stats || { present: 0, late: 0, absent: 0, excused: 0 };
+
+                              return (
+                                <div key={student.id} className='flex items-center justify-between'>
+                                  <div className='flex items-center gap-4'>
+                                    <div className='flex items-center'>
+                                      <span className='font-medium flex items-center w-32 overflow-hidden text-ellipsis'>
+                                        {student.first_name} {student.last_name}
+                                      </span>
+                                      <Tooltip
+                                        content={
+                                          <div>
+                                            <p className="mb-1">Student Statistics</p>
+                                            <div className='flex gap-2 justify-between'>
+                                              <p className="font-semibold">Present:</p>
+                                              <p>{cumulativeStats.present}</p>
+                                            </div>
+                                            <div className='flex gap-2 justify-between'>
+                                              <p className="font-semibold">Late:</p>
+                                              <p>{cumulativeStats.late}</p>
+                                            </div>
+                                            <div className='flex gap-2 justify-between'>
+                                              <p className="font-semibold">Absent:</p>
+                                              <p>{cumulativeStats.absent}</p>
+                                            </div>
+                                            <div className='flex gap-2 justify-between'>
+                                              <p className="font-semibold">Excused:</p>
+                                              <p>{cumulativeStats.excused}</p>
+                                            </div>
                                           </div>
-                                          <div className='flex gap-2 justify-between'>
-                                            <p className="font-semibold">Late:</p>
-                                            <p>{stats.late}</p>
-                                          </div>
-                                          <div className='flex gap-2 justify-between'>
-                                            <p className="font-semibold">Absent:</p>
-                                            <p>{stats.absent}</p>
-                                          </div>
-                                          <div className='flex gap-2 justify-between'>
-                                            <p className="font-semibold">Excused:</p>
-                                            <p>{stats.excused}</p>
-                                          </div>
-                                        </div>
+                                        }
+                                        position="top"
+                                      >
+                                        <Info className="w-4 h-4 ml-2 text-gray-500 cursor-pointer" />
+                                      </Tooltip>
+                                    </div>
+                                  </div>
+                                  <div className='flex gap-2'>
+                                    {attendances.map((attendance, index) => {
+                                      let status = 'Absent';
+                                      if (attendance.was_excused) {
+                                        status = 'Excused';
+                                      } else if (attendance.was_present && !attendance.was_late) {
+                                        status = 'Present';
+                                      } else if (attendance.was_present && attendance.was_late) {
+                                        status = 'Late';
                                       }
-                                      position="top"
-                                    >
-                                      <Info className="w-4 h-4 ml-2 text-gray-500 cursor-pointer" />
-                                    </Tooltip>
+
+                                      return (
+                                        <div
+                                          key={index}
+                                          className={`flex items-center justify-center w-5 h-5 rounded ${attendanceTypeColors[status]}`}
+                                        >
+                                          <Tooltip content={
+                                            <div className='w-fit'>
+                                              <div className='flex gap-2'>
+                                                <p className="w-10 font-semibold">Subject:</p>
+                                                <p>{attendance.lesson.subject.name || 'N/A'}</p>
+                                              </div>
+                                              <div className='flex gap-2'>
+                                                <p className="w-10 font-semibold">Hours:</p>
+                                                <p>
+                                                  {attendance.lesson.start_time && attendance.lesson.end_time
+                                                    ? `${formatTime(attendance.lesson.start_time)} - ${formatTime(attendance.lesson.end_time)}`
+                                                    : 'N/A'}
+                                                </p>
+                                              </div>
+                                              <div className='flex gap-2'>
+                                                <p className="w-10 font-semibold">Status:</p>
+                                                <p>{status}</p>
+                                              </div>
+                                            </div>
+                                          } position="left">
+                                            <Info className="w-3 h-3 text-white cursor-pointer" strokeWidth={3} onClick={(e) => e.stopPropagation()} />
+                                          </Tooltip>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 </div>
-                                <div className='flex gap-2'>
-                                  {attendances.map((attendance, index) => {
-                                    let status = 'Absent';
-                                    if (attendance.was_excused) {
-                                      status = 'Excused';
-                                    } else if (attendance.was_present && !attendance.was_late) {
-                                      status = 'Present';
-                                    } else if (attendance.was_present && attendance.was_late) {
-                                      status = 'Late';
-                                    }
-
-                                    return (
-                                      <div
-                                        key={index}
-                                        className={`flex items-center justify-center w-5 h-5 rounded ${attendanceTypeColors[status]}`}
-                                      >
-                                        <Tooltip content={
-                                          <div className='w-fit'>
-                                            <div className='flex gap-2'>
-                                              <p className="w-10 font-semibold">Subject:</p>
-                                              <p>{attendance.lesson.subject.name || 'N/A'}</p>
-                                            </div>
-                                            <div className='flex gap-2'>
-                                              <p className="w-10 font-semibold">Hours:</p>
-                                              <p>
-                                                {attendance.lesson.start_time && attendance.lesson.end_time
-                                                  ? `${formatTime(attendance.lesson.start_time)} - ${formatTime(attendance.lesson.end_time)}`
-                                                  : 'N/A'}
-                                              </p>
-                                            </div>
-                                            <div className='flex gap-2'>
-                                              <p className="w-10 font-semibold">Status:</p>
-                                              <p>{status}</p>
-                                            </div>
-                                          </div>
-                                        } position="left">
-                                          <Info className="w-3 h-3 text-white cursor-pointer" strokeWidth={3} onClick={(e) => e.stopPropagation()} />
-                                        </Tooltip>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            ))}
+                              )
+                            })}
                           </div>
                         ) : (
                           <p className='text-textBg-500'>No attendance records for this day.</p>
@@ -638,4 +647,4 @@ export function Attendance() {
   );
 }
 
-export default Attendance; 
+export default Attendance;

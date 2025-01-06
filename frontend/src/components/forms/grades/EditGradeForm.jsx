@@ -4,6 +4,7 @@ import Modal from '../../Modal';
 import { X } from 'lucide-react';
 import { getToken } from '../../../utils/UserRoleUtils';
 import { validate as validateUUID } from 'uuid';
+import { toast } from 'react-toastify';
 
 const EditGradeForm = ({ grade, isOpen, onSuccess, onClose }) => {
   const [description, setDescription] = useState(grade.description);
@@ -25,6 +26,7 @@ const EditGradeForm = ({ grade, isOpen, onSuccess, onClose }) => {
 
     if (!validateUUID(grade.id)) {
       setError('Invalid UUID identifier.');
+      toast.error('Invalid UUID identifier.');
       return;
     }
 
@@ -48,11 +50,13 @@ const EditGradeForm = ({ grade, isOpen, onSuccess, onClose }) => {
         const errorData = await response.json();
         throw new Error(errorData.message || `Error: ${response.status}`);
       }
-
       const data = await response.json();
+
       onSuccess(data);
+      toast.success(data.message || 'Grade edited successfully.');
     } catch (err) {
       setError(err.message || 'An error occurred while updating the grade.');
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -65,8 +69,6 @@ const EditGradeForm = ({ grade, isOpen, onSuccess, onClose }) => {
         <X size={24} className="hover:cursor-pointer" onClick={onClose} />
       </div>
       <form onSubmit={handleSubmit}>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-
         <div className="mb-4">
           <label htmlFor="description" className="block text-textBg-700 mb-2">Description</label>
           <textarea

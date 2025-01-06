@@ -4,6 +4,7 @@ import { validate as validateUUID } from 'uuid';
 import Modal from '../../Modal';
 import { X } from 'lucide-react';
 import { getToken } from '../../../utils/UserRoleUtils';
+import { toast } from 'react-toastify';
 
 const EditSchoolYearForm = ({ id, currentName, currentStartDate, currentEndDate, isOpen, onSuccess, onClose }) => {
   const [name, setName] = useState(currentName);
@@ -36,11 +37,13 @@ const EditSchoolYearForm = ({ id, currentName, currentStartDate, currentEndDate,
 
     if (!validateUUID(id)) {
       setError('Invalid UUID identifier.');
+      toast.error('Invalid UUID identifier.');
       return;
     }
 
     if (new Date(startDate) > new Date(endDate)) {
       setError('Start Date cannot be after End Date.');
+      toast.error('Start Date cannot be after End Date.');
       return;
     }
 
@@ -60,8 +63,11 @@ const EditSchoolYearForm = ({ id, currentName, currentStartDate, currentEndDate,
         throw new Error(`Error: ${response.status}`);
       }
       const data = await response.json();
+
       onSuccess(data);
+      toast.success(data.message || 'School year edited successfully.');
     } catch (err) {
+      toast.error(err.message || 'An unexpected error occurred.');
       setError(err.message);
     } finally {
       setLoading(false);
@@ -75,8 +81,6 @@ const EditSchoolYearForm = ({ id, currentName, currentStartDate, currentEndDate,
         <X size={24} className="hover:cursor-pointer" onClick={onClose}/>
       </div>
       <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-        {error && <p className="text-red-500">{error}</p>}
-
         <div className="flex flex-col gap-2">
           <label className="text-base text-textBg-700" htmlFor="schoolYearName">School Year Name</label>
           <input

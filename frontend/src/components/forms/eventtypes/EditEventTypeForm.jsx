@@ -4,6 +4,7 @@ import { validate as validateUUID } from 'uuid';
 import Modal from '../../Modal';
 import { X } from 'lucide-react';
 import { getToken } from '../../../utils/UserRoleUtils';
+import { toast } from 'react-toastify';
 
 const EditEventTypeForm = ({ id, currentName, isOpen, onSuccess, onClose}) => {
   const [name, setName] = useState(currentName);
@@ -21,7 +22,6 @@ const EditEventTypeForm = ({ id, currentName, isOpen, onSuccess, onClose}) => {
     }
 
     setLoading(true);
-    setError(null);
 
     try {
       const response = await fetch(`http://localhost:3000/event-type/${id}`, {
@@ -37,9 +37,11 @@ const EditEventTypeForm = ({ id, currentName, isOpen, onSuccess, onClose}) => {
         throw new Error(`Error: ${response.status}`);
       }
       const data = await response.json();
+      
       onSuccess(data);
+      toast.success(data.message || 'Event type created successfully.');
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -52,8 +54,6 @@ const EditEventTypeForm = ({ id, currentName, isOpen, onSuccess, onClose}) => {
         <X size={24} className="hover:cursor-pointer" onClick={onClose} />
       </div>
       <form onSubmit={handleSubmit}>
-        {error && <p className="text-red-500">{error}</p>}
-
         <div className="mb-4">
           <label htmlFor="name" className="block text-textBg-700 mb-2">Event Type</label>
           <input

@@ -26,6 +26,8 @@ import { SocketProvider } from './context/SocketContext';
 import { Subjects } from './pages/Subjects';
 import EventTypes from './pages/EventTypes';
 import { Problems } from './pages/Problems';
+import { ToastContainer, toast } from 'react-toastify'; 
+import 'react-toastify/dist/ReactToastify.css';
 
 export const AuthContext = createContext();
 
@@ -87,6 +89,16 @@ export default function App() {
 
   return (
     <SocketProvider>
+       <ToastContainer
+        position="top-right"
+        autoClose={1500}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnHover
+        draggable
+      />
       <AuthContext.Provider value={{ isAuthenticated, userRole, userId, handleLogin, handleLogout }}>
         {isAuthenticated && (
           <Topbar messNot messNotNumber={10} bellNot bellNotNumber={10} onLogout={handleLogout}/>
@@ -103,6 +115,7 @@ export default function App() {
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Attendance" path="/attendance" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Homework" path="/homework" />
                   <SidebarItem icon={<LayoutDashboard size={20} />} text="Grades" path="/grades" />
+                  <SidebarItem icon={<LayoutDashboard size={20} />} text="Problems" path="/problems" />
                 </>
               )}  
              
@@ -147,6 +160,7 @@ export default function App() {
                     <Route path="/homework" element={<Homework />} />
                     <Route path="/homework/:id" element={<HomeworkDetail />} />
                     <Route path="/grades" element={<Grades />} />
+                    <Route path="/problems" element={<Problems />} />
                   </>
                 )}
                

@@ -9,6 +9,7 @@ import { validate as validateUUID } from 'uuid';
 import CreateSemesterForm from "../components/forms/semesters/CreateSemesterForm";
 import EditSemesterForm from "../components/forms/semesters/EditSemester"; 
 import ConfirmForm from '../components/forms/ConfirmForm';
+import { toast } from 'react-toastify'
 
 function SchoolYearDetails() {
   const [schoolYearInfo, setSchoolYearInfo] = useState(null);
@@ -40,8 +41,8 @@ function SchoolYearDetails() {
       const result = await response.json();
       setSchoolYearInfo(result.data);
     } catch (err) {
+      toast.error(err.message || 'An unexpected error occurred.');
       setError(err.message || 'An error occurred while fetching school year data.');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -94,10 +95,13 @@ function SchoolYearDetails() {
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
-      // Optionally, you can show a success message here
-      await fetchSchoolYearInfo(); // Refresh data after deletion
+      const data = await response.json();
+
+      fetchSchoolYearInfo();
+      toast.success(data.message || 'Semester deleted successfully.');
     } catch (err) {
       setError(err.message || 'An error occurred while deleting the semester.');
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       closeDeleteModal();
     }
@@ -106,25 +110,23 @@ function SchoolYearDetails() {
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
       {loading && <p>Loading...</p>}
-      {error && <p className="text-red-500">Error: {error}</p>}
       {schoolYearInfo ? (
         <>
           <PageTitle text={`School Year Details`} />
           <div className="flex flex-col sm:border sm:border-solid sm:rounded sm:border-textBg-200 sm:p-8">
             <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-8">
-                <div className="flex flex-col gap-2">
-                    <p className="text-lg sm:text-2xl font-semibold text-textBg-700">
-                        {schoolYearInfo.name}
-                    </p> 
-                    <div className="flex text-textBg-600 items-center gap-2">
-                        <Calendar size={16} />
-                        <p className="text-sm">
-                            {new Date(schoolYearInfo.start_date).toLocaleDateString()} - {new Date(schoolYearInfo.end_date).toLocaleDateString()}
-                        </p>
-                    </div>
-                    
-                </div>
-                <Button icon={<Plus size={16}/>} text="Create Semester" onClick={openCreateModal} />
+              <div className="flex flex-col gap-2">
+                  <p className="text-lg sm:text-2xl font-semibold text-textBg-700">
+                      {schoolYearInfo.name}
+                  </p> 
+                  <div className="flex text-textBg-600 items-center gap-2">
+                      <Calendar size={16} />
+                      <p className="text-sm">
+                          {new Date(schoolYearInfo.start_date).toLocaleDateString()} - {new Date(schoolYearInfo.end_date).toLocaleDateString()}
+                      </p>
+                  </div>
+              </div>
+              <Button icon={<Plus size={16}/>} text="Create Semester" onClick={openCreateModal} className="mt-4"/>
             </div>
             <div className="flex flex-col gap-4">
                 {schoolYearInfo.semesters && schoolYearInfo.semesters.length > 0 ? (

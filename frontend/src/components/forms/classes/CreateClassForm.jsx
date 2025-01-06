@@ -3,6 +3,7 @@ import Button from "../../Button";
 import { getToken } from '../../../utils/UserRoleUtils';
 import Modal from "../../Modal";
 import { X } from "lucide-react";
+import { toast } from "react-toastify";
 
 function CreateClassForm({ onSuccess, isOpen, closeModal}) {
   const [classNames, setClassNames] = useState([]);
@@ -12,14 +13,12 @@ function CreateClassForm({ onSuccess, isOpen, closeModal}) {
   const [schoolYearId, setSchoolYearId] = useState('');
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const token = getToken();
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const [classNamesRes, schoolYearsRes] = await Promise.all([
@@ -49,8 +48,7 @@ function CreateClassForm({ onSuccess, isOpen, closeModal}) {
         setClassNames(classNamesData.data || []);
         setSchoolYears(schoolYearsData.data || []);
       } catch (err) {
-        console.error('Error fetching data for form:', err);
-        setError('Failed to load form data. Please try again.');
+        toast.error(err.message || 'An unexpected error occurred.');
       } finally {
         setLoading(false);
       }
@@ -62,13 +60,6 @@ function CreateClassForm({ onSuccess, isOpen, closeModal}) {
   const handleCreate = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-
-    if (!classNameId || !schoolYearId) {
-      setError('All fields are required.');
-      setLoading(false);
-      return;
-    }
 
     try {
       const response = await fetch('http://localhost:3000/class', {
@@ -80,31 +71,20 @@ function CreateClassForm({ onSuccess, isOpen, closeModal}) {
         body: JSON.stringify({ 
           classNameId,
           schoolYearId,
-
         }),
       });
 
-      if (response.status === 200 || response.status === 201) { 
-        const data = await response.json();
-        onSuccess(data); 
-      } else {
+      if (!response.ok) {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to create class.');
+        throw new Error(errorData.message || 'Failed to create class.');
       }
+
+      const data = await response.json();
+
+      onSuccess(data); 
+      toast.success(data.message || 'Class created successfully.'); 
     } catch (err) {
-      console.error('Error creating class:', err);
-      if (err.name === 'TypeError') {
-
-        setError('Network error. Please check your connection and try again.');
-      } else if (err.response && err.response.data && err.response.data.errors) {
-
-        const errorMessages = err.response.data.errors.map(error => error.msg).join(', ');
-        setError(errorMessages);
-      } else if (err.response && err.response.data && err.response.data.message) {
-        setError(err.response.data.message);
-      } else {
-        setError('An unexpected error occurred while creating the class.');
-      }
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -117,7 +97,6 @@ function CreateClassForm({ onSuccess, isOpen, closeModal}) {
         <X size={24} className="hover:cursor-pointer" onClick={closeModal}/>
       </div>
       <form className="flex flex-col gap-6" onSubmit={handleCreate}>
-        {error && <p className="text-red-500">{error}</p>}
         {loading && <p className="text-gray-500">Loading...</p>}
 
         <div className="flex flex-col gap-2">

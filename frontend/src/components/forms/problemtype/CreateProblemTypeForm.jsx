@@ -1,8 +1,8 @@
-// src/components/forms/problemTypes/CreateProblemTypeForm.jsx
 import React, { useState } from 'react';
 import Button from "../../Button";
 import { X } from 'lucide-react';
 import Modal from '../../Modal';
+import { toast } from 'react-toastify';
 
 function CreateProblemTypeForm({ onSuccess, onClose, isOpen }) {
   const [name, setName] = useState('');
@@ -27,12 +27,15 @@ function CreateProblemTypeForm({ onSuccess, onClose, isOpen }) {
         const errorData = await response.json();
         throw new Error(errorData.message || `Error: ${response.status}`);
       }
+      const data = response.json();
 
       onSuccess(); 
       onClose();   
       setName(''); 
+      toast.success(data.message || 'Problem type created successfully')
     } catch (err) {
-      setError(err.message || 'Wystąpił nieoczekiwany błąd.');
+      setError(err.message || 'An unexpected error occurred.');
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -45,7 +48,6 @@ function CreateProblemTypeForm({ onSuccess, onClose, isOpen }) {
         <X size={24} className="hover:cursor-pointer" onClick={onClose}/>
       </div>
       <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-        {error && <p className="text-red-500">{error}</p>}
         <div className="flex flex-col gap-2">
           <label className="text-base text-textBg-700" htmlFor="typeName">Name</label>
           <input

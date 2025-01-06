@@ -8,12 +8,12 @@ import { getToken } from '../utils/UserRoleUtils';
 import ConfirmForm from '../components/forms/ConfirmForm';
 import CreateEventTypeForm from "../components/forms/eventtypes/CreateEventTypeForm";
 import EditEventTypeForm from "../components/forms/eventtypes/EditEventTypeForm";
+import { toast } from "react-toastify";
 
 export function EventTypes() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortOption, setSortOption] = useState(""); // Added sortOption state
+  const [sortOption, setSortOption] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [editingType, setEditingType] = useState(null);
   const [typeToDelete, setTypeToDelete] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -25,7 +25,6 @@ export function EventTypes() {
 
   const fetchTypes = async () => {
     setLoading(true);
-    setError(null);
     try {
       const response = await fetch('http://localhost:3000/event-type', {
         method: 'GET',
@@ -40,7 +39,7 @@ export function EventTypes() {
       const result = await response.json();
       setEvents(result.data);
     } catch (err) {
-      setError(err.message); 
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false); 
     }
@@ -54,18 +53,15 @@ export function EventTypes() {
     setSearchTerm(e.target.value);
   };
 
-  const handleSortChange = (e) => { // Added handleSortChange function
+  const handleSortChange = (e) => {
     setSortOption(e.target.value);
   };
 
-  // Updated filtering and sorting logic using useMemo
   const filteredAndSortedData = useMemo(() => {
-    // Filter based on search term
     const filtered = events.filter(type =>
       type.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Sort based on sortOption
     const sorted = [...filtered].sort((a, b) => {
       const nameA = a.name.toLowerCase();
       const nameB = b.name.toLowerCase();
@@ -113,6 +109,7 @@ export function EventTypes() {
   const handleConfirmDelete = async () => {
     if (!typeToDelete) return;
 
+    setLoading(true);
     try {
       const response = await fetch(`http://localhost:3000/event-type/${typeToDelete}`, {
         method: 'DELETE',
@@ -124,10 +121,14 @@ export function EventTypes() {
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
+      const data = await response.json();
+
       setEvents(prev => prev.filter(type => type.id !== typeToDelete));
+      toast.success(data.message || 'Event type deleted successfully.');
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
+      setLoading(false);
       closeDeleteModal();
     }
   };
@@ -173,8 +174,6 @@ export function EventTypes() {
 
       {loading ? (
         <p className="text-textBg-900 text-lg">Loading...</p>
-      ) : error ? (
-        <p className="text-red-500">{error}</p>
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {filteredAndSortedData.length > 0 ? (

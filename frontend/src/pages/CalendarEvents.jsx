@@ -17,6 +17,7 @@ import CreateEventForm from "../components/forms/events/CreateEventForm";
 import EditEventForm from "../components/forms/events/EditEventForm";
 import ConfirmForm from "../components/forms/ConfirmForm";
 import UserRoles from "../data/userRoles";
+import { toast } from "react-toastify";
 
 const today = new Date();
 let baseYear = today.getFullYear();
@@ -94,13 +95,13 @@ export function CalendarEvents() {
       if (!response.ok) {
         throw new Error(`Error fetching event types: ${response.status}`);
       }
-
       const result = await response.json();
+
       setEventTypes(result.data);
       assignColorsToEventTypeCardColors(result.data);
     } catch (err) {
-      console.error(err);
-      setError('Failed to load event types.');
+      setError(err.message || 'Failed to load event types.');
+      toast.error(err.message || 'An unexpected error occurred.');
     }
   };
 
@@ -126,6 +127,7 @@ export function CalendarEvents() {
       setEvents(result.data);
     } catch (err) {
       setError(err.message); 
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false); 
     }
@@ -216,9 +218,13 @@ export function CalendarEvents() {
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
+      const data = await response.json();
+
       handleSuccess();
+      toast.success(data.message || 'Class name deleted successfully.');
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       closeDeleteModal();
     }
@@ -287,8 +293,6 @@ export function CalendarEvents() {
               </h2>
               {loading ? (
                 <p className='text-textBg-500'>Loading events...</p>
-              ) : error ? (
-                <p className='text-red-500'>{error}</p>
               ) : selectedDate ? (
                 <>
                   {getEventsForDate(selectedDate).length > 0 ? (

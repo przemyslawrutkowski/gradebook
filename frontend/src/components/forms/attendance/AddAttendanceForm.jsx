@@ -5,6 +5,7 @@ import Modal from '../../Modal';
 import UserRoles from '../../../data/userRoles';
 import { getToken, getUserId } from '../../../utils/UserRoleUtils';
 import Tooltip from '../../Tooltip';
+import { toast } from 'react-toastify';
 
 const AddAttendanceForm = ({
   isOpen,
@@ -70,7 +71,7 @@ const AddAttendanceForm = ({
         }
       })
       .catch(err => {
-        setError(err.message);
+        toast.error(err.message || 'An unexpected error occurred.');
       })
       .finally(() => {
         setLoading(false);
@@ -115,7 +116,7 @@ const AddAttendanceForm = ({
             studentId: attendance.studentId, 
             wasPresent: true, 
             wasLate: false,
-            wasExcused: false // Dodane
+            wasExcused: false
           };
         case 'Late':
           return { 
@@ -123,7 +124,7 @@ const AddAttendanceForm = ({
             studentId: attendance.studentId, 
             wasPresent: true, 
             wasLate: true,
-            wasExcused: false // Dodane
+            wasExcused: false
           };
         case 'Absent':
         default:
@@ -132,14 +133,14 @@ const AddAttendanceForm = ({
             studentId: attendance.studentId, 
             wasPresent: false, 
             wasLate: false,
-            wasExcused: false // Dodane
+            wasExcused: false
           };
       }
-    })
+    });
   
     for (const attendance of processedAttendances) {
       if (!attendance.wasPresent && attendance.wasLate) {
-        setError(`Nieprawidłowy status obecności dla studenta ID: ${attendance.studentId}`);
+        setError(`Invalid attendance status for student ID: ${attendance.studentId}`);
         setLoading(false);
         return;
       }
@@ -162,7 +163,7 @@ const AddAttendanceForm = ({
             body: JSON.stringify({
               wasPresent: attendance.wasPresent,
               wasLate: attendance.wasLate,
-              // wasExcused is not updated via PATCH; it's always false on creation
+              wasExcused: attendance.wasExcused,
             }),
           })
         ));
@@ -176,7 +177,7 @@ const AddAttendanceForm = ({
       if(userRole === UserRoles.Administrator){
         fetchLessonsForClass(selectedClass); 
       }
-
+  
       if(userRole === UserRoles.Teacher){
         fetchLessonsForTeacher(userId);
       }
@@ -184,6 +185,7 @@ const AddAttendanceForm = ({
       onClose();
     } catch (err) {
       setError(err.message || 'An error occurred while saving.');
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }

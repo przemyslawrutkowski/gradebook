@@ -4,6 +4,7 @@ import { validate as validateUUID } from 'uuid';
 import Modal from '../../Modal';
 import { X } from 'lucide-react';
 import { getToken } from '../../../utils/UserRoleUtils';
+import { toast } from 'react-toastify';
 
 const EditSemesterForm = ({ id, currentSemester, currentStartDate, currentEndDate, isOpen, onSuccess, onClose }) => {
   const [semester, setSemester] = useState(currentSemester);
@@ -35,17 +36,20 @@ const EditSemesterForm = ({ id, currentSemester, currentStartDate, currentEndDat
 
     if (!validateUUID(id)) {
       setError('Invalid UUID identifier.');
+      toast.error('Invalid UUID identifier.');
       return;
     }
 
     const semesterNumber = parseInt(semester, 10);
     if (isNaN(semesterNumber) || semesterNumber <= 0) {
       setError('Semester must be a positive number.');
+      toast.error('Semester must be a positive number.');
       return;
     }
 
     if (new Date(startDate) >= new Date(endDate)) {
       setError('Start Date must be before End Date.');
+      toast.error('Start Date must be before End Date.');
       return;
     }
 
@@ -70,12 +74,14 @@ const EditSemesterForm = ({ id, currentSemester, currentStartDate, currentEndDat
         const errorData = await response.json();
         throw new Error(errorData.message || `Error: ${response.status}`);
       }
-
       const data = await response.json();
+
       onSuccess(data);
       onClose();
+      toast.success(data.message || 'Semester edited successfully.');
     } catch (err) {
       setError(err.message || 'An error occurred while updating the semester.');
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -88,8 +94,6 @@ const EditSemesterForm = ({ id, currentSemester, currentStartDate, currentEndDat
         <X size={24} className="hover:cursor-pointer" onClick={onClose}/>
       </div>
       <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-        {error && <p className="text-red-500">{error}</p>}
-
         <div className="flex flex-col gap-2">
           <label className="text-base text-textBg-700" htmlFor="semesterNumber">Semester Number</label>
           <input

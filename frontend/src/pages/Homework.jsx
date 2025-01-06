@@ -4,6 +4,7 @@ import HomeworkCard from '../components/HomeworkCard'
 import { CheckCircle, Hourglass, XCircle, Clock, User } from 'lucide-react'
 import { getUserId, getToken, getUserRole } from '../utils/UserRoleUtils'
 import UserRoles from "../data/userRoles"
+import { toast } from "react-toastify"
 
 export function Homework() {
   const [homeworks, setHomeworks] = useState([])
@@ -12,7 +13,6 @@ export function Homework() {
   const [error, setError] = useState(null)
   const [studentId, setStudentId] = useState(null)
 
-  
   const parentId = getUserId();
   const userRole = getUserRole()
   const token = getToken()
@@ -40,7 +40,8 @@ export function Homework() {
       const result = await response.json();
       setStudentId(result.data);
     } catch (err) {
-      console.error("Failed to fetch students for parent:", err.message);
+     setError(err.message || 'An unexpected error occurred.');
+     toast.error(err.message || 'An unexpected error occurred.');
     }
   };
 
@@ -74,7 +75,8 @@ export function Homework() {
       const result = await response.json()
       setHomeworks(result.data)
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false)
     }
@@ -97,7 +99,8 @@ export function Homework() {
       const result = await response.json()
       setHomeworks(result.data)
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false)
     }
@@ -120,7 +123,8 @@ export function Homework() {
       const result = await response.json()
       setHomeworks(result.data)
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false)
     }

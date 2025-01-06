@@ -1,4 +1,3 @@
-// Schedule.jsx
 import React, { useState, useEffect } from 'react';
 import PageTitle from '../components/PageTitle';
 import Button from '../components/Button';
@@ -22,11 +21,13 @@ import Calendar from '../components/Calendar';
 import Select from 'react-select';
 import CreateLessonForm from "../components/forms/lessons/CreateLessonForm";
 import AddAttendanceForm from '../components/forms/attendance/AddAttendanceForm';
-import ConfirmForm from '../components/forms/ConfirmForm';
+import ConfirmDeleteLesson from '../components/forms/lessons/ConfirmDeleteLessonForm';
 import Tooltip from '../components/Tooltip';
 import CreateHomeworkForm from "../components/forms/homeworks/CreateHomeworkForm"; 
 import CreateGradeForm from '../components/forms/grades/CreateGradeForm';
 import DropdownMenu from '../components/Dropdown';
+import { toast } from 'react-toastify';
+import {formatTime} from '../utils/dateTimeUtils'
 
 const today = new Date();
 let baseYear = today.getFullYear();
@@ -53,7 +54,6 @@ export function Schedule() {
   const calendarHeight = (calendarEndHour - calendarStartHour) * 66;
   const currentTimePosition = getCurrentTimePosition();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [fetchedClasses, setFetchedClasses] = useState([]);
   const [lessons, setLessons] = useState([]);
   const [lessonToDelete, setLessonToDelete] = useState(null);
@@ -82,7 +82,7 @@ export function Schedule() {
       const result = await response.json();
       setUserId(result.data);
     } catch (err) {
-      console.error("Failed to fetch students for parent:", err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -134,7 +134,6 @@ export function Schedule() {
     if (userRole !== UserRoles.Teacher && userRole !== UserRoles.Administrator) return;
 
     setLoading(true);
-    setError(null);
     try {
       const response = await fetch('http://localhost:3000/class', 
       {
@@ -150,7 +149,7 @@ export function Schedule() {
       const result = await response.json();
       setFetchedClasses(result.data);
     } catch(err){
-      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally{
       setLoading(false);
     }
@@ -163,7 +162,6 @@ export function Schedule() {
     }
 
     setLoading(true);
-    setError(null);
 
     try {
       const response = await fetch(`http://localhost:3000/lesson/class/${classId}`, {
@@ -181,7 +179,7 @@ export function Schedule() {
       const result = await response.json();
       setLessons(result.data);
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -194,7 +192,6 @@ export function Schedule() {
     }
 
     setLoading(true);
-    setError(null);
 
     if(userRole === UserRoles.Student || userRole === UserRoles.Teacher || userRole === UserRoles.Parent){
       try {
@@ -213,7 +210,7 @@ export function Schedule() {
         const result = await response.json();
         setLessons(result.data);
       } catch (err) {
-        setError(err.message);
+        toast.error(err.message || 'An unexpected error occurred.');
       } finally {
         setLoading(false);
       }
@@ -249,6 +246,8 @@ export function Schedule() {
         throw new Error(`Error: ${response.status}`);
       }
 
+      const data = await response.json();
+
       if (type === 'single') {
         setLessons(prevLessons => prevLessons.filter(lesson => lesson.id !== lessonToDelete.id));
       } else if (type === 'all') {
@@ -256,8 +255,9 @@ export function Schedule() {
       }
 
       closeDeleteModal();
+      toast.success(data.message || 'Class name deleted successfully.');
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
       closeDeleteModal();
     }
   };
@@ -338,8 +338,8 @@ export function Schedule() {
       classId: lesson.class_id,
       subjectId: lesson.subject_id,
       teacherId: lesson.teacher_id,
-      startTime: new Date(lesson.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      endTime: new Date(lesson.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      startTime: formatTime(lesson.start_time),
+      endTime: formatTime(lesson.end_time),
       bgColor: getBackgroundColor(lesson.subjects.name),
       date: new Date(lesson.date),
       textColor: 'text-[#ffffff]',
@@ -397,12 +397,14 @@ export function Schedule() {
           lesson.id === lessonId ? { ...lesson, ...updatedLesson.data } : lesson
         )
       );
+      toast.success(updatedLesson.message || 'Class name deleted successfully.');
     } catch (err) {
-      setUpdateError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setUpdating(false);
     }
   };
+
 
   const handleSaveAttendance = async ({ lessonId, attendances }) => {
     setUpdating(true);
@@ -440,8 +442,9 @@ export function Schedule() {
       }
   
       closeModal();
+      toast.success(data.message || 'Class name deleted successfully.');
     } catch (err) {
-      setUpdateError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setUpdating(false);
     }
@@ -463,7 +466,6 @@ export function Schedule() {
     setSelectedEvent(null);
   };
 
-  // Zarządzanie Dropdownem
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
@@ -496,9 +498,6 @@ export function Schedule() {
     return <div className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">Loading...</div>;
   }
 
-  if (error) {
-    return <div className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8 text-red-500">Error: {error}</div>;
-  }
 
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
@@ -897,7 +896,7 @@ export function Schedule() {
         selectedClass={selectedClass}
       />
 
-      <ConfirmForm
+      <ConfirmDeleteLesson
         isOpen={isDeleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={handleConfirmDelete}

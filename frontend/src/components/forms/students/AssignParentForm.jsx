@@ -4,12 +4,12 @@ import Button from '../../Button';
 import Select from 'react-select'; 
 import { X } from 'lucide-react';
 import { getToken } from '../../../utils/UserRoleUtils';
+import { toast } from 'react-toastify';
 
 function AssignParentForm({ onSuccess, isOpen, closeModal, studentId, studentName }) {
   const [availableParents, setAvailableParents] = useState([]);
   const [selectedParent, setSelectedParent] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const token = getToken();
   
@@ -21,13 +21,12 @@ function AssignParentForm({ onSuccess, isOpen, closeModal, studentId, studentNam
 
   const fetchAvailableParents = async () => {
     setLoading(true);
-    setError(null);
     try {
       const response = await fetch(`http://localhost:3000/parent/available-parents`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getToken()}`, 
+          'Authorization': `Bearer ${token}`, 
         },
       });
 
@@ -42,8 +41,7 @@ function AssignParentForm({ onSuccess, isOpen, closeModal, studentId, studentNam
       }));
       setAvailableParents(parentsData);
     } catch (err) {
-      setError('Failed to fetch available parents.');
-      console.error(err);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -53,7 +51,6 @@ function AssignParentForm({ onSuccess, isOpen, closeModal, studentId, studentNam
     if (!selectedParent) return;
 
     setLoading(true);
-    setError(null);
     try {
       const response = await fetch('http://localhost:3000/student-parent/', { 
         method: 'POST',
@@ -71,13 +68,13 @@ function AssignParentForm({ onSuccess, isOpen, closeModal, studentId, studentNam
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to assign parent.');
       }
-
-      const result = await response.json();
+      const data = await response.json();
+      
       onSuccess();
       closeModal();
+      toast.success(data.message || 'Class name deleted successfully.');
     } catch (err) {
-      setError(err.message || 'An error occurred while assigning the parent.');
-      console.error(err);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -91,8 +88,7 @@ function AssignParentForm({ onSuccess, isOpen, closeModal, studentId, studentNam
       </div>
       <div>
         {loading && <p>Loading...</p>}
-        {error && <p className="text-red-500">{error}</p>}
-        {!loading && !error && (
+        {!loading && (
           <Select
             options={availableParents}
             onChange={setSelectedParent}

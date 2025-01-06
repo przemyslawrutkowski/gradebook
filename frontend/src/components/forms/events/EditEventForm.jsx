@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import Modal from '../../Modal';
 import { getToken } from '../../../utils/UserRoleUtils';
 import { formatDateToInput, formatTimeToInput } from '../../../utils/dateTimeUtils';
+import { toast } from 'react-toastify';
 
 function EditEventForm({ onSuccess, onClose, isOpen, event }) {
   const [name, setName] = useState(event?.name || '');
@@ -36,8 +37,8 @@ function EditEventForm({ onSuccess, onClose, isOpen, event }) {
       const result = await response.json();
       setEventTypes(result.data);
     } catch (err) {
-      console.error(err);
       setError('Failed to load event types.');
+      toast.error(err.message || 'An unexpected error occurred.');
     }
   };
 
@@ -65,6 +66,7 @@ function EditEventForm({ onSuccess, onClose, isOpen, event }) {
     const endDateTime = new Date(`${date}T${endTime}`);
     if (endDateTime <= startDateTime) {
       setError('End time must be after start time.');
+      toast.error('End time must be after start time.');
       setLoading(false);
       return;
     }
@@ -91,12 +93,14 @@ function EditEventForm({ onSuccess, onClose, isOpen, event }) {
         const errorData = await response.json();
         throw new Error(errorData.message || `Error: ${response.status}`);
       }
+      const data = await response.json();
 
       onSuccess(); 
       onClose();
+      toast.success(data.message || 'Class name deleted successfully.');
     } catch (err) {
-      console.error(err);
       setError(err.message || 'An unexpected error occurred.');
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -109,8 +113,6 @@ function EditEventForm({ onSuccess, onClose, isOpen, event }) {
         <X size={24} className="hover:cursor-pointer" onClick={onClose}/>
       </div>
       <form className="flex flex-col gap-6" onSubmit={handleUpdate}>
-        {error && <p className="text-red-500">{error}</p>}
-
         <div className="flex flex-col gap-2">
           <label className="text-base text-textBg-700" htmlFor="eventName">Event Name</label>
           <input

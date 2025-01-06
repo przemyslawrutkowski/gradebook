@@ -8,6 +8,7 @@ import { getToken } from "../utils/UserRoleUtils";
 import { validate as validateUUID } from 'uuid'; 
 import ConfirmForm from '../components/forms/ConfirmForm';
 import EditSchoolYearForm from "../components/forms/schoolyears/EditSchoolYearForm";
+import { toast } from "react-toastify";
 
 export function SchoolYears() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,6 +42,7 @@ export function SchoolYears() {
       setSchoolYears(result.data);
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -120,9 +122,13 @@ export function SchoolYears() {
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
+      const data = await response.json();
+
       setSchoolYears(prev => prev.filter(cls => cls.id !== schoolYearToDelete));
+      toast.success(data.message || 'School year deleted successfully.');
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       closeDeleteModal();
     }
@@ -168,8 +174,6 @@ export function SchoolYears() {
 
       {loading ? (
         <p className="text-textBg-900 text-lg">Loading...</p>
-      ) : error ? (
-        <p className="text-red-500">{error}</p>
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {filteredAndSortedSchoolYears.length > 0 ? (

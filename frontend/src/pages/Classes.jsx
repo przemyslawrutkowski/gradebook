@@ -5,19 +5,18 @@ import Button from "../components/Button";
 import ClassCard from "../components/ClassCard";
 import CreateClassForm from "../components/forms/classes/CreateClassForm";
 import { getToken } from "../utils/UserRoleUtils";
+import { toast } from "react-toastify"
 
 export function Classes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const token = getToken();
 
   const fetchClasses = async () => {
     setLoading(true);
-    setError(null);
     try {
       const response = await fetch('http://localhost:3000/class', 
       {
@@ -31,9 +30,10 @@ export function Classes() {
         throw new Error(`Error: ${response.status}`);
       }
       const result = await response.json();
+
       setClasses(result.data);
     } catch(err){
-      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally{
       setLoading(false);
     }
@@ -85,7 +85,6 @@ export function Classes() {
         </div>
       </div>
 
-      {error && <p className="text-red-500">{error}</p>}
       {loading && <p>Loading...</p>}
 
       <div className="grid grid-cols-1 gap-4">
@@ -107,7 +106,10 @@ export function Classes() {
  
       <CreateClassForm
         isOpen={isModalOpen}
-        onSuccess={fetchClasses}
+        onSuccess={() => {
+          fetchClasses();
+          closeModal();
+        }}
         closeModal={closeModal}
       />
   

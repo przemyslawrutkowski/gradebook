@@ -8,6 +8,7 @@ import { getToken } from '../utils/UserRoleUtils';
 import ConfirmForm from '../components/forms/ConfirmForm';
 import CreateSubjectForm from "../components/forms/subjects/CreateSubjectForm"
 import EditSubjectForm from "../components/forms/subjects/EditSubjectForm"
+import { toast } from "react-toastify";
 
 export function Subjects() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,6 +42,7 @@ export function Subjects() {
       setSubjects(result.data);
     } catch (err) {
       setError(err.message); 
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false); 
     }
@@ -122,9 +124,13 @@ export function Subjects() {
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
+      const data = await response.json();
+      
       setSubjects(prev => prev.filter(cls => cls.id !== subjectToDelete));
+      toast.success(data.message || 'Class name deleted successfully.');
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       closeDeleteModal();
     }
@@ -170,8 +176,6 @@ export function Subjects() {
 
       {loading ? (
         <p className="text-textBg-900 text-lg">Loading...</p>
-      ) : error ? (
-        <p className="text-red-500">{error}</p>
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {filteredAndSortedSubjects.length > 0 ? (

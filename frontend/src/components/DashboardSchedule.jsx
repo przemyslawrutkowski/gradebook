@@ -10,6 +10,7 @@ import { Info } from 'lucide-react';
 import Tooltip from '../components/Tooltip';
 import '../customCSS/customScrollbar.css';
 import UserRoles from '../data/userRoles';
+import { formatTime } from '../utils/dateTimeUtils'
 
 const DashboardSchedule = () => {
   const [selectedOffset, setSelectedOffset] = useState(0);
@@ -126,8 +127,8 @@ const DashboardSchedule = () => {
         title: lesson.subjects.name,
         classId: lesson.class_id,
         subjectId: lesson.subject_id,
-        startTime: new Date(lesson.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        endTime: new Date(lesson.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        startTime: formatTime(lesson.start_time),
+        endTime: formatTime(lesson.end_time),
         bgColor: getBgColor(lesson.subjects.name),
         date: lessonDate,
         textColor: 'text-[#ffffff]',

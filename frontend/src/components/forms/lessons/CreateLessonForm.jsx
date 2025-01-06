@@ -3,7 +3,9 @@ import Button from "../../Button";
 import { X } from 'lucide-react';
 import Modal from '../../Modal';
 import { getToken } from '../../../utils/UserRoleUtils';
-import '../../../customCSS/customScrollbar.css'
+import '../../../customCSS/customScrollbar.css';
+import { formatTime } from '../../../utils/dateTimeUtils'
+import { toast } from 'react-toastify';
 
 function CreateLessonForm({ onSuccess, onClose, isOpen }) {
   const [loading, setLoading] = useState(false);
@@ -46,6 +48,7 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
       setClasses(result.data);
     } catch(err){
       setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally{
       setLoading(false);
     }
@@ -70,6 +73,7 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
       setTeachers(result.data);
     } catch(err){
       setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally{
       setLoading(false);
     }
@@ -94,6 +98,7 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
       setSubjects(result.data);
     } catch(err){
       setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally{
       setLoading(false);
     }
@@ -118,6 +123,7 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
       setSemesters(result.data);
     } catch(err){
       setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally{
       setLoading(false);
     }
@@ -133,8 +139,8 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
           fetchSemesters(),
         ]);
       } catch (err) {
-        console.error('Error fetching dropdown data', err);
         setError('Failed to load dropdown data.');
+        toast.error(err.message || 'An unexpected error occurred.');
       }
     };
 
@@ -169,6 +175,7 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
 
     if (new Date(startDate) > new Date(endDate)) {
       setError('Start Date cannot be after End Date.');
+      toast.error('Start Date cannot be after End Date.');
       setLoading(false);
       return;
     }
@@ -183,6 +190,7 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
       lessonSchedules.length === 0
     ) {
       setError('Please fill in all required fields.');
+      toast.error('Please fill in all required fields.');
       setLoading(false);
       return;
     }
@@ -209,11 +217,13 @@ function CreateLessonForm({ onSuccess, onClose, isOpen }) {
         const errorData = await response.json();
         throw new Error(errorData.message || `Error: ${response.status}`);
       }
+      const data = response.json();
 
       onSuccess(); 
       onClose(); 
+      toast.success(data.message || 'Lessons created successfully.');
     } catch (err) {
-      setError(err.message || 'An error occurred.');
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }

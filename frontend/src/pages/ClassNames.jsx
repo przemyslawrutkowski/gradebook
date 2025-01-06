@@ -8,12 +8,12 @@ import EditClassNameForm from "../components/forms/classnames/EditClassNameForm"
 import { validate as validateUUID } from 'uuid'; 
 import { getToken } from '../utils/UserRoleUtils';
 import ConfirmForm from '../components/forms/ConfirmForm';
+import { toast } from "react-toastify";
 
 export function ClassNames() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [editingClassName, setEditingClassName] = useState(null);
   const [classToDelete, setClassToDelete] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -25,7 +25,6 @@ export function ClassNames() {
 
   const fetchClassNames = async () => {
     setLoading(true);
-    setError(null);
     try {
       const response = await fetch('http://localhost:3000/class-name', {
         method: 'GET',
@@ -40,7 +39,7 @@ export function ClassNames() {
       const result = await response.json();
       setClassNames(result.data);
     } catch (err) {
-      setError(err.message); 
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false); 
     }
@@ -122,9 +121,12 @@ export function ClassNames() {
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
+      const data = await response.json();
+
       setClassNames(prev => prev.filter(cls => cls.id !== classToDelete));
+      toast.success(data.message || 'Class name deleted successfully.');
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       closeDeleteModal();
     }
@@ -170,8 +172,6 @@ export function ClassNames() {
 
       {loading ? (
         <p className="text-textBg-900 text-lg">Loading...</p>
-      ) : error ? (
-        <p className="text-red-500">{error}</p>
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {filteredAndSortedClassNames.length > 0 ? (

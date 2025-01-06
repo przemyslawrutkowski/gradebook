@@ -3,19 +3,18 @@ import Button from "../../Button";
 import { X } from 'lucide-react';
 import Modal from '../../Modal';
 import { getToken } from '../../../utils/UserRoleUtils';
+import { toast } from "react-toastify";
 
 function CreateEventTypeForm({ onSuccess, onClose, isOpen }) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   
   const token = getToken();
 
   const handleCreate = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-
+  
     try {
       const response = await fetch('http://localhost:3000/event-type', {
         method: 'POST',
@@ -25,14 +24,17 @@ function CreateEventTypeForm({ onSuccess, onClose, isOpen }) {
         },
         body: JSON.stringify({ name }),
       });
-
+  
+      const data = await response.json();
+  
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        throw new Error(data.message || `Error: ${response.status}`);
       } 
+  
       onSuccess(); 
-      onClose(); 
+      toast.success(data.message || 'Event type edited successfully.');
     } catch (err) {
-      setError(err.response?.data?.message || 'Error.');
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
       setName('');
@@ -46,7 +48,6 @@ function CreateEventTypeForm({ onSuccess, onClose, isOpen }) {
         <X size={24} className="hover:cursor-pointer" onClick={onClose}/>
       </div>
       <form className="flex flex-col gap-6" onSubmit={handleCreate}>
-        {error && <p className="text-red-500">{error}</p>}
         <div className="flex flex-col gap-2">
           <label className="text-base text-textBg-700" htmlFor="className">Event Type</label>
           <input

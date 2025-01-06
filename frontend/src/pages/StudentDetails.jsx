@@ -13,6 +13,7 @@ import {
   UserMinus 
 } from "lucide-react";
 import { getToken } from "../utils/UserRoleUtils";
+import { toast } from 'react-toastify'
 
 function StudentDetails() {
   const { id } = useParams();
@@ -22,11 +23,9 @@ function StudentDetails() {
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const fetchStudentInfo = async () => {
     setLoading(true);
-    setError(null);
     try {
       const response = await fetch(`http://localhost:3000/student/${id}`, {
         method: 'GET',
@@ -41,8 +40,7 @@ function StudentDetails() {
       const result = await response.json();
       setStudentInfo(result.data);
     } catch (err) {
-      setError(err.message || 'An error occurred while fetching student data.');
-      console.error(err);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -60,7 +58,6 @@ function StudentDetails() {
 
   const handleUnassignParent = async () => {
     setLoading(true);
-    setError(null);
     try {
       const parentId = studentInfo.parents[0].id;
       const response = await fetch(`http://localhost:3000/student-parent/${id}/${parentId}`, {
@@ -73,11 +70,13 @@ function StudentDetails() {
       if (!response.ok) {
         throw new Error(`Error: ${response.status} ${response.statusText}`);
       }
+      const data = response.json();
+
       closeConfirmModal();
       fetchStudentInfo();
+      toast.success(data.message || 'Parent unassigned successfully.');
     } catch (err) {
-      setError(err.message || 'An error occurred while unassigning the parent.');
-      console.error(err);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -86,7 +85,6 @@ function StudentDetails() {
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
       {loading && <p>Loading...</p>}
-      {error && <p className="text-red-500">Error: {error}</p>}
       {studentInfo ? (
         <>
           <PageTitle text={`Student Details`} />

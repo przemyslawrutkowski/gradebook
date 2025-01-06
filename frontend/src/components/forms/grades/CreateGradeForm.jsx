@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Modal from '../../Modal';
 import Button from '../../Button';
 import { getToken } from '../../../utils/UserRoleUtils';
+import { toast } from 'react-toastify';
 
 function CreateGradeForm({ isOpen, onClose, onSuccess, students, lessonId, subjectId, teacherId }) {
   const [description, setDescription] = useState('');
@@ -24,9 +25,8 @@ function CreateGradeForm({ isOpen, onClose, onSuccess, students, lessonId, subje
     setLoading(true);
     setError(null);
   
-    // Check if weight has been entered
     if (weight === '') {
-      setError('Please enter the weight.');
+      toast.error('Please enter the weight.');
       setLoading(false);
       return;
     }
@@ -63,8 +63,9 @@ function CreateGradeForm({ isOpen, onClose, onSuccess, students, lessonId, subje
 
       onSuccess();
       handleClose();
+      toast.success('Grades added successfully.');
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -82,46 +83,45 @@ function CreateGradeForm({ isOpen, onClose, onSuccess, students, lessonId, subje
     <Modal isOpen={isOpen} onClose={handleClose} widthHeightClassname="max-w-2xl">
       <h2 className="text-xl font-bold mb-4">Add Grades</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Description</label>
-          <input
-            type="text"
+        <div className="flex flex-col gap-2">
+          <label className="text-base text-textBg-700" htmlFor="description">Description</label>
+          <textarea
+            id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-            placeholder="Enter grade description"
+            className="w-full text-textBg-900 px-3 py-2 border min-h-16 border-textBg-200 rounded text-base focus:outline-none focus:border-textBg-500"
+            placeholder="Homework description..."
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Weight</label>
+        <div className="flex flex-col gap-2">
+          <label className="text-base text-textBg-700" htmlFor="description">Weight</label>
           <input
             type="number"
             min="1"
-            max="10"
+            max="3"
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
             required
-            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+            className="w-full text-textBg-900 px-3 py-2 border border-textBg-200 rounded text-base focus:outline-none focus:border-textBg-500"
             placeholder="Enter grade weight"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Students</label>
+          <label className="text-base text-textBg-700">Students</label>
           <div className="mt-2 space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
             {students.map(student => (
               <div key={student.id} className="flex items-center justify-between">
-                <span>{student.first_name} {student.last_name}</span>
+                <p className='text-sm'>{student.first_name} {student.last_name}</p>
                 <input
                   type="number"
                   min="1"
-                  max="100"
+                  max="6"
                   value={grades[student.id] || ''}
                   onChange={(e) => handleGradeChange(student.id, e.target.value)}
-                  className="w-20 border border-gray-300 rounded-md p-1"
+                  className="w-24 text-textBg-900 px-3 py-2 border border-textBg-200 rounded text-base focus:outline-none focus:border-textBg-500"
                   placeholder="Grade"
-                  required
                 />
               </div>
             ))}

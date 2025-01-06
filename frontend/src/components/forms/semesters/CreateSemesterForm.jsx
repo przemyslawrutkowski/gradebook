@@ -3,6 +3,7 @@ import Button from "../../Button";
 import Modal from '../../Modal';
 import { X } from 'lucide-react';
 import { getToken } from '../../../utils/UserRoleUtils';
+import { toast } from 'react-toastify';
 
 function CreateSemesterForm({ isOpen, onSuccess, onClose, schoolYearId }) {
   const [semester, setSemester] = useState('');
@@ -30,6 +31,7 @@ function CreateSemesterForm({ isOpen, onSuccess, onClose, schoolYearId }) {
     const semesterNumber = parseInt(semester, 10);
     if (isNaN(semesterNumber) || semesterNumber <= 0) {
       setError('Semester must be a positive number.');
+      toast.error('Semester must be a positive number.');
       setLoading(false);
       return;
     }
@@ -39,6 +41,7 @@ function CreateSemesterForm({ isOpen, onSuccess, onClose, schoolYearId }) {
 
     if (start >= end) {
       setError('The start date must be before the end date.');
+      toast.error('The start date must be before the end date.');
       setLoading(false);
       return;
     }
@@ -65,11 +68,13 @@ function CreateSemesterForm({ isOpen, onSuccess, onClose, schoolYearId }) {
         const errorData = await response.json();
         throw new Error(errorData.message || `Error: ${response.status}`);
       }
-
       const data = await response.json();
+
       onSuccess(data); 
-      onClose();  
+      onClose();
+      toast.success(data.message || 'Semester created successfully.');  
     } catch (err) {
+      toast.error(err.message || 'An unexpected error occurred.');
       setError(err.message || 'An error occurred while creating the semester.');
     } finally {
       setLoading(false);
@@ -83,8 +88,6 @@ function CreateSemesterForm({ isOpen, onSuccess, onClose, schoolYearId }) {
         <X size={24} className="hover:cursor-pointer" onClick={onClose}/>
       </div>
       <form className="flex flex-col gap-6" onSubmit={handleCreate}>
-        {error && <p className="text-red-500">{error}</p>}
-
         <div className="flex flex-col gap-2">
           <label className="text-base text-textBg-700" htmlFor="semesterNumber">Semester Number</label>
           <input
