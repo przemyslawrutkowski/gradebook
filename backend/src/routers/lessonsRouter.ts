@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { validateCreateLessons, validateUpdateLesson, validateGetAndDeleteLessons, validateDeleteLesson, validateUserId, validateClassId } from '../validations/lessonsValidation.js';
-import { createLessons, getLessons, updateLesson, deleteLessons, getAllLessons, getLessonsByClassId, deleteLesson, getLessonsThreeDaysBack, getLessonsThreeDaysAhead, getLessonsToday, getLessonsForUser } from '../handlers/lessons.js';
+import { validateCreateLessons, validateUpdateLesson, validateClassAndSubjectIds, validateDeleteLesson, validateUserId, validateClassId, validateDeleteLessonsByClassIdAndDate } from '../validations/lessonsValidation.js';
+import { createLessons, getLessons, updateLesson, deleteLessonsByClassAndSubjectIds, getAllLessons, getLessonsByClassId, deleteLesson, getLessonsThreeDaysBack, getLessonsThreeDaysAhead, getLessonsToday, getLessonsForUser, deleteLessonsByClassIdAndDate } from '../handlers/lessons.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { UserType } from '../enums/userTypes.js';
 
@@ -64,7 +64,7 @@ lessonsRouter.get('/user/:userId',
 lessonsRouter.get('/:classId/:subjectId',
     authenticate,
     authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
-    validateGetAndDeleteLessons(),
+    validateClassAndSubjectIds(),
     handleInputErrors,
     getLessons
 )
@@ -77,12 +77,20 @@ lessonsRouter.patch('/:lessonId',
     updateLesson
 )
 
-lessonsRouter.delete('/:classId/:subjectId',
+lessonsRouter.delete('/class/:classId/subject/:subjectId',
     authenticate,
     authorize([UserType.Administrator, UserType.Teacher]),
-    validateGetAndDeleteLessons(),
+    validateClassAndSubjectIds(),
     handleInputErrors,
-    deleteLessons
+    deleteLessonsByClassAndSubjectIds
+)
+
+lessonsRouter.delete('/class/:classId/date/:date',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher]),
+    validateDeleteLessonsByClassIdAndDate(),
+    handleInputErrors,
+    deleteLessonsByClassIdAndDate
 )
 
 lessonsRouter.delete('/:lessonId',

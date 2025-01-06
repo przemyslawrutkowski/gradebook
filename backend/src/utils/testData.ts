@@ -142,6 +142,25 @@ export const lessonsData3 = {
     ],
 };
 
+export const lessonsData4 = {
+    startDate: '2025-01-01',
+    endDate: '2025-02-01',
+    lessonSchedules: [
+        {
+            dayOfWeek: 5,
+            startTime: '13:00',
+            endTime: '14:00',
+            frequency: 2
+        },
+        {
+            dayOfWeek: 5,
+            startTime: '15:00',
+            endTime: '16:00',
+            frequency: 2
+        }
+    ],
+};
+
 export const messageData = {
     subject: "Subject",
     content: "Content",
@@ -219,6 +238,14 @@ export const grade2 = {
     description: 'Graphing geometry shadows in axonometry'
 };
 
+export const finalGrade1 = {
+    grade: 3
+};
+
+export const finalGrade2 = {
+    grade: 6
+};
+
 export const homework1 = {
     description: 'Homework short description',
     deadline: '2025-01-10'
@@ -254,6 +281,27 @@ export const schoolEvent2 = {
     startTime: '10:00',
     endTime: '18:00'
 }
+
+export const exam1 = {
+    topic: "Introduction to TypeScript",
+    scope: "Overview of types, interfaces, classes, and generics"
+};
+
+export const exam2 = {
+    topic: "Advanced SQL Queries",
+    scope: "Inner joins, Outer joins, Subqueries, Window Functions"
+};
+
+export const exam3 = {
+    topic: "Node.js Fundamentals",
+    scope: "Event-Driven Architecture, Asynchronous Programming, Middleware, and API Development"
+};
+
+export const exam4 = {
+    topic: "Advanced TypeScript",
+    scope: "Generics, Decorators, Module Augmentation, and Advanced Type Manipulation"
+};
+
 
 export const nonExistentId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
 export const invalidIdUrl = '%20';
