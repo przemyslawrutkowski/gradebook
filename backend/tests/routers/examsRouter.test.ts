@@ -10,7 +10,7 @@ import {
 import { teacher1, subject1, nonExistentId, invalidIdUrl, emptyString, lessonsData1, exam1, semester1, lessonsData4, exam3, exam2, exam4, className1, schoolYear1 } from '../../src/utils/testData';
 import { lessons } from '@prisma/client';
 
-suite('examsRouter', { only: true }, () => {
+suite('examsRouter', () => {
     afterEach(async () => {
         await prisma.exams.deleteMany();
         await prisma.lessons.deleteMany();
@@ -22,7 +22,7 @@ suite('examsRouter', { only: true }, () => {
         await prisma.school_years.deleteMany();
     });
 
-    test('createExam() - success', { only: true }, async () => {
+    test('createExam() - success', async () => {
         const signUpResponse = await sendPostRequest('/auth/signup/teacher', teacher1);
         assert.strictEqual(signUpResponse.statusCode, 200, 'Expected the status code to be 200 for a successful signup.');
 
@@ -82,7 +82,7 @@ suite('examsRouter', { only: true }, () => {
     });
 
 
-    test('createExam() - validation error', { only: true }, async () => {
+    test('createExam() - validation error', async () => {
         const createExamResponse = await sendPostRequest('/exam', {
             topic: emptyString,
             scope: emptyString,
@@ -92,7 +92,7 @@ suite('examsRouter', { only: true }, () => {
         assert.strictEqual(createExamResponse.body.errors.length, 3, 'Expected the number of validation errors to be 3.');
     });
 
-    test('createExam() - lesson does not exist', { only: true }, async () => {
+    test('createExam() - lesson does not exist', async () => {
         const createExamResponse = await sendPostRequest('/exam', {
             ...exam1,
             lessonId: nonExistentId
@@ -100,7 +100,7 @@ suite('examsRouter', { only: true }, () => {
         assert.strictEqual(createExamResponse.statusCode, 404, 'Expected the status code to be 404 for a lesson that does not exist.');
     });
 
-    test('getExams() - success', { only: true }, async () => {
+    test('getExams() - success', async () => {
         const signUpResponse = await sendPostRequest('/auth/signup/teacher', teacher1);
         assert.strictEqual(signUpResponse.statusCode, 200, 'Expected the status code to be 200 for a successful signup.');
 
@@ -165,18 +165,18 @@ suite('examsRouter', { only: true }, () => {
         assert.strictEqual(getExamsResponse.body.data.length, 2, 'Expected the number of retrieved exams to be 2.');
     });
 
-    test('getExams() - validation error', { only: true }, async () => {
+    test('getExams() - validation error', async () => {
         const getExamsResponse = await sendGetRequest(`/exam/${invalidIdUrl}`);
         assert.strictEqual(getExamsResponse.statusCode, 400, 'Expected the status code to be 400 for a validation error.');
         assert.strictEqual(getExamsResponse.body.errors.length, 1, 'Expected the number of validation errors to be 1.');
     });
 
-    test('getExams() - user does not exist', { only: true }, async () => {
+    test('getExams() - user does not exist', async () => {
         const getExamsResponse = await sendGetRequest(`/exam/${nonExistentId}`);
         assert.strictEqual(getExamsResponse.statusCode, 404, 'Expected the status code to be 404 for a user that does not exist.');
     });
 
-    test('getThreeUpcomingExams() - success', { only: true }, async () => {
+    test('getThreeUpcomingExams() - success', async () => {
         const signUpResponse = await sendPostRequest('/auth/signup/teacher', teacher1);
         assert.strictEqual(signUpResponse.statusCode, 200, 'Expected the status code to be 200 for a successful signup.');
 
@@ -260,18 +260,18 @@ suite('examsRouter', { only: true }, () => {
         assert.strictEqual(getExamsResponse.body.data[2].id, createExamResponse2.body.data.id, 'Expected the retrieved exam ID to match the created exam ID.');
     });
 
-    test('getThreeUpcomingExams() - validation error', { only: true }, async () => {
+    test('getThreeUpcomingExams() - validation error', async () => {
         const getExamsResponse = await sendGetRequest(`/exam/upcoming/${invalidIdUrl}`);
         assert.strictEqual(getExamsResponse.statusCode, 400, 'Expected the status code to be 400 for a validation error.');
         assert.strictEqual(getExamsResponse.body.errors.length, 1, 'Expected the number of validation errors to be 1.');
     });
 
-    test('getThreeUpcomingExams() - user does not exist', { only: true }, async () => {
+    test('getThreeUpcomingExams() - user does not exist', async () => {
         const getExamsResponse = await sendGetRequest(`/exam/upcoming/${nonExistentId}`);
         assert.strictEqual(getExamsResponse.statusCode, 404, 'Expected the status code to be 404 for a user that does not exist.');
     });
 
-    test('updateGrade() - success', { only: true }, async () => {
+    test('updateGrade() - success', async () => {
         const signUpResponse = await sendPostRequest('/auth/signup/teacher', teacher1);
         assert.strictEqual(signUpResponse.statusCode, 200, 'Expected the status code to be 200 for a successful signup.');
 
@@ -338,7 +338,7 @@ suite('examsRouter', { only: true }, () => {
         assert.strictEqual(updateExamResponse.body.data.scope, exam2.scope, `Expected the updated scope to be "${exam2.scope}".`);
     });
 
-    test('updateExam() - validation error', { only: true }, async () => {
+    test('updateExam() - validation error', async () => {
         const updateExamResponse = await sendPatchRequest(`/exam/${invalidIdUrl}`, {
             topic: emptyString,
             scope: emptyString
@@ -347,7 +347,7 @@ suite('examsRouter', { only: true }, () => {
         assert.strictEqual(updateExamResponse.body.errors.length, 2, 'Expected the number of validation errors to be 2.');
     });
 
-    test('updateExam() - exam does not exist', { only: true }, async () => {
+    test('updateExam() - exam does not exist', async () => {
         const updateExamResponse = await sendPatchRequest(
             `/exam/${nonExistentId}`,
             {
@@ -358,7 +358,7 @@ suite('examsRouter', { only: true }, () => {
         assert.strictEqual(updateExamResponse.statusCode, 404, 'Expected the status code to be 404 for an exam that does not exist.');
     });
 
-    test('deleteExam() - success', { only: true }, async () => {
+    test('deleteExam() - success', async () => {
         const signUpResponse = await sendPostRequest('/auth/signup/teacher', teacher1);
         assert.strictEqual(signUpResponse.statusCode, 200, 'Expected the status code to be 200 for a successful signup.');
 
@@ -418,13 +418,13 @@ suite('examsRouter', { only: true }, () => {
         assert.strictEqual(deleteExamResponse.body.data.id, createExamResponse.body.data.id, 'Expected the deleted exam ID to match the created exam ID.');
     });
 
-    test('deleteExam() - validation error', { only: true }, async () => {
+    test('deleteExam() - validation error', async () => {
         const deleteExamResponse = await sendDeleteRequest(`/exam/${invalidIdUrl}`);
         assert.strictEqual(deleteExamResponse.statusCode, 400, 'Expected the status code to be 400 for a validation error.');
         assert.strictEqual(deleteExamResponse.body.errors.length, 1, 'Expected the number of validation errors to be 1.');
     });
 
-    test('deleteExam() - exam does not exist', { only: true }, async () => {
+    test('deleteExam() - exam does not exist', async () => {
         const deleteExamResponse = await sendDeleteRequest(`/exam/${nonExistentId}`);
         assert.strictEqual(deleteExamResponse.statusCode, 404, 'Expected the status code to be 404 for an exam that does not exist.');
     });
