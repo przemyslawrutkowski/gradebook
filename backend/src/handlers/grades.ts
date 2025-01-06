@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../db';
-import { grades_gradebook, subjects, classes, students, teachers } from '@prisma/client';
+import { grades_gradebook, subjects, classes, students, teachers, final_grades, semesters } from '@prisma/client';
 import { createSuccessResponse, createErrorResponse } from '../interfaces/responseInterfaces';
 import { parse as uuidParse, stringify as uuidStringify } from 'uuid';
 import { Buffer } from 'node:buffer';
@@ -69,6 +69,92 @@ export const createGrade = async (req: Request, res: Response) => {
     } catch (err) {
         console.error('Error creating grade', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while creating grade. Please try again later.'));
+    }
+};
+
+export const createFinalGrade = async (req: Request, res: Response) => {
+    try {
+        const grade: number = req.body.grade;
+        const studentId: string = req.body.studentId;
+        const subjectId: string = req.body.subjectId;
+        const teacherId: string = req.body.teacherId;
+        const semesterId: string = req.body.semesterId;
+
+        const existingStudent: students | null = await prisma.students.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(studentId))
+            }
+        });
+
+        if (!existingStudent) {
+            return res.status(404).json(createErrorResponse(`Student does not exist.`));
+        }
+
+        const existingSubject: subjects | null = await prisma.subjects.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(subjectId))
+            }
+        });
+
+        if (!existingSubject) {
+            return res.status(404).json(createErrorResponse(`Subject does not exist.`));
+        }
+
+        const existingTeacher: teachers | null = await prisma.teachers.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(teacherId))
+            }
+        });
+
+        if (!existingTeacher) {
+            return res.status(404).json(createErrorResponse(`Teacher does not exist.`));
+        }
+
+        const existingSemester: semesters | null = await prisma.semesters.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(semesterId))
+            }
+        });
+
+        if (!existingSemester) {
+            return res.status(404).json(createErrorResponse(`Semester does not exist.`));
+        }
+
+        const existingGrade: final_grades | null = await prisma.final_grades.findFirst({
+            where: {
+                student_id: Buffer.from(uuidParse(studentId)),
+                subject_id: Buffer.from(uuidParse(subjectId)),
+                semester_id: Buffer.from(uuidParse(semesterId))
+            }
+        });
+
+        if (existingGrade) {
+            return res.status(404).json(createErrorResponse(`Final grade already exists.`));
+        }
+
+        const createdGrade = await prisma.final_grades.create({
+            data: {
+                grade: grade,
+                student_id: Buffer.from(uuidParse(studentId)),
+                subject_id: Buffer.from(uuidParse(subjectId)),
+                teacher_id: Buffer.from(uuidParse(teacherId)),
+                semester_id: Buffer.from(uuidParse(semesterId))
+            }
+        });
+
+        const responseData = {
+            ...createdGrade,
+            id: uuidStringify(createdGrade.id),
+            student_id: uuidStringify(createdGrade.student_id),
+            subject_id: uuidStringify(createdGrade.subject_id),
+            teacher_id: uuidStringify(createdGrade.teacher_id),
+            semester_id: uuidStringify(createdGrade.semester_id)
+        };
+
+        return res.status(200).json(createSuccessResponse(responseData, `Final grade created successfully.`));
+    } catch (err) {
+        console.error('Error creating final grade', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while creating final grade. Please try again later.'));
     }
 };
 
@@ -212,6 +298,42 @@ export const getThreeLatestGrades = async (req: Request, res: Response) => {
     }
 };
 
+export const getFinalGrades = async (req: Request, res: Response) => {
+    try {
+        const studentId: string = req.params.studentId;
+
+        const existingStudent: students | null = await prisma.students.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(studentId))
+            }
+        });
+
+        if (!existingStudent) {
+            return res.status(404).json(createErrorResponse(`Student does not exist.`));
+        }
+
+        const grades = await prisma.final_grades.findMany({
+            where: {
+                student_id: Buffer.from(uuidParse(studentId)),
+            }
+        });
+
+        const responseData = grades.map(grade => ({
+            ...grade,
+            id: uuidStringify(grade.id),
+            student_id: uuidStringify(grade.student_id),
+            subject_id: uuidStringify(grade.subject_id),
+            teacher_id: uuidStringify(grade.teacher_id),
+            semester_id: uuidStringify(grade.semester_id)
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, 'Final grades retrieved successfully.'));
+    } catch (err) {
+        console.error('Error retrieving final grades', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving final grades. Please try again later.'));
+    }
+};
+
 export const updateGrade = async (req: Request, res: Response) => {
     try {
         const gradeId: string = req.params.gradeId;
@@ -258,6 +380,46 @@ export const updateGrade = async (req: Request, res: Response) => {
     }
 };
 
+export const updateFinalGrade = async (req: Request, res: Response) => {
+    try {
+        const gradeId: string = req.params.gradeId;
+        const grade: number = req.body.grade;
+
+        const existingGrade: final_grades | null = await prisma.final_grades.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(gradeId))
+            }
+        });
+
+        if (!existingGrade) {
+            return res.status(404).json(createErrorResponse(`Final grade does not exist.`));
+        }
+
+        const updatedGrade = await prisma.final_grades.update({
+            where: {
+                id: Buffer.from(uuidParse(gradeId))
+            },
+            data: {
+                grade: grade
+            }
+        });
+
+        const responseData = {
+            ...updatedGrade,
+            id: uuidStringify(updatedGrade.id),
+            student_id: uuidStringify(updatedGrade.student_id),
+            subject_id: uuidStringify(updatedGrade.subject_id),
+            teacher_id: uuidStringify(updatedGrade.teacher_id),
+            semester_id: uuidStringify(updatedGrade.semester_id)
+        };
+
+        return res.status(200).json(createSuccessResponse(responseData, `Final grade updated successfully.`));
+    } catch (err) {
+        console.error('Error updating final grade', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while updating final grade. Please try again later.'));
+    }
+};
+
 export const deleteGrade = async (req: Request, res: Response) => {
     try {
         const gradeId: string = req.params.gradeId;
@@ -291,6 +453,42 @@ export const deleteGrade = async (req: Request, res: Response) => {
     } catch (err) {
         console.error('Error deleting grade', err);
         res.status(500).json(createErrorResponse('An unexpected error occurred while deleting grade. Please try again later.'));
+    }
+};
+
+export const deleteFinalGrade = async (req: Request, res: Response) => {
+    try {
+        const gradeId: string = req.params.gradeId;
+
+        const existingGrade: final_grades | null = await prisma.final_grades.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(gradeId))
+            }
+        });
+
+        if (!existingGrade) {
+            return res.status(404).json(createErrorResponse(`Final grade does not exist.`));
+        }
+
+        const deletedGrade = await prisma.final_grades.delete({
+            where: {
+                id: Buffer.from(uuidParse(gradeId))
+            }
+        });
+
+        const responseData = {
+            ...deletedGrade,
+            id: uuidStringify(deletedGrade.id),
+            student_id: uuidStringify(deletedGrade.student_id),
+            subject_id: uuidStringify(deletedGrade.subject_id),
+            teacher_id: uuidStringify(deletedGrade.teacher_id),
+            semester_id: uuidStringify(deletedGrade.semester_id),
+        };
+
+        return res.status(200).json(createSuccessResponse(responseData, `Final grade deleted successfully.`));
+    } catch (err) {
+        console.error('Error deleting final grade', err);
+        res.status(500).json(createErrorResponse('An unexpected error occurred while deleting final grade. Please try again later.'));
     }
 };
 

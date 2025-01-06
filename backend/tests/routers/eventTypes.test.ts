@@ -7,7 +7,7 @@ import {
     sendPatchRequest,
     sendDeleteRequest,
 } from '../../src/utils/requestHelpers';
-import { student1, teacher1, subject1, nonExistentId, invalidIdUrl, grade1, grade2, emptyString, eventType1, eventType2 } from '../../src/utils/testData';
+import { nonExistentId, invalidIdUrl, emptyString, eventType1, eventType2 } from '../../src/utils/testData';
 
 suite('eventTypesRouter', () => {
     afterEach(async () => {
