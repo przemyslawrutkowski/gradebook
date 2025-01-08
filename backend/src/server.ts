@@ -27,6 +27,9 @@ import AuthUser from './interfaces/authUser';
 import schoolEventsRouter from './routers/schoolEventsRouter';
 import eventTypesRouter from './routers/eventTypesRouter';
 import examsRouter from './routers/examsRouter';
+import problemsRouter from './routers/problemsRouter';
+import statusesRouter from './routers/statusesRouter';
+import problemTypesRouter from './routers/problemTypesRouter';
 
 const app = express();
 const server = http.createServer(app);
@@ -69,6 +72,9 @@ app.use('/homework', homeworksRouter);
 app.use('/school-event', schoolEventsRouter);
 app.use('/event-type', eventTypesRouter);
 app.use('/exam', examsRouter);
+app.use('/problem', problemsRouter);
+app.use('/status', statusesRouter);
+app.use('/problem-type', problemTypesRouter)
 
 io.use((socket: Socket, next) => {
     const token = socket.handshake.auth.token;
