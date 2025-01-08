@@ -4,8 +4,9 @@ import assert from 'node:assert';
 import {
     sendPostRequest,
     sendDeleteRequest,
+    sendGetRequest,
 } from '../../src/utils/requestHelpers';
-import { userType1, nonExistentId, invalidIdUrl, emptyString } from '../../src/utils/testData';
+import { userType1, nonExistentId, invalidIdUrl, emptyString, userType2 } from '../../src/utils/testData';
 
 suite('userTypesRouter', () => {
     afterEach(async () => {
@@ -32,6 +33,18 @@ suite('userTypesRouter', () => {
 
         const createUserTypeResponse2 = await sendPostRequest('/user-type', userType1);
         assert.strictEqual(createUserTypeResponse2.statusCode, 409, 'Expected the status code to be 409 for a user type that already exists.');
+    });
+
+    test('getUserTypes() - success', async () => {
+        const createUserTypeResponse1 = await sendPostRequest('/user-type', userType1);
+        assert.strictEqual(createUserTypeResponse1.statusCode, 200, 'Expected the status code to be 200 for a successful user-type creation.');
+
+        const createUserTypeResponse2 = await sendPostRequest('/user-type', userType2);
+        assert.strictEqual(createUserTypeResponse2.statusCode, 200, 'Expected the status code to be 200 for a successful user-type creation.');
+
+        const getUserTypesResponse = await sendGetRequest('/user-type');
+        assert.strictEqual(getUserTypesResponse.statusCode, 200, 'Expected the status code to be 200 for a successful user-types retrieval.');
+        assert.strictEqual(getUserTypesResponse.body.data.length, 2, 'Expected the number of retrieved user-types to be 2.');
     });
 
     test('deleteUserType() - success', async () => {

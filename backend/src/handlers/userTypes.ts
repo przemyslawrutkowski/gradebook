@@ -37,6 +37,21 @@ export const createUserType = async (req: Request, res: Response) => {
     }
 }
 
+export const getUserTypes = async (req: Request, res: Response) => {
+    try {
+        const userTypes = await prisma.user_types.findMany();
+
+        const responseData = userTypes.map(userType => ({
+            id: uuidStringify(userType.id),
+            name: userType.name,
+        }));
+
+        return res.status(200).json(createSuccessResponse(responseData, `User types retrieved successfully.`));
+    } catch (err) {
+        console.error('Error retrieving user types', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving user types. Please try again later.'));
+    }
+};
 
 export const deleteUserType = async (req: Request, res: Response) => {
     try {
@@ -69,19 +84,3 @@ export const deleteUserType = async (req: Request, res: Response) => {
         res.status(500).json(createErrorResponse('An unexpected error occurred while deleting user type. Please try again later.'));
     }
 }
-
-export const getUserTypes = async (req: Request, res: Response) => {
-    try {
-        const userTypes = await prisma.user_types.findMany();
-
-        const responseData = userTypes.map(userType => ({
-            id: uuidStringify(userType.id),
-            name: userType.name,
-        }));
-
-        return res.status(200).json(createSuccessResponse(responseData, `User types retrieved successfully.`));
-    } catch (err) {
-        console.error('Error retrieving user types', err);
-        return res.status(500).json(createErrorResponse('An unexpected error occurred while retrieving user types. Please try again later.'));
-    }
-};

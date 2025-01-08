@@ -311,7 +311,7 @@ model teachers_subjects {
 model updates {
   id           Bytes    @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   description  String   @db.VarChar(255)
-  version      String   @db.VarChar(255)
+  version      String   @unique(map: "version") @db.VarChar(255)
   release_time DateTime @db.Timestamp(0)
 }
 

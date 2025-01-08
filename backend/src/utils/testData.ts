@@ -320,11 +320,21 @@ export const problemType2 = {
 
 export const problem1 = {
     description: 'Incorrect Assessment'
-}
+};
 
 export const problem2 = {
     description: 'Problems with Page Display'
-}
+};
+
+export const update1 = {
+    description: 'Initial release with basic features.',
+    version: '1.0.0'
+};
+
+export const update2 = {
+    description: 'Minor bug fixes and performance improvements.',
+    version: '1.1.0',
+};
 
 export const nonExistentId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
 export const invalidIdUrl = '%20';

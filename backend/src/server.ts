@@ -30,6 +30,7 @@ import examsRouter from './routers/examsRouter';
 import problemsRouter from './routers/problemsRouter';
 import statusesRouter from './routers/statusesRouter';
 import problemTypesRouter from './routers/problemTypesRouter';
+import updatesRouter from './routers/updatesRouter';
 
 const app = express();
 const server = http.createServer(app);
@@ -75,6 +76,7 @@ app.use('/exam', examsRouter);
 app.use('/problem', problemsRouter);
 app.use('/status', statusesRouter);
 app.use('/problem-type', problemTypesRouter)
+app.use('/update', updatesRouter)
 
 io.use((socket: Socket, next) => {
     const token = socket.handshake.auth.token;

@@ -33,7 +33,7 @@ export const createStatus = async (req: Request, res: Response) => {
         return res.status(200).json(createSuccessResponse(responseData, `Status created successfully.`));
     } catch (err) {
         console.error('Error creating status', err);
-        res.status(500).json(createErrorResponse('An unexpected error occurred while status. Please try again later.'));
+        res.status(500).json(createErrorResponse('An unexpected error occurred while creating status. Please try again later.'));
     }
 }
 

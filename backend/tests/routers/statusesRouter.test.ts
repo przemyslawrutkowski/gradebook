@@ -4,8 +4,9 @@ import assert from 'node:assert';
 import {
     sendPostRequest,
     sendDeleteRequest,
+    sendGetRequest,
 } from '../../src/utils/requestHelpers';
-import { nonExistentId, invalidIdUrl, emptyString, status1 } from '../../src/utils/testData';
+import { nonExistentId, invalidIdUrl, emptyString, status1, status2 } from '../../src/utils/testData';
 
 suite('statusesRouter', () => {
     afterEach(async () => {
@@ -32,6 +33,18 @@ suite('statusesRouter', () => {
 
         const createStatusResponse2 = await sendPostRequest('/status', status1);
         assert.strictEqual(createStatusResponse2.statusCode, 409, 'Expected the status code to be 409 for a status that already exists.');
+    });
+
+    test('getStatus() - success', async () => {
+        const createStatusResponse1 = await sendPostRequest('/status', status1);
+        assert.strictEqual(createStatusResponse1.statusCode, 200, 'Expected the status code to be 200 for a successful status creation.');
+
+        const createStatusResponse2 = await sendPostRequest('/status', status2);
+        assert.strictEqual(createStatusResponse2.statusCode, 200, 'Expected the status code to be 200 for a successful status creation.');
+
+        const getStatusesResponse = await sendGetRequest('/status');
+        assert.strictEqual(getStatusesResponse.statusCode, 200, 'Expected the status code to be 200 for a successful statuses retrieval.');
+        assert.strictEqual(getStatusesResponse.body.data.length, 2, 'Expected the number of retrieved statuses to be 2.');
     });
 
     test('deleteStatus() - success', async () => {
