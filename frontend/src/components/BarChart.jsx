@@ -53,14 +53,14 @@ const AttendanceChart = ({ data }) => {
           <Bar 
             dataKey="Presence" 
             stackId="a" 
-            fill="#EB4C60"
+            fill="#1A99EE"
             barSize={64}
             radius={[0,0,0,0]} 
           />
           <Bar 
             dataKey="Absent" 
             stackId="a" 
-            fill="#1A99EE"
+            fill="#EB4C60"
             barSize={64}
             radius={[4,4,0,0]} 
           />

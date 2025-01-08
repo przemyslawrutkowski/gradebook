@@ -26,7 +26,7 @@ import { SocketProvider } from './context/SocketContext';
 import { Subjects } from './pages/Subjects';
 import EventTypes from './pages/EventTypes';
 import { Problems } from './pages/Problems';
-import { ToastContainer, toast } from 'react-toastify'; 
+import { ToastContainer } from 'react-toastify'; 
 import 'react-toastify/dist/ReactToastify.css';
 
 export const AuthContext = createContext();

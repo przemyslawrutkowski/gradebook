@@ -158,6 +158,7 @@ export function Home() {
       if (!response.ok) {
         throw new Error(result.message || `Error: ${response.status}`);
       }
+      console.log(result.data);
       setUpcomingExams(result.data);
     } catch (err) {
       setUpcomingExamsError(err.message);
