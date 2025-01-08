@@ -1,4 +1,4 @@
-import { UserType } from "../enums/userTypes";
+import { UserType } from '../enums/userTypes';
 
 export const administrator1 = {
     pesel: '11111111111',
@@ -162,8 +162,8 @@ export const lessonsData4 = {
 };
 
 export const messageData = {
-    subject: "Subject",
-    content: "Content",
+    subject: 'Subject',
+    content: 'Content',
 };
 
 export const userType1 = {
@@ -283,25 +283,58 @@ export const schoolEvent2 = {
 }
 
 export const exam1 = {
-    topic: "Introduction to TypeScript",
-    scope: "Overview of types, interfaces, classes, and generics"
+    topic: 'Introduction to TypeScript',
+    scope: 'Overview of types, interfaces, classes, and generics'
 };
 
 export const exam2 = {
-    topic: "Advanced SQL Queries",
-    scope: "Inner joins, Outer joins, Subqueries, Window Functions"
+    topic: 'Advanced SQL Queries',
+    scope: 'Inner joins, Outer joins, Subqueries, Window Functions'
 };
 
 export const exam3 = {
-    topic: "Node.js Fundamentals",
-    scope: "Event-Driven Architecture, Asynchronous Programming, Middleware, and API Development"
+    topic: 'Node.js Fundamentals',
+    scope: 'Event-Driven Architecture, Asynchronous Programming, Middleware, and API Development'
 };
 
 export const exam4 = {
-    topic: "Advanced TypeScript",
-    scope: "Generics, Decorators, Module Augmentation, and Advanced Type Manipulation"
+    topic: 'Advanced TypeScript',
+    scope: 'Generics, Decorators, Module Augmentation, and Advanced Type Manipulation'
 };
 
+export const status1 = {
+    name: 'Resolved'
+};
+
+export const status2 = {
+    name: 'Pending'
+};
+
+export const problemType1 = {
+    name: 'Data Issue'
+};
+
+export const problemType2 = {
+    name: 'Technical Issues'
+};
+
+export const problem1 = {
+    description: 'Incorrect Assessment'
+};
+
+export const problem2 = {
+    description: 'Problems with Page Display'
+};
+
+export const update1 = {
+    description: 'Initial release with basic features.',
+    version: '1.0.0'
+};
+
+export const update2 = {
+    description: 'Minor bug fixes and performance improvements.',
+    version: '1.1.0',
+};
 
 export const nonExistentId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
 export const invalidIdUrl = '%20';

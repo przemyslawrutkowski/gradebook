@@ -1,5 +1,10 @@
 import { body, param } from 'express-validator';
 
+export const createVersionValidation = (field: string) => {
+    return body(field).matches(/^\d+\.\d+\.\d+$/).withMessage(`${field} must be in MAJOR.MINOR.PATCH format.`);
+};
+
+
 export const createDateValidation = (field: string, location: 'body' | 'param' = 'body') => {
     const validator = location === 'body' ? body(field) : param(field);
     return validator.isDate().withMessage(`${field} must be a valid date in YYYY-MM-DD format.`);

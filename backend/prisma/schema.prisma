@@ -152,39 +152,25 @@ model parents {
 
 model problem_types {
   id                 Bytes                @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
-  name               String               @db.VarChar(255)
+  name               String               @unique(map: "name") @db.VarChar(255)
   problems_gradebook problems_gradebook[]
 }
 
 model problems_gradebook {
-  id                         Bytes                        @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
-  description                String                       @db.VarChar(255)
-  reported_time              DateTime                     @db.Timestamp(0)
-  problem_type_id            Bytes                        @db.Binary(16)
-  reporter_id                Bytes                        @db.Binary(16)
-  user_type_id               Bytes                        @db.Binary(16)
-  status_id                  Bytes                        @db.Binary(16)
-  problem_types              problem_types                @relation(fields: [problem_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_1")
-  user_types                 user_types                   @relation(fields: [user_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_2")
-  statuses                   statuses                     @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_3")
-  problems_history_gradebook problems_history_gradebook[]
+  id              Bytes         @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
+  description     String        @db.VarChar(255)
+  reported_time   DateTime      @db.Timestamp(0)
+  problem_type_id Bytes         @db.Binary(16)
+  reporter_id     Bytes         @db.Binary(16)
+  user_type_id    Bytes         @db.Binary(16)
+  status_id       Bytes         @db.Binary(16)
+  problem_types   problem_types @relation(fields: [problem_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_1")
+  user_types      user_types    @relation(fields: [user_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_2")
+  statuses        statuses      @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_gradebook_ibfk_3")
 
   @@index([problem_type_id], map: "problem_type_id")
   @@index([status_id], map: "status_id")
   @@index([user_type_id], map: "user_type_id")
-}
-
-model problems_history_gradebook {
-  id                 Bytes              @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
-  change_description String             @db.VarChar(255)
-  change_time        DateTime           @db.Timestamp(0)
-  problem_id         Bytes              @db.Binary(16)
-  status_id          Bytes              @db.Binary(16)
-  problems_gradebook problems_gradebook @relation(fields: [problem_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_history_gradebook_ibfk_1")
-  statuses           statuses           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "problems_history_gradebook_ibfk_2")
-
-  @@index([problem_id], map: "problem_id")
-  @@index([status_id], map: "status_id")
 }
 
 model school_events {
@@ -202,10 +188,9 @@ model school_events {
 }
 
 model statuses {
-  id                         Bytes                        @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
-  name                       String                       @db.VarChar(255)
-  problems_gradebook         problems_gradebook[]
-  problems_history_gradebook problems_history_gradebook[]
+  id                 Bytes                @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
+  name               String               @unique(map: "name") @db.VarChar(255)
+  problems_gradebook problems_gradebook[]
 }
 
 model students {
@@ -326,7 +311,7 @@ model teachers_subjects {
 model updates {
   id           Bytes    @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   description  String   @db.VarChar(255)
-  version      String   @db.VarChar(255)
+  version      String   @unique(map: "version") @db.VarChar(255)
   release_time DateTime @db.Timestamp(0)
 }
 
