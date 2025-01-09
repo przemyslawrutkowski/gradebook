@@ -31,6 +31,9 @@ import problemsRouter from './routers/problemsRouter';
 import statusesRouter from './routers/statusesRouter';
 import problemTypesRouter from './routers/problemTypesRouter';
 import updatesRouter from './routers/updatesRouter';
+import questionTypesRouter from './routers/questionTypesRouter';
+import surveysRouter from './routers/surveysRouter';
+import questionsRouter from './routers/questionsRouter';
 
 const app = express();
 const server = http.createServer(app);
@@ -75,8 +78,11 @@ app.use('/event-type', eventTypesRouter);
 app.use('/exam', examsRouter);
 app.use('/problem', problemsRouter);
 app.use('/status', statusesRouter);
-app.use('/problem-type', problemTypesRouter)
-app.use('/update', updatesRouter)
+app.use('/problem-type', problemTypesRouter);
+app.use('/update', updatesRouter);
+app.use('/question-type', questionTypesRouter);
+app.use('/survey', surveysRouter);
+app.use('/question', questionsRouter);
 
 io.use((socket: Socket, next) => {
     const token = socket.handshake.auth.token;

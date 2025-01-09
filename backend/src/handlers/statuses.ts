@@ -43,7 +43,7 @@ export const getStatuses = async (req: Request, res: Response) => {
 
         const responseData = statuses.map(status => ({
             id: uuidStringify(status.id),
-            name: status.name,
+            name: status.name
         }));
 
         return res.status(200).json(createSuccessResponse(responseData, `Statuses retrieved successfully.`));

@@ -5,7 +5,7 @@ import { createSuccessResponse, createErrorResponse } from '../interfaces/respon
 import { Buffer } from 'node:buffer';
 import { attendances, lessons, students } from '@prisma/client';
 import { parse as uuidParse, stringify as uuidStringify } from 'uuid';
-import MonthlyAttendance from '../interfaces/MonthlyAttendance';
+import MonthlyAttendance from '../interfaces/monthlyAttendance';
 import { Month } from '../enums/months';
 import attendanceUpdate from '../interfaces/attendanceUpdate';
 
@@ -215,9 +215,9 @@ export const getStudentAttendances = async (req: Request, res: Response) => {
                 },
             },
             orderBy: {
-                lessons:{
+                lessons: {
                     start_time: 'asc',
-                } 
+                }
             }
         });
 
@@ -286,9 +286,9 @@ export const getClassAttendances = async (req: Request, res: Response) => {
                 }
             },
             orderBy: {
-                lessons:{
+                lessons: {
                     start_time: 'asc',
-                } 
+                }
             }
         });
 
@@ -384,7 +384,7 @@ export const getStudentAttendancesByDate = async (req: Request, res: Response) =
                 subject_id: uuidStringify(attendance.lessons.subject_id),
                 subject: {
                     ...attendance.lessons.subjects,
-                    id: uuidStringify(attendance.lessons.subjects.id),  
+                    id: uuidStringify(attendance.lessons.subjects.id),
                 }
             } : null
         }));
@@ -457,7 +457,7 @@ export const excuseAbsencesForStudent = async (req: Request, res: Response) => {
         if (!existingStudent) {
             return res.status(404).json(createErrorResponse('Student does not exist.'));
         }
-        
+
         const updateResult = await prisma.attendances.updateMany({
             where: {
                 student_id: Buffer.from(uuidParse(studentId)),

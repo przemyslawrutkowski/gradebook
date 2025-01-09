@@ -194,22 +194,22 @@ model statuses {
 }
 
 model students {
-  id                     Bytes               @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
-  pesel                  String              @unique(map: "pesel") @db.VarChar(11)
-  email                  String              @unique(map: "email") @db.VarChar(255)
-  phone_number           String              @unique(map: "phone_number") @db.VarChar(9)
-  password               String              @db.VarChar(255)
-  first_name             String              @db.VarChar(255)
-  last_name              String              @db.VarChar(255)
-  reset_password_token   String?             @unique(map: "reset_password_token") @db.VarChar(512)
-  reset_password_expires DateTime?           @db.Timestamp(0)
-  class_id               Bytes?              @db.Binary(16)
+  id                     Bytes                 @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
+  pesel                  String                @unique(map: "pesel") @db.VarChar(11)
+  email                  String                @unique(map: "email") @db.VarChar(255)
+  phone_number           String                @unique(map: "phone_number") @db.VarChar(9)
+  password               String                @db.VarChar(255)
+  first_name             String                @db.VarChar(255)
+  last_name              String                @db.VarChar(255)
+  reset_password_token   String?               @unique(map: "reset_password_token") @db.VarChar(512)
+  reset_password_expires DateTime?             @db.Timestamp(0)
+  class_id               Bytes?                @db.Binary(16)
   attendances            attendances[]
   badges_history         badges_history[]
   grades_gradebook       grades_gradebook[]
-  classes                classes?            @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "students_ibfk_1")
+  questions_responses    questions_responses[]
+  classes                classes?              @relation(fields: [class_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "students_ibfk_1")
   students_parents       students_parents[]
-  surveys_responses      surveys_responses[]
 
   @@index([class_id], map: "class_id")
 }
@@ -233,53 +233,12 @@ model subjects {
 }
 
 model surveys {
-  id                Bytes               @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
-  name              String              @db.VarChar(255)
-  description       String              @db.VarChar(255)
-  start_time        DateTime            @db.Timestamp(0)
-  end_time          DateTime            @db.Timestamp(0)
-  surveys_questions surveys_questions[]
-}
-
-model surveys_possible_responses {
-  id                Bytes             @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
-  response          String            @db.VarChar(255)
-  question_id       Bytes             @db.Binary(16)
-  surveys_questions surveys_questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "surveys_possible_responses_ibfk_1")
-
-  @@index([question_id], map: "question_id")
-}
-
-model surveys_questions {
-  id                         Bytes                        @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
-  question                   String                       @db.VarChar(255)
-  survey_id                  Bytes                        @db.Binary(16)
-  question_type_id           Bytes                        @db.Binary(16)
-  surveys_possible_responses surveys_possible_responses[]
-  surveys                    surveys                      @relation(fields: [survey_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "surveys_questions_ibfk_1")
-  surveys_questions_types    surveys_questions_types      @relation(fields: [question_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "surveys_questions_ibfk_2")
-  surveys_responses          surveys_responses[]
-
-  @@index([question_type_id], map: "question_type_id")
-  @@index([survey_id], map: "survey_id")
-}
-
-model surveys_questions_types {
-  id                Bytes               @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
-  name              String              @unique(map: "name") @db.VarChar(255)
-  surveys_questions surveys_questions[]
-}
-
-model surveys_responses {
-  id                Bytes             @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
-  response          String            @db.VarChar(255)
-  student_id        Bytes             @db.Binary(16)
-  question_id       Bytes             @db.Binary(16)
-  students          students          @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "surveys_responses_ibfk_1")
-  surveys_questions surveys_questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "surveys_responses_ibfk_2")
-
-  @@unique([student_id, question_id], map: "student_id")
-  @@index([question_id], map: "question_id")
+  id          Bytes       @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
+  name        String      @db.VarChar(255)
+  description String      @db.VarChar(255)
+  start_time  DateTime    @db.Timestamp(0)
+  end_time    DateTime    @db.Timestamp(0)
+  questions   questions[]
 }
 
 model teachers {
@@ -381,4 +340,45 @@ model final_grades {
   subject_id  Bytes @db.Binary(16)
   teacher_id  Bytes @db.Binary(16)
   semester_id Bytes @db.Binary(16)
+}
+
+model questions {
+  id                           Bytes                          @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
+  content                      String                         @db.VarChar(255)
+  survey_id                    Bytes                          @db.Binary(16)
+  question_type_id             Bytes                          @db.Binary(16)
+  surveys                      surveys                        @relation(fields: [survey_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "questions_ibfk_1")
+  questions_types              questions_types                @relation(fields: [question_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "questions_ibfk_2")
+  questions_possible_responses questions_possible_responses[]
+  questions_responses          questions_responses[]
+
+  @@index([question_type_id], map: "question_type_id")
+  @@index([survey_id], map: "survey_id")
+}
+
+model questions_possible_responses {
+  id          Bytes     @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
+  content     String    @db.VarChar(255)
+  question_id Bytes     @db.Binary(16)
+  questions   questions @relation(fields: [question_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "questions_possible_responses_ibfk_1")
+
+  @@index([question_id], map: "question_id")
+}
+
+model questions_responses {
+  id          Bytes     @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
+  content     String    @db.VarChar(255)
+  student_id  Bytes     @db.Binary(16)
+  question_id Bytes     @db.Binary(16)
+  students    students  @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "questions_responses_ibfk_1")
+  questions   questions @relation(fields: [question_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "questions_responses_ibfk_2")
+
+  @@unique([student_id, question_id], map: "student_id")
+  @@index([question_id], map: "question_id")
+}
+
+model questions_types {
+  id        Bytes       @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
+  name      String      @unique(map: "name") @db.VarChar(255)
+  questions questions[]
 }

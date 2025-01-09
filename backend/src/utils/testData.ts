@@ -1,3 +1,4 @@
+import { QuestionType } from '../enums/questionTypes';
 import { UserType } from '../enums/userTypes';
 
 export const administrator1 = {
@@ -333,7 +334,65 @@ export const update1 = {
 
 export const update2 = {
     description: 'Minor bug fixes and performance improvements.',
-    version: '1.1.0',
+    version: '1.1.0'
+};
+
+export const questionType1 = {
+    name: QuestionType.Closed
+};
+
+export const questionType2 = {
+    name: QuestionType.Open
+};
+
+export const survey1 = {
+    name: 'Test Survey 1',
+    description: 'Test description 1',
+    startDate: '2025-01-09',
+    endDate: '2025-01-11',
+    startTime: '12:00',
+    endTime: '15:00',
+};
+
+export const survey2 = {
+    name: 'Test Survey 2',
+    description: 'Test description 2',
+    startDate: '2025-01-12',
+    endDate: '2025-01-15',
+    startTime: '13:00',
+    endTime: '14:00',
+};
+
+export const closedQuestion1 = {
+    content: 'Do You like swimming?'
+};
+
+export const closedQuestion2 = {
+    content: 'Do You like running?'
+};
+
+export const closedQuestionResponse1 = {
+    content: 'Yes'
+};
+
+export const closedQuestionResponse2 = {
+    content: 'No'
+};
+
+export const openQuestion1 = {
+    content: 'Do You like horse riding?'
+};
+
+export const openQuestion2 = {
+    content: 'Do You like skating?'
+};
+
+export const openQuestionResponse1 = {
+    content: 'Yes'
+};
+
+export const openQuestionResponse2 = {
+    content: 'No'
 };
 
 export const nonExistentId = 'f47ac10b-58cc-11e8-b624-0800200c9a66';
