@@ -47,9 +47,12 @@ export function CalendarEvents() {
   const [isDeleteExamModalOpen, setIsDeleteExamModalOpen] = useState(false);
   const [examToDelete, setExamToDelete] = useState(null);
 
+  const [userId, setUserId] = useState(null);
+  
+  const parentId = getUserId();
   const token = getToken();
   const userRole = getUserRole();
-  const userId = getUserId();
+
   const [eventTypes, setEventTypes] = useState([]);
   const [eventTypeCardColors, setEventTypeCardColors] = useState({});
   const [eventTypeLegendColors, setEventTypeLegendColors] = useState({});
@@ -90,6 +93,40 @@ export function CalendarEvents() {
     setEventTypeCardColors(newEventTypeCardColors);
     setEventTypeLegendColors(newEventTypeLegendColors);
   };
+  
+    const fetchStudentForParent = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/student-parent/${parentId}/students`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status}`);
+        }
+        const result = await response.json();
+        setUserId(result.data);
+      } catch (err) {
+        console.error("Failed to fetch students for parent:", err.message);
+      }
+    };
+
+    useEffect(() => {
+      const initializeData = async () => {
+        if (userRole === UserRoles.Student) {
+          const id = getUserId();
+          setUserId(id);
+        } else if (userRole === UserRoles.Parent) {
+          await fetchStudentForParent();
+        }
+      };
+  
+      initializeData();
+    }, [userRole]);
+
+
 
   const fetchEventTypes = async () => {
     try {
@@ -122,7 +159,7 @@ export function CalendarEvents() {
     fetchEventTypes();
   }, [token]);
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (userId) => {
     setLoading(true);
     setError(null);
     try {
@@ -189,9 +226,11 @@ export function CalendarEvents() {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
-    fetchEvents();
+    if (userId) {
+      fetchEvents(userId); 
+    }
   }, [token, userId, userRole]);
 
   useEffect(() => {
