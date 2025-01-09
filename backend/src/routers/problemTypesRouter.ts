@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { createProblemType, getProblemTypes, deleteProblemType } from '../handlers/problemTypes.js';
+import { createProblemType, getProblemTypes, deleteProblemType, updateProblemType } from '../handlers/problemTypes.js';
 import { validateCreateProblemType, validateDeleteProblemType } from '../validations/problemTypesValidation.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { UserType } from '../enums/userTypes.js';
@@ -17,8 +17,14 @@ problemTypesRouter.post('',
 
 problemTypesRouter.get('',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher]),
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
     getProblemTypes
+)
+
+problemTypesRouter.patch('/:problemTypeId',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher]),
+    updateProblemType
 )
 
 problemTypesRouter.delete('/:problemTypeId',

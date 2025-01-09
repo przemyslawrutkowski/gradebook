@@ -53,6 +53,42 @@ export const getStatuses = async (req: Request, res: Response) => {
     }
 };
 
+export const updateStatus = async (req: Request, res: Response) => {
+    try {
+        const statusId: string = req.params.status;
+        const name: string = req.body.name;
+
+        const existingStatus: statuses | null = await prisma.statuses.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(statusId))
+            }
+        });
+
+        if (!existingStatus) {
+            return res.status(404).json(createErrorResponse('Status does not exist.'));
+        }
+
+        const updatedStatus = await prisma.statuses.update({
+            where: {
+                id: Buffer.from(uuidParse(statusId))
+            },
+            data: {
+                name: name
+            }
+        });
+
+        const responseData = {
+            ...updatedStatus,
+            id: uuidStringify(updatedStatus.id)
+        };
+
+        return res.status(200).json(createSuccessResponse(responseData, 'Status updated successfully.'));
+    } catch (err) {
+        console.error('Error updating status', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while updating the status. Please try again later.'));
+    }
+};
+
 export const deleteStatus = async (req: Request, res: Response) => {
     try {
         const statusId: string = req.params.statusId;

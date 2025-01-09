@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../modules/auth.js';
-import { createStatus, getStatuses, deleteStatus } from '../handlers/statuses.js';
+import { createStatus, getStatuses, deleteStatus, updateStatus } from '../handlers/statuses.js';
 import { validateCreateStatus, validateDeleteStatus } from '../validations/statusesValidation.js';
 import { handleInputErrors } from '../modules/middleware.js';
 import { UserType } from '../enums/userTypes.js';
@@ -19,6 +19,12 @@ statusesRouter.get('',
     authenticate,
     authorize([UserType.Administrator, UserType.Teacher]),
     getStatuses
+)
+
+statusesRouter.patch('/:statusId',
+    authenticate,
+    authorize([UserType.Administrator, UserType.Teacher]),
+    updateStatus
 )
 
 statusesRouter.delete('/:statusId',

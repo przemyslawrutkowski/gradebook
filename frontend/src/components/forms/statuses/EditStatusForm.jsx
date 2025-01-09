@@ -1,4 +1,3 @@
-// components/forms/problemtype/EditProblemTypeForm.jsx
 import React, { useState, useEffect } from 'react';
 import Button from '../../Button';
 import { validate as validateUUID } from 'uuid';
@@ -7,7 +6,7 @@ import { X } from 'lucide-react';
 import { getToken } from '../../../utils/UserRoleUtils';
 import { toast } from 'react-toastify';
 
-const EditProblemTypeForm = ({ id, currentName, isOpen, onSuccess, onClose }) => {
+const EditStatusForm = ({ id, currentName, isOpen, onSuccess, onClose }) => {
   const [name, setName] = useState(currentName);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -27,10 +26,9 @@ const EditProblemTypeForm = ({ id, currentName, isOpen, onSuccess, onClose }) =>
     }
 
     setLoading(true);
-    setError(null);
 
     try {
-      const response = await fetch(`http://localhost:3000/problem-type/${id}`, {
+      const response = await fetch(`http://localhost:3000/status/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -44,10 +42,11 @@ const EditProblemTypeForm = ({ id, currentName, isOpen, onSuccess, onClose }) =>
         throw new Error(errorData.message || `Error: ${response.status}`);
       }
       const data = await response.json();
+      console.log(data);  
 
       onSuccess(data);
       onClose();
-      toast.success(data.message || 'Problem type updated successfully.');
+      toast.success(data.message || 'Status updated successfully.');
     } catch (err) {
       setError(err.message);
       toast.error(err.message || 'An unexpected error occurred.');
@@ -59,12 +58,12 @@ const EditProblemTypeForm = ({ id, currentName, isOpen, onSuccess, onClose }) =>
   return (
     <Modal isOpen={isOpen} onClose={onClose} widthHeightClassname="max-w-md">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-textBg-700">Edit Problem Type</h2>
+        <h2 className="text-xl font-bold text-textBg-700">Edit Status</h2>
         <X size={24} className="hover:cursor-pointer" onClick={onClose} />
       </div>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label htmlFor="name" className="block text-textBg-700 mb-2">Problem Type Name</label>
+          <label htmlFor="name" className="block text-textBg-700 mb-2">Status Name</label>
           <input
             type="text"
             id="name"
@@ -72,7 +71,7 @@ const EditProblemTypeForm = ({ id, currentName, isOpen, onSuccess, onClose }) =>
             onChange={(e) => setName(e.target.value)}
             required
             className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
-            placeholder="e.g., Technical Issue"
+            placeholder="e.g., Pending"
           />
         </div>
         {error && <p className="text-red-500 mb-4">{error}</p>}
@@ -94,4 +93,4 @@ const EditProblemTypeForm = ({ id, currentName, isOpen, onSuccess, onClose }) =>
   );
 };
 
-export default EditProblemTypeForm;
+export default EditStatusForm;

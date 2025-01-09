@@ -53,6 +53,42 @@ export const getProblemTypes = async (req: Request, res: Response) => {
     }
 };
 
+export const updateProblemType = async (req: Request, res: Response) => {
+    try {
+        const problemTypeId: string = req.params.problemTypeId;
+        const name: string = req.body.name;
+
+        const existingProblemType: problem_types | null = await prisma.problem_types.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(problemTypeId))
+            }
+        });
+
+        if (!existingProblemType) {
+            return res.status(404).json(createErrorResponse('Problem type does not exist.'));
+        }
+
+        const updatedProblemType = await prisma.problem_types.update({
+            where: {
+                id: Buffer.from(uuidParse(problemTypeId))
+            },
+            data: {
+                name: name
+            }
+        });
+
+        const responseData = {
+            ...updatedProblemType,
+            id: uuidStringify(updatedProblemType.id)
+        };
+
+        return res.status(200).json(createSuccessResponse(responseData, 'Problem type updated successfully.'));
+    } catch (err) {
+        console.error('Error updating problem type', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while updating the problem type. Please try again later.'));
+    }
+};
+
 export const deleteProblemType = async (req: Request, res: Response) => {
     try {
         const problemTypeId: string = req.params.problemTypeId;

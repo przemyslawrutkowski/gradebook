@@ -709,7 +709,6 @@ export function Schedule() {
                                   </div>
                                 )}
 
-                                {/* Akcje dla mobile z dropdownem */}
                                 {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
                                   <div className='md:hidden relative ml-1'>
                                     <button

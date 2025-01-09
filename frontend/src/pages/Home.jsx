@@ -109,7 +109,7 @@ export function Home() {
   
     return academicMonths.map((month) => {
       const monthData = data[month] || { present: 0, late: 0, absent: 0 };
-      const presence = monthData.present + monthData.late;
+      const presence = monthData.present + monthData.late + monthData.excused;
       const absent = monthData.absent;
   
       return {

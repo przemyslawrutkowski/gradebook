@@ -485,3 +485,62 @@ export const excuseAbsencesForStudent = async (req: Request, res: Response) => {
         return res.status(500).json(createErrorResponse('An unexpected error occurred while excusing attendances. Please try again later.'));
     }
 };
+
+export const excuseAbsencesForStudentByDate = async (req: Request, res: Response) => {
+    try {
+        const studentId: string = req.params.studentId;
+        const date = new Date(req.params.date);
+
+        const existingStudent = await prisma.students.findUnique({
+            where: {
+                id: Buffer.from(uuidParse(studentId)),
+            },
+        });
+
+        if (!existingStudent) {
+            return res.status(404).json(createErrorResponse('Student does not exist.'));
+        }
+
+        
+        if (!existingStudent) {
+            return res.status(404).json(createErrorResponse('Student does not exist.'));
+        }
+
+        const startOfDay = new Date(date);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+
+        const updateResult = await prisma.attendances.updateMany({
+            where: {
+                student_id: Buffer.from(uuidParse(studentId)),
+                was_present: false,
+                was_late: false,
+                was_excused: false,
+                lessons: {
+                    date: {
+                        gte: startOfDay,
+                        lte: endOfDay,
+                    },
+                },
+            },
+            data: {
+                was_excused: true,
+            },
+        });
+
+        if (updateResult.count === 0) {
+            return res.status(404).json(createErrorResponse('No unexcused absences found for the specified date.'));
+        }
+
+        return res.status(200).json(
+            createSuccessResponse(
+                { updatedCount: updateResult.count },
+                `${updateResult.count} absences have been excused successfully for the specified date.`
+            )
+        );
+    } catch (err) {
+        console.error('Error excusing attendances for student by date', err);
+        return res.status(500).json(createErrorResponse('An unexpected error occurred while excusing attendances. Please try again later.'));
+    }
+};

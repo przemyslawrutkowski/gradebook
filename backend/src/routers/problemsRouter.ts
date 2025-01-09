@@ -9,7 +9,7 @@ const problemsRouter = Router();
 
 problemsRouter.post('',
     authenticate,
-    authorize([UserType.Administrator, UserType.Teacher]),
+    authorize([UserType.Administrator, UserType.Teacher, UserType.Parent, UserType.Student]),
     validateCreateProblem(),
     handleInputErrors,
     createProblem

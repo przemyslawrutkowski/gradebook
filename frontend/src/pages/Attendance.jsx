@@ -16,8 +16,9 @@ import Select from 'react-select';
 import Tooltip from '../components/Tooltip';
 import Button from "../components/Button";
 import ConfirmForm from '../components/forms/ConfirmForm';
+import ExcuseAbsences from '../components/forms/attendance/ExcuseAbsences'; 
 import { toast } from "react-toastify";
-import { formatTime } from '../utils/dateTimeUtils'
+import { formatTime, formatDateLocal } from '../utils/dateTimeUtils'
 
 const attendanceTypeColors = {
   Present: 'bg-green-500',
@@ -49,6 +50,10 @@ export function Attendance() {
   const [selectedClass, setSelectedClass] = useState(null);
   const [classAttendances, setClassAttendances] = useState([]);
   const [isConfirmFormOpen, setIsConfirmFormOpen] = useState(false);
+  const [isExcuseModalOpen, setIsExcuseModalOpen] = useState(false);
+  
+  const [excuseType, setExcuseType] = useState('all'); 
+  const [excuseDate, setExcuseDate] = useState(null);
 
   const [studentId, setStudentId] = useState(null);
 
@@ -201,14 +206,14 @@ export function Attendance() {
       const presentCount = attendanceData.filter((attendance) => attendance.was_present && !attendance.was_late && !attendance.was_excused).length;
       const lateCount = attendanceData.filter((attendance) => attendance.was_present && attendance.was_late && !attendance.was_excused).length;
       const absentCount = attendanceData.filter((attendance) => !attendance.was_present && !attendance.was_late && !attendance.was_excused).length;
-      const excusedCount = attendanceData.filter((attendance) => attendance.was_excused).length; // New statistic
+      const excusedCount = attendanceData.filter((attendance) => attendance.was_excused).length; // Nowa statystyka
       return { presentCount, lateCount, absentCount, excusedCount };
     }
     if (userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) {
       const presentCount = classAttendances.filter((attendance) => attendance.was_present && !attendance.was_late && !attendance.was_excused).length;
       const lateCount = classAttendances.filter((attendance) => attendance.was_present && attendance.was_late && !attendance.was_excused).length;
       const absentCount = classAttendances.filter((attendance) => !attendance.was_present && !attendance.was_late && !attendance.was_excused).length;
-      const excusedCount = classAttendances.filter((attendance) => attendance.was_excused).length; // New statistic
+      const excusedCount = classAttendances.filter((attendance) => attendance.was_excused).length; // Nowa statystyka
       return { presentCount, lateCount, absentCount, excusedCount };
     }
     return { presentCount: 0, lateCount: 0, absentCount: 0, excusedCount: 0 };
@@ -352,14 +357,29 @@ export function Attendance() {
       return;
     }
 
+    setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/attendance/excuse/${studentId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      let response;
+      if (excuseType === 'all') {
+        response = await fetch(`http://localhost:3000/attendance/excuse/${studentId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+      } else if (excuseType === 'by-date') {
+        console.log(selectedDate);
+        const date = formatDateLocal(selectedDate);
+        console.log(date);
+        response = await fetch(`http://localhost:3000/attendance/excuse/${studentId}/by-date/${encodeURIComponent(date)}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -368,6 +388,7 @@ export function Attendance() {
       const data = await response.json();
 
       fetchAttendance(studentId);
+
       toast.success(data.message || 'Absences excused successfully.');
     } catch (err) {
       toast.error(err.message || 'An unexpected error occurred.');
@@ -383,21 +404,30 @@ export function Attendance() {
     handleExcuseAbsences();
   };
 
+  const openExcuseModal = () => setIsExcuseModalOpen(true);
+  const closeExcuseModal = () => setIsExcuseModalOpen(false);
+
+  const handleExcuseSubmit = ({ excuseType, excuseDate }) => {
+    setExcuseType(excuseType);
+    setExcuseDate(excuseType === 'by-date' ? excuseDate : null);
+    closeExcuseModal();
+    openConfirmForm();
+  };
+
   return (
     <main className="flex-1 mt-12 lg:mt-0 lg:ml-64 pt-3 pb-8 px-6 sm:px-8">
       <div className="flex items-center justify-between">
         <PageTitle text="Attendance"/>
         {userRole === UserRoles.Parent && (
-          <div className='w-full mb-4 sm:w-auto'>
-            
-            <Button
-              text={!canExcuseAbsences ? "No Unexcused Absences" : 'Excuse All Absences'}
-              onClick={openConfirmForm}
-              disabled={!canExcuseAbsences}
-              className='w-full md:w-auto'
-            />
-          </div>
-        )}
+        <div className='w-full mb-4 sm:w-auto'>
+          <Button
+            text='Excuse Absences'
+            onClick={openExcuseModal}
+            disabled={!canExcuseAbsences}
+            className='w-full md:w-auto'
+          />
+        </div>
+      )}
       </div>
       
       {(userRole === UserRoles.Teacher || userRole === UserRoles.Administrator) && (
@@ -642,6 +672,13 @@ export function Attendance() {
         onConfirm={handleConfirmExcuseAbsences}
         title="Confirm Excuse Absences"
         description="Are you sure you want to excuse all absences for this student? This action is irreversible."
+      />
+
+      <ExcuseAbsences
+        isOpen={isExcuseModalOpen}
+        onClose={() => setIsExcuseModalOpen(false)}
+        onSubmit={handleExcuseSubmit}
+        selectedDate={selectedDate}
       />
     </main>
   );

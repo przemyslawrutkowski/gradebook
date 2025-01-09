@@ -5,7 +5,7 @@ import Modal from '../../Modal';
 import { toast } from 'react-toastify';
 import { getToken } from '../../../utils/UserRoleUtils';
 
-function CreateProblemTypeForm({ onSuccess, onClose, isOpen }) {
+function CreateStatusForm({ onSuccess, onClose, isOpen }) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -18,7 +18,7 @@ function CreateProblemTypeForm({ onSuccess, onClose, isOpen }) {
     setError(null);
 
     try {
-      const response = await fetch(`http://localhost:3000/problem-type`, {
+      const response = await fetch(`http://localhost:3000/status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,7 +48,7 @@ function CreateProblemTypeForm({ onSuccess, onClose, isOpen }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} widthHeightClassname="max-w-md">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-textBg-700">Add Problem Type</h2>
+        <h2 className="text-xl font-bold text-textBg-700">Create Status</h2>
         <X size={24} className="hover:cursor-pointer" onClick={onClose}/>
       </div>
       <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
@@ -61,11 +61,9 @@ function CreateProblemTypeForm({ onSuccess, onClose, isOpen }) {
             onChange={(e) => setName(e.target.value)}
             required
             className="w-full text-textBg-900 px-3 py-2 border border-textBg-200 rounded text-base focus:outline-none focus:border-textBg-500"
-            placeholder="e.g., Technical Issue"
+            placeholder="e.g., Pending"
           />
         </div>
-
-        {error && <p className="text-red-500">{error}</p>}
 
         <div className="flex justify-end gap-4">
           <Button
@@ -86,4 +84,4 @@ function CreateProblemTypeForm({ onSuccess, onClose, isOpen }) {
   );
 }
 
-export default CreateProblemTypeForm;
+export default CreateStatusForm;
